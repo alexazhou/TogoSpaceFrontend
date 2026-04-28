@@ -298,12 +298,19 @@ function getActivityToolName(activity: AgentActivity): string {
 }
 
 .agent-activity-item__dot {
-  width: 8px;
-  height: 8px;
+  position: relative;
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+}
+
+.agent-activity-item__dot::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
   border-radius: 999px;
   background: var(--good);
   animation: agent-activity-item-dot-pulse 2s ease-in-out infinite;
-  flex: none;
 }
 
 .agent-activity-item__mark {
