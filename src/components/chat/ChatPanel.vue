@@ -531,12 +531,16 @@ function handleEnterKey(e: KeyboardEvent): void {
   border: none;
   border-radius: 0;
   padding: 12px;
-  color: inherit;
+  color: var(--text-primary);
   background: transparent;
   outline: none;
   font-size: 0.8rem;
   line-height: 1.3;
   display: block;
+}
+
+.composer textarea::placeholder {
+  color: var(--text-secondary);
 }
 
 .composer textarea:focus {
