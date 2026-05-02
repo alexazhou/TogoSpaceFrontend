@@ -32,6 +32,7 @@ const props = defineProps<{
   scheduleNotRunningReason?: string;
   scheduleResumePending?: boolean;
   authEnabled?: boolean;
+  showBackToConsole?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -39,6 +40,7 @@ const emit = defineEmits<{
   selectTeam: [teamId: number];
   toggleActiveTeamEnabled: [enabled: boolean];
   openSettings: [];
+  backToConsole: [];
   resumeSchedule: [];
 }>();
 
@@ -212,11 +214,14 @@ function closeLogoutConfirm(): void {
         class="nav-icon-button nav-icon-button--bare"
         type="button"
         :disabled="activeTeamId === null"
-        :title="t('topbar.settings')"
-        :aria-label="t('topbar.settings')"
-        @click="emit('openSettings')"
+        :title="showBackToConsole ? t('settings.back') : t('topbar.settings')"
+        :aria-label="showBackToConsole ? t('settings.back') : t('topbar.settings')"
+        @click="showBackToConsole ? emit('backToConsole') : emit('openSettings')"
       >
-        <i class="fa-solid fa-gear" aria-hidden="true"></i>
+        <i
+          :class="showBackToConsole ? 'fa-solid fa-chevron-left' : 'fa-solid fa-gear'"
+          aria-hidden="true"
+        ></i>
       </button>
       <div class="team-switcher">
         <button

@@ -71,6 +71,7 @@ const teamToggleConfirm = ref<{
 });
 const showTeamDisabledPill = computed(() => route.name === 'console' && !activeTeamEnabled.value);
 const showTopbarConnectionStatus = computed(() => route.name === 'console');
+const showTopbarBackToConsole = computed(() => route.name === 'settings');
 const statusLabel = computed(() => formatConnectionState(connectionState.value));
 const isLightMode = computed(() => themeMode.value === 'light');
 const scheduleResumePending = ref(false);
@@ -146,6 +147,15 @@ function openSettings(): void {
     name: 'settings',
     params: { teamId: activeTeamId.value, section: DEFAULT_SETTINGS_SECTION },
   }).catch(console.error);
+}
+
+function backToConsole(): void {
+  if (activeTeamId.value === null) {
+    router.push({ name: 'home' }).catch(console.error);
+    return;
+  }
+
+  router.push({ name: 'console', params: { teamId: activeTeamId.value } }).catch(console.error);
 }
 
 function selectTeam(teamId: number): void {
@@ -300,6 +310,7 @@ onBeforeUnmount(() => {
       :active-team-enabled-pending="isActiveTeamTogglePending"
       :show-team-disabled-pill="showTeamDisabledPill"
       :show-connection-status="showTopbarConnectionStatus"
+      :show-back-to-console="showTopbarBackToConsole"
       :schedule-state="scheduleState"
       :schedule-not-running-reason="scheduleNotRunningReason"
       :schedule-resume-pending="scheduleResumePending"
@@ -307,6 +318,7 @@ onBeforeUnmount(() => {
       @toggle-theme="toggleTheme"
       @select-team="selectTeam"
       @toggle-active-team-enabled="requestActiveTeamEnabledToggle"
+      @back-to-console="backToConsole"
       @open-settings="openSettings"
       @resume-schedule="handleResumeSchedule"
     />
