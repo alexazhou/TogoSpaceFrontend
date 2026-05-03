@@ -14,6 +14,17 @@ const toolResultRef = ref<HTMLElement | null>(null);
 const isToolResultOverflowing = ref(false);
 let toolResultObserver: ResizeObserver | null = null;
 
+function setToolResultRef(
+  element: Element | { $el?: Element | null } | null,
+): void {
+  if (element instanceof HTMLElement) {
+    toolResultRef.value = element;
+    return;
+  }
+  const maybeElement = element && typeof element === 'object' && '$el' in element ? element.$el : null;
+  toolResultRef.value = maybeElement instanceof HTMLElement ? maybeElement : null;
+}
+
 const toolName = computed(() => {
   const metadataToolName = props.activity.metadata?.tool_name;
   if (typeof metadataToolName === 'string' && metadataToolName.trim()) {
@@ -162,6 +173,11 @@ function getSendMessagePrefix(activity: AgentActivity): string {
 }
 
 function getActivityToolResult(activity: AgentActivity): string {
+  if (toolName.value === 'execute_bash') {
+    const stdout = getExecuteBashStdout(activity);
+    const stderr = getExecuteBashStderr(activity);
+    return [stdout, stderr].filter(Boolean).join('\n');
+  }
   if (toolName.value === 'write_file') {
     const toolArguments = activity.metadata?.tool_arguments;
     if (toolArguments && typeof toolArguments === 'object') {
@@ -195,6 +211,28 @@ function getActivityToolResult(activity: AgentActivity): string {
     }
   }
   return t('agent.parseFailed');
+}
+
+function getExecuteBashStdout(activity: AgentActivity): string {
+  const toolResult = activity.metadata?.tool_result;
+  if (!toolResult || typeof toolResult !== 'object') {
+    return '';
+  }
+  const stdout = (toolResult as { stdout?: unknown }).stdout;
+  return typeof stdout === 'string' ? stdout.trim() : '';
+}
+
+function getExecuteBashStderr(activity: AgentActivity): string {
+  const toolResult = activity.metadata?.tool_result;
+  if (!toolResult || typeof toolResult !== 'object') {
+    return '';
+  }
+  const stderr = (toolResult as { stderr?: unknown }).stderr;
+  return typeof stderr === 'string' ? stderr.trim() : '';
+}
+
+function isExecuteBashResult(activity: AgentActivity): boolean {
+  return activity.activity_type === 'tool_call' && toolName.value === 'execute_bash';
 }
 
 function activitySummary(activity: AgentActivity): string {
@@ -369,6 +407,7 @@ onBeforeUnmount(() => {
       'agent-activity-item--expanded': isExpandedContent(activity),
       'agent-activity-item--message': isExpandedMessage(activity),
       'agent-activity-item--tool-result': isExpandedToolResult(activity),
+      'agent-activity-item--bash-result': isExecuteBashResult(activity),
     }"
     :data-status="activity.status"
     :data-activity-type="activity.activity_type"
@@ -427,12 +466,27 @@ onBeforeUnmount(() => {
         <span class="agent-activity-item__tokens">{{ activityMetaTokens(activity) }}</span>
       </span>
     </div>
-    <p
-      v-if="isExpandedToolResult(activity)"
-      ref="toolResultRef"
-      class="agent-activity-item__tool-result"
-    >{{ getActivityToolResult(activity) }}</p>
-    <p v-if="isExpandedToolResult(activity) && isToolResultOverflowing" class="agent-activity-item__tool-result-ellipsis">...</p>
+    <template v-if="isExecuteBashResult(activity)">
+      <p
+        v-if="getExecuteBashStdout(activity)"
+        :ref="setToolResultRef"
+        class="agent-activity-item__tool-result agent-activity-item__tool-result--stdout"
+      >{{ getExecuteBashStdout(activity) }}</p>
+      <p
+        v-if="getExecuteBashStderr(activity)"
+        :ref="!getExecuteBashStdout(activity) ? setToolResultRef : undefined"
+        class="agent-activity-item__tool-result agent-activity-item__tool-result--stderr"
+      >{{ getExecuteBashStderr(activity) }}</p>
+      <p v-if="isToolResultOverflowing" class="agent-activity-item__tool-result-ellipsis">...</p>
+    </template>
+    <template v-else>
+      <p
+        v-if="isExpandedToolResult(activity)"
+        :ref="setToolResultRef"
+        class="agent-activity-item__tool-result"
+      >{{ getActivityToolResult(activity) }}</p>
+      <p v-if="isExpandedToolResult(activity) && isToolResultOverflowing" class="agent-activity-item__tool-result-ellipsis">...</p>
+    </template>
     <p v-if="activity.error_message" class="agent-activity-item__error">{{ activity.error_message }}</p>
   </article>
 </template>
@@ -774,6 +828,14 @@ onBeforeUnmount(() => {
   white-space: pre-wrap;
   overflow: hidden;
   max-height: calc(1.45em * 5);
+}
+
+.agent-activity-item__tool-result--stdout {
+  color: var(--text);
+}
+
+.agent-activity-item__tool-result--stderr {
+  color: var(--danger, #f85149);
 }
 
 .agent-activity-item__tool-result-ellipsis {
