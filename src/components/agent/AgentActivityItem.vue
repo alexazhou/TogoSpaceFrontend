@@ -162,6 +162,16 @@ function getSendMessagePrefix(activity: AgentActivity): string {
 }
 
 function getActivityToolResult(activity: AgentActivity): string {
+  if (toolName.value === 'write_file') {
+    const toolArguments = activity.metadata?.tool_arguments;
+    if (toolArguments && typeof toolArguments === 'object') {
+      const candidate = toolArguments as { content?: unknown; text?: unknown };
+      const writeContent = [candidate.content, candidate.text].find((item) => typeof item === 'string');
+      if (typeof writeContent === 'string' && writeContent.trim()) {
+        return writeContent.trim();
+      }
+    }
+  }
   const toolResult = activity.metadata?.tool_result;
   if (toolResult == null) {
     return '';
