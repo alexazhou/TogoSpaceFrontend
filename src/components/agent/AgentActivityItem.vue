@@ -133,25 +133,18 @@ function getActivityToolArguments(activity: AgentActivity): string {
   return formatToolArguments(toolArguments);
 }
 
-function getSendMessagePreview(activity: AgentActivity): string {
+function getSendMessageContent(activity: AgentActivity): string {
   const toolArguments = activity.metadata?.tool_arguments;
   if (toolArguments == null) {
     return '';
   }
-  const truncatePreview = (value: string): string => {
-    const normalized = value.replace(/\s+/g, ' ').trim();
-    if (!normalized) {
-      return '';
-    }
-    return normalized.length > 24 ? `${normalized.slice(0, 24)}...` : normalized;
-  };
   const extractMessage = (value: unknown): string => {
     if (typeof value !== 'object' || value === null) {
       return t('agent.parseFailed');
     }
     const candidate = value as { msg?: unknown; content?: unknown; text?: unknown };
     const message = [candidate.msg, candidate.content, candidate.text].find((item) => typeof item === 'string');
-    return typeof message === 'string' ? truncatePreview(message) : t('agent.parseFailed');
+    return typeof message === 'string' ? message.trim() : t('agent.parseFailed');
   };
   return extractMessage(toolArguments);
 }
@@ -167,8 +160,7 @@ function getSendMessagePrefix(activity: AgentActivity): string {
 function activitySummary(activity: AgentActivity): string {
   if (activity.activity_type === 'tool_call') {
     if (toolName.value === 'send_chat_msg') {
-      const preview = getSendMessagePreview(activity);
-      return preview;
+      return getSendMessageContent(activity);
     }
     if (toolName.value === 'finish_chat_turn') {
       return '';
@@ -254,13 +246,57 @@ function getActivityToolName(activity: AgentActivity): string {
   const toolName = activity.metadata?.tool_name;
   return typeof toolName === 'string' ? toolName : '';
 }
+
+function isExpandedContent(activity: AgentActivity): boolean {
+  return activity.activity_type === 'reasoning'
+    || (activity.activity_type === 'tool_call' && toolName.value === 'send_chat_msg');
+}
+
+function isExpandedMessage(activity: AgentActivity): boolean {
+  return activity.activity_type === 'tool_call' && toolName.value === 'send_chat_msg';
+}
+
+function shouldShowInlineTitle(activity: AgentActivity): boolean {
+  return !(
+    Boolean(activitySummary(activity))
+    || shouldShowToolName(activity)
+    || (activity.activity_type === 'llm_infer' && Boolean(getActivityModel(activity)))
+    || (activity.activity_type !== 'tool_call' && Boolean(getActivityToolName(activity)))
+  );
+}
+
+function summaryTitle(activity: AgentActivity): string {
+  if (isExpandedContent(activity)) {
+    return '';
+  }
+  return activitySummary(activity);
+}
 </script>
 
 <template>
-  <article class="agent-activity-item" :data-status="activity.status" :data-activity-type="activity.activity_type">
+  <article
+    class="agent-activity-item"
+    :class="{
+      'agent-activity-item--expanded': isExpandedContent(activity),
+      'agent-activity-item--message': isExpandedMessage(activity),
+    }"
+    :data-status="activity.status"
+    :data-activity-type="activity.activity_type"
+  >
     <div class="agent-activity-item__row">
-      <span class="agent-activity-item__state" :data-status="activity.status">{{ activityStatusSymbol(activity.status) }}</span>
-      <strong class="agent-activity-item__title">{{ activityTitle(activity) }}</strong>
+      <span class="agent-activity-item__state-anchor" tabindex="0">
+        <span class="agent-activity-item__state" :data-status="activity.status">{{ activityStatusSymbol(activity.status) }}</span>
+        <span class="agent-activity-item__state-popover">
+          <span class="agent-activity-item__state-row">
+            <span class="agent-activity-item__state-row-left">
+              <span class="agent-activity-item__state-title">{{ activityTitle(activity) }}</span>
+              <span class="agent-activity-item__state-meta agent-activity-item__state-meta--strong">{{ formatDuration(activity.duration_ms) }}</span>
+            </span>
+            <span class="agent-activity-item__state-meta">{{ formatActivityTime(activity.started_at) }}</span>
+          </span>
+        </span>
+      </span>
+      <strong v-if="shouldShowInlineTitle(activity)" class="agent-activity-item__title">{{ activityTitle(activity) }}</strong>
       <span
         v-if="shouldShowToolName(activity)"
         class="agent-activity-item__chip agent-activity-item__chip--mono agent-activity-item__tool-name"
@@ -285,7 +321,7 @@ function getActivityToolName(activity: AgentActivity): string {
         v-if="activitySummary(activity)"
         class="agent-activity-item__summary"
         :class="{ 'agent-activity-item__summary--code': !!getActivityToolCommand(activity) }"
-        :title="activitySummary(activity)"
+        :title="summaryTitle(activity)"
       >{{ activitySummary(activity) }}</span>
       <span
         v-if="activity.activity_type !== 'llm_infer' && getActivityModel(activity)"
@@ -297,11 +333,8 @@ function getActivityToolName(activity: AgentActivity): string {
         class="agent-activity-item__chip agent-activity-item__chip--mono"
         :title="getActivityToolName(activity)"
       >{{ getActivityToolName(activity) }}</span>
-      <span class="agent-activity-item__tail">
-        <span v-if="activityMetaTokens(activity)" class="agent-activity-item__tokens">{{ activityMetaTokens(activity) }}</span>
-        <span class="agent-activity-item__status">{{ activityStatusLabel(activity.status) }}</span>
-        <span class="agent-activity-item__time" :title="formatActivityTime(activity.started_at)">{{ formatActivityTimeCompact(activity.started_at) }}</span>
-        <span class="agent-activity-item__duration">{{ formatDuration(activity.duration_ms) }}</span>
+      <span v-if="activityMetaTokens(activity)" class="agent-activity-item__tail">
+        <span class="agent-activity-item__tokens">{{ activityMetaTokens(activity) }}</span>
       </span>
     </div>
     <p v-if="activity.error_message" class="agent-activity-item__error">{{ activity.error_message }}</p>
@@ -337,6 +370,15 @@ function getActivityToolName(activity: AgentActivity): string {
   overflow: hidden;
 }
 
+.agent-activity-item__state-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  outline: none;
+}
+
 .agent-activity-item__state {
   flex: none;
   width: 14px;
@@ -359,6 +401,74 @@ function getActivityToolName(activity: AgentActivity): string {
 .agent-activity-item__state[data-status='failed'],
 .agent-activity-item__state[data-status='cancelled'] {
   color: var(--danger, #f85149);
+}
+
+.agent-activity-item__state-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  display: grid;
+  gap: 8px;
+  min-width: 164px;
+  max-width: 220px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
+  background: var(--surface-elevated);
+  box-shadow: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    visibility 120ms ease;
+}
+
+.agent-activity-item__state-title {
+  color: var(--text-strong);
+  font-size: 0.78rem;
+  line-height: 1.25;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.agent-activity-item__state-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.agent-activity-item__state-row-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.agent-activity-item__state-anchor:hover .agent-activity-item__state-popover,
+.agent-activity-item__state-anchor:focus-visible .agent-activity-item__state-popover,
+.agent-activity-item__state-anchor:focus-within .agent-activity-item__state-popover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.agent-activity-item__state-meta {
+  color: var(--text);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0.88;
+}
+
+.agent-activity-item__state-meta--strong {
+  font-weight: 600;
+  opacity: 1;
 }
 
 .agent-activity-item__title {
@@ -430,18 +540,6 @@ function getActivityToolName(activity: AgentActivity): string {
   font-variant-numeric: tabular-nums;
 }
 
-.agent-activity-item__time {
-  width: 56px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.agent-activity-item__duration {
-  width: 40px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
 .agent-activity-item[data-status='started'] .agent-activity-item__status {
   background: color-mix(in srgb, var(--good) 16%, transparent);
   color: color-mix(in srgb, var(--good) 84%, var(--text) 16%);
@@ -492,10 +590,52 @@ function getActivityToolName(activity: AgentActivity): string {
   color: var(--danger, #f85149);
   font-size: 0.7rem;
   line-height: 1.35;
-  padding-left: 20px;
+  padding-left: 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.agent-activity-item--expanded .agent-activity-item__row {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+
+.agent-activity-item--expanded .agent-activity-item__state-anchor {
+  margin-top: 0.18rem;
+}
+
+.agent-activity-item--expanded .agent-activity-item__summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 0;
+  white-space: pre-wrap;
+  overflow: visible;
+  text-overflow: clip;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.agent-activity-item--expanded .agent-activity-item__tail {
+  margin-left: auto;
+  width: auto;
+  padding-left: 8px;
+}
+
+.agent-activity-item--message .agent-activity-item__row {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.agent-activity-item--message .agent-activity-item__summary {
+  flex: 1 0 100%;
+  order: 10;
+  padding-left: 22px;
+}
+
+.agent-activity-item--message .agent-activity-item__tail {
+  order: 11;
 }
 
 @keyframes agent-activity-item-dot-pulse {
