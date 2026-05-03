@@ -45,6 +45,16 @@ function activityStatusLabel(status: AgentActivityStatus): string {
   return t('agent.activityState.cancelled');
 }
 
+function activityStatusSymbol(status: AgentActivityStatus): string {
+  if (status === 'started') {
+    return '●';
+  }
+  if (status === 'succeeded') {
+    return '✓';
+  }
+  return '×';
+}
+
 function shouldShowToolName(activity: AgentActivity): boolean {
   if (activity.activity_type !== 'tool_call') {
     return false;
@@ -195,6 +205,14 @@ function formatActivityTime(value: string | null | undefined): string {
   return value.replace('T', ' ').slice(0, 19);
 }
 
+function formatActivityTimeCompact(value: string | null | undefined): string {
+  if (!value) {
+    return '';
+  }
+  const normalized = formatActivityTime(value);
+  return normalized.slice(-8);
+}
+
 function formatDuration(durationMs: number | null | undefined): string {
   if (durationMs == null || Number.isNaN(durationMs)) {
     return '0ms';
@@ -241,31 +259,48 @@ function getActivityToolName(activity: AgentActivity): string {
 <template>
   <article class="agent-activity-item" :data-status="activity.status" :data-activity-type="activity.activity_type">
     <div class="agent-activity-item__row">
-      <span v-if="activity.status === 'started'" class="agent-activity-item__dot"></span>
-      <span v-else-if="activity.status === 'succeeded'" class="agent-activity-item__mark agent-activity-item__mark--ok">✓</span>
-      <span v-else-if="activity.status === 'failed' || activity.status === 'cancelled'" class="agent-activity-item__mark agent-activity-item__mark--fail">✗</span>
+      <span class="agent-activity-item__state" :data-status="activity.status">{{ activityStatusSymbol(activity.status) }}</span>
       <strong class="agent-activity-item__title">{{ activityTitle(activity) }}</strong>
-      <span v-if="shouldShowToolName(activity)" class="agent-activity-item__summary agent-activity-item__summary--code agent-activity-item__primary-meta agent-activity-item__tool-name">{{ toolName }}</span>
+      <span
+        v-if="shouldShowToolName(activity)"
+        class="agent-activity-item__chip agent-activity-item__chip--mono agent-activity-item__tool-name"
+        :title="toolName"
+      >{{ toolName }}</span>
       <span
         v-if="shouldShowToolName(activity) && getActivityToolArguments(activity)"
         class="agent-activity-item__summary agent-activity-item__summary--code agent-activity-item__tool-args"
+        :title="getActivityToolArguments(activity)"
       >{{ getActivityToolArguments(activity) }}</span>
-      <span v-if="activity.activity_type === 'llm_infer' && getActivityModel(activity)" class="agent-activity-item__primary-meta">{{ getActivityModel(activity) }}</span>
+      <span
+        v-if="activity.activity_type === 'llm_infer' && getActivityModel(activity)"
+        class="agent-activity-item__chip agent-activity-item__chip--mono"
+        :title="getActivityModel(activity)"
+      >{{ getActivityModel(activity) }}</span>
       <span
         v-if="toolName === 'send_chat_msg' && getSendMessagePrefix(activity)"
-        class="agent-activity-item__summary agent-activity-item__primary-meta"
+        class="agent-activity-item__chip"
+        :title="getSendMessagePrefix(activity)"
       >{{ getSendMessagePrefix(activity) }}</span>
       <span
         v-if="activitySummary(activity)"
         class="agent-activity-item__summary"
         :class="{ 'agent-activity-item__summary--code': !!getActivityToolCommand(activity) }"
+        :title="activitySummary(activity)"
       >{{ activitySummary(activity) }}</span>
-      <span v-if="activity.activity_type !== 'llm_infer' && getActivityModel(activity)" class="agent-activity-item__primary-meta">{{ getActivityModel(activity) }}</span>
-      <span v-if="activity.activity_type !== 'tool_call' && getActivityToolName(activity)" class="agent-activity-item__primary-meta agent-activity-item__summary--code">{{ getActivityToolName(activity) }}</span>
+      <span
+        v-if="activity.activity_type !== 'llm_infer' && getActivityModel(activity)"
+        class="agent-activity-item__chip agent-activity-item__chip--mono"
+        :title="getActivityModel(activity)"
+      >{{ getActivityModel(activity) }}</span>
+      <span
+        v-if="activity.activity_type !== 'tool_call' && getActivityToolName(activity)"
+        class="agent-activity-item__chip agent-activity-item__chip--mono"
+        :title="getActivityToolName(activity)"
+      >{{ getActivityToolName(activity) }}</span>
       <span class="agent-activity-item__tail">
         <span v-if="activityMetaTokens(activity)" class="agent-activity-item__tokens">{{ activityMetaTokens(activity) }}</span>
         <span class="agent-activity-item__status">{{ activityStatusLabel(activity.status) }}</span>
-        <span class="agent-activity-item__time">{{ formatActivityTime(activity.started_at) }}</span>
+        <span class="agent-activity-item__time" :title="formatActivityTime(activity.started_at)">{{ formatActivityTimeCompact(activity.started_at) }}</span>
         <span class="agent-activity-item__duration">{{ formatDuration(activity.duration_ms) }}</span>
       </span>
     </div>
@@ -276,86 +311,100 @@ function getActivityToolName(activity: AgentActivity): string {
 <style scoped>
 .agent-activity-item {
   display: grid;
-  gap: 4px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: var(--surface-soft);
-  border: 1px solid var(--panel-border);
+  gap: 3px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--panel-bg) 94%, var(--surface-soft) 6%);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
 }
 
 .agent-activity-item[data-status='started'] {
-  background: rgba(125, 163, 224, 0.08);
-  border: 1px solid rgba(125, 163, 224, 0.18);
-  box-shadow: none;
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel-bg) 94%);
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--panel-border) 80%);
 }
 
 .agent-activity-item[data-status='failed'] {
-  border-color: color-mix(in srgb, var(--danger, #f85149) 30%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger, #f85149) 10%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--danger, #f85149) 26%, var(--panel-border) 74%);
+  background: color-mix(in srgb, var(--danger, #f85149) 7%, var(--panel-bg) 93%);
 }
 
 .agent-activity-item__row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
   flex-wrap: nowrap;
   overflow: hidden;
 }
 
-.agent-activity-item__dot {
-  position: relative;
-  width: 12px;
-  height: 12px;
-  flex: 0 0 12px;
+.agent-activity-item__state {
+  flex: none;
+  width: 14px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--muted);
 }
 
-.agent-activity-item__dot::before {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  border-radius: 999px;
-  background: var(--good);
+.agent-activity-item__state[data-status='started'] {
+  color: var(--good);
   animation: agent-activity-item-dot-pulse 2s ease-in-out infinite;
 }
 
-.agent-activity-item__mark {
-  flex: none;
-  font-size: 0.82rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.agent-activity-item__mark--ok {
+.agent-activity-item__state[data-status='succeeded'] {
   color: var(--good);
 }
 
-.agent-activity-item__mark--fail {
+.agent-activity-item__state[data-status='failed'],
+.agent-activity-item__state[data-status='cancelled'] {
   color: var(--danger, #f85149);
 }
 
 .agent-activity-item__title {
   flex: none;
   color: var(--text-strong);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   line-height: 1.2;
 }
 
-.agent-activity-item__status,
 .agent-activity-item__row span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   line-height: 1.2;
+}
+
+.agent-activity-item__chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  max-width: 180px;
+  min-width: 0;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-soft) 74%, transparent);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-activity-item__chip--mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.68rem;
 }
 
 .agent-activity-item__status {
   flex: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 18px;
   padding: 0 6px;
-  height: 20px;
   border-radius: 999px;
-  background: rgba(125, 163, 224, 0.1);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: color-mix(in srgb, var(--accent) 76%, var(--text) 24%);
   font-weight: 600;
 }
@@ -365,9 +414,10 @@ function getActivityToolName(activity: AgentActivity): string {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0;
+  gap: 8px;
   flex: none;
   min-width: max-content;
+  padding-left: 8px;
 }
 
 .agent-activity-item__tail > * {
@@ -375,42 +425,31 @@ function getActivityToolName(activity: AgentActivity): string {
 }
 
 .agent-activity-item__tokens {
-  min-width: 70px;
+  min-width: 66px;
   text-align: right;
-  margin-right: 6px;
-}
-
-.agent-activity-item__status {
-  justify-content: center;
-  min-width: 42px;
-  margin-right: 1px;
+  font-variant-numeric: tabular-nums;
 }
 
 .agent-activity-item__time {
-  width: auto;
+  width: 56px;
   text-align: right;
-  margin-left: 4px;
-  margin-right: 2px;
+  font-variant-numeric: tabular-nums;
 }
 
 .agent-activity-item__duration {
-  width: 36px;
+  width: 40px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .agent-activity-item[data-status='started'] .agent-activity-item__status {
-  margin-left: 4px;
-  padding: 0;
-  height: auto;
-  border-radius: 0;
-  background: transparent;
-  color: var(--accent);
+  background: color-mix(in srgb, var(--good) 16%, transparent);
+  color: color-mix(in srgb, var(--good) 84%, var(--text) 16%);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__status {
-  background: color-mix(in srgb, var(--danger, #f85149) 38%, var(--panel-bg) 62%);
-  color: #fff;
-  text-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.12);
+  background: color-mix(in srgb, var(--danger, #f85149) 18%, transparent);
+  color: var(--danger, #f85149);
 }
 
 .agent-activity-item__summary {
@@ -422,12 +461,6 @@ function getActivityToolName(activity: AgentActivity): string {
   text-overflow: ellipsis;
 }
 
-.agent-activity-item__primary-meta {
-  flex: none;
-  color: var(--text);
-  font-weight: 600;
-}
-
 .agent-activity-item__tool-name,
 .agent-activity-item__tool-args {
   min-width: 0;
@@ -435,22 +468,14 @@ function getActivityToolName(activity: AgentActivity): string {
 }
 
 .agent-activity-item__tool-name {
-  flex: none;
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: 150px;
 }
 
 .agent-activity-item__tool-args {
-  flex: 0 1 280px;
-  max-width: 280px;
+  flex: 0 1 240px;
+  max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.agent-activity-item[data-activity-type='tool_call'] .agent-activity-item__tail {
-  flex: 1 0 auto;
-  min-width: 0;
 }
 
 .agent-activity-item[data-status='started'] .agent-activity-item__summary {
@@ -459,14 +484,15 @@ function getActivityToolName(activity: AgentActivity): string {
 
 .agent-activity-item__summary--code {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 0.75rem;
+  font-size: 0.69rem;
 }
 
 .agent-activity-item__error {
   margin: 0;
   color: var(--danger, #f85149);
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   line-height: 1.35;
+  padding-left: 20px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
