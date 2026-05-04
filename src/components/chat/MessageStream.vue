@@ -72,6 +72,15 @@ function resolveSenderDisplayName(senderId: number): string {
   return profile ? displayName(profile) : String(senderId);
 }
 
+type MessageStatus = 'published' | 'immediate' | 'pending-immediate' | 'queued';
+
+function resolveMessageStatus(message: MessageInfo): MessageStatus {
+  if (message.seq !== null) {
+    return message.insert_immediately ? 'immediate' : 'published';
+  }
+  return message.insert_immediately ? 'pending-immediate' : 'queued';
+}
+
 function updateScrollbarState(): void {
   const stream = streamRef.value;
   if (!stream) {
@@ -137,7 +146,7 @@ onBeforeUnmount(() => {
   <div ref="streamRef" class="message-stream" :class="{ 'has-scrollbar': hasScrollbar }">
     <div
       v-for="(message, index) in messages"
-      :key="`${message.time}-${message.sender_id}-${index}`"
+      :key="message.db_id ?? `${message.time}-${message.sender_id}-${index}`"
       class="message-row"
       :class="`side-${bubbleSide(message.sender_id)}`"
     >
@@ -157,7 +166,21 @@ onBeforeUnmount(() => {
             </span>
           </template>
           <span class="time">{{ formatTime(message.time) }}</span>
-          <span v-if="message.insert_immediately" class="badge-immediate" title="立即注入">⚡</span>
+          <span
+            v-if="resolveMessageStatus(message) === 'queued'"
+            class="msg-status msg-status--queued"
+            title="消息排队中，等待 Agent 回复后注入"
+          >⏳ 排队中</span>
+          <span
+            v-else-if="resolveMessageStatus(message) === 'pending-immediate'"
+            class="msg-status msg-status--pending-immediate"
+            title="立即注入，等待发布"
+          >⚡ 等待注入</span>
+          <span
+            v-else-if="resolveMessageStatus(message) === 'immediate'"
+            class="msg-status msg-status--immediate"
+            title="已立即注入"
+          >⚡</span>
           <template v-if="bubbleSide(message.sender_id) === 'right'">
             <span class="sender" :style="{ color: senderColor(resolveSenderStableName(message.sender_id)) }">
               {{ resolveSenderDisplayName(message.sender_id) }}
@@ -169,7 +192,7 @@ onBeforeUnmount(() => {
             />
           </template>
         </div>
-        <div class="bubble">{{ message.content }}</div>
+        <div class="bubble" :class="{ 'bubble--pending': message.seq === null }">{{ message.content }}</div>
       </template>
     </div>
 
@@ -280,10 +303,24 @@ onBeforeUnmount(() => {
   color: var(--text-tertiary);
 }
 
-.badge-immediate {
+.badge-immediate,
+.msg-status {
   font-size: 0.72rem;
-  color: #f59e0b;
   line-height: 1;
+}
+
+.msg-status--immediate {
+  color: #f59e0b;
+}
+
+.msg-status--queued {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.msg-status--pending-immediate {
+  color: #f59e0b;
+  font-style: italic;
 }
 
 .bubble,
@@ -303,6 +340,11 @@ onBeforeUnmount(() => {
   color: var(--bubble-left-text, inherit);
   border: 1px solid color-mix(in srgb, var(--border-default) 18%, transparent);
   box-shadow: var(--bubble-shadow, none);
+  transition: opacity 0.25s ease;
+}
+
+.bubble--pending {
+  opacity: 0.55;
 }
 
 .side-right .bubble {
