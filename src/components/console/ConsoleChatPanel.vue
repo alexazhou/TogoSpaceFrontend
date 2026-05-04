@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { postRoomMessage } from '../../api';
 import { useConsoleMessageScroll } from '../../composables/useConsoleMessageScroll';
@@ -32,6 +32,7 @@ const emit = defineEmits<{
 
 const messageViewport = useTemplateRef('messageViewport');
 const draft = defineModel<string>('draft', { default: '' });
+const insertImmediately = ref(false);
 
 const {
   shouldFollowMessages,
@@ -151,8 +152,9 @@ async function handleSubmit(): Promise<void> {
   emit('updateError', '');
 
   try {
-    await postRoomMessage(props.currentRoom.room_id, content);
+    await postRoomMessage(props.currentRoom.room_id, content, insertImmediately.value);
     draft.value = '';
+    insertImmediately.value = false;
   } catch (error) {
     emit('updateError', '消息发送失败。');
     console.error(error);
@@ -199,7 +201,9 @@ onBeforeUnmount(() => {
       :reloading-messages="reloadingMessages"
       :draft="draft"
       :composer-notice="composerNotice"
+      :insert-immediately="insertImmediately"
       @update-draft="draft = $event"
+      @update-insert-immediately="insertImmediately = $event"
       @submit="handleSubmit"
       @click-working-agent="emit('clickWorkingAgent', $event)"
     />

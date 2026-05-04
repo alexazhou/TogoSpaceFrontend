@@ -67,6 +67,8 @@ export interface MessageInfo {
   sender_id: number;
   content: string;
   time: string;
+  seq?: number | null;
+  insert_immediately?: boolean;
 }
 
 export interface WsMessageEvent {

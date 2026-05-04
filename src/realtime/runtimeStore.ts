@@ -48,6 +48,8 @@ function normalizeMessage(teamId: number, raw: RawMessageInfo): MessageInfo {
     sender_id: raw.agent_id,
     content: raw.content,
     time: raw.send_time,
+    seq: raw.seq,
+    insert_immediately: raw.insert_immediately,
   };
 }
 

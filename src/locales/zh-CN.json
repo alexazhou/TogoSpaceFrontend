@@ -153,11 +153,14 @@
     "teamDisabled": "当前团队已停用，请先启用再发送消息。",
     "sendFailed": "消息发送失败。",
     "waitingSpeaker": "等待 {name} 发言",
-    "processing": "{name} 处理中"
+    "processing": "{name} 处理中",
+    "insertImmediately": "立即注入",
+    "insertImmediatelyTip": "消息将在 Agent 下次读取前注入到对话流"
   },
   "console": {
-    "mobileNoRoomHint": "先从聊天室列表选择一个会话，再进入移动端消息流。",
-    "mobileSelectRoom": "选择聊天室"
+    "loadFailed": "加载消息失败，请检查网络或后端状态。",
+    "connectFailed": "无法连接到后端服务，请确认服务已启动。",
+    "adjustHeight": "调整聊天室和成员卡片高度"
   },
   "team": {
     "info": "团队信息",
@@ -498,11 +501,6 @@
     "noRooms": "当前团队还没有房间。",
     "loadFailed": "团队详情加载失败。",
     "templateFallback": "模板 #{id}"
-  },
-  "console": {
-    "loadFailed": "加载消息失败，请检查网络或后端状态。",
-    "connectFailed": "无法连接到后端服务，请确认服务已启动。",
-    "adjustHeight": "调整聊天室和成员卡片高度"
   },
   "auth": {
     "dialogEyebrow": "访问鉴权",

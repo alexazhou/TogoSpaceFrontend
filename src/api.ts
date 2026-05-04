@@ -747,6 +747,8 @@ export type RawMessageInfo = {
   agent_id: number;
   content: string;
   send_time: string;
+  seq: number | null;
+  insert_immediately: boolean;
 };
 
 export async function getRoomMessages(roomId: number): Promise<RawMessageInfo[]> {
@@ -756,10 +758,16 @@ export async function getRoomMessages(roomId: number): Promise<RawMessageInfo[]>
   return data.messages;
 }
 
-export async function postRoomMessage(roomId: number, content: string): Promise<void> {
+export async function postRoomMessage(roomId: number, content: string, insertImmediately = false): Promise<void> {
   await requestJson(`/rooms/${roomId}/messages/send.json`, {
     method: 'POST',
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, insert_immediately: insertImmediately }),
+  });
+}
+
+export async function escalateMessageToImmediate(roomId: number, msgId: number): Promise<void> {
+  await requestJson(`/rooms/${roomId}/messages/${msgId}/escalate_to_immediate.json`, {
+    method: 'POST',
   });
 }
 

@@ -153,11 +153,14 @@
     "teamDisabled": "This team is disabled. Please enable it before sending messages.",
     "sendFailed": "Failed to send message.",
     "waitingSpeaker": "Waiting for {name} to speak",
-    "processing": "{name} processing"
+    "processing": "{name} processing",
+    "insertImmediately": "Insert Immediately",
+    "insertImmediatelyTip": "Message will be injected before the agent reads next"
   },
   "console": {
-    "mobileNoRoomHint": "Pick a room first, then continue the conversation in the mobile message view.",
-    "mobileSelectRoom": "Select a room"
+    "loadFailed": "Failed to load messages. Check network or backend status.",
+    "connectFailed": "Cannot connect to backend. Please ensure the service is started.",
+    "adjustHeight": "Adjust chat room and member card height"
   },
   "team": {
     "info": "Team Info",
@@ -498,11 +501,6 @@
     "noRooms": "No rooms in this team.",
     "loadFailed": "Failed to load team details.",
     "templateFallback": "Template #{id}"
-  },
-  "console": {
-    "loadFailed": "Failed to load messages. Check network or backend status.",
-    "connectFailed": "Cannot connect to backend. Please ensure the service is started.",
-    "adjustHeight": "Adjust chat room and member card height"
   },
   "auth": {
     "dialogEyebrow": "Authentication",

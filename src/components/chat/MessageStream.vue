@@ -157,6 +157,7 @@ onBeforeUnmount(() => {
             </span>
           </template>
           <span class="time">{{ formatTime(message.time) }}</span>
+          <span v-if="message.insert_immediately" class="badge-immediate" title="立即注入">⚡</span>
           <template v-if="bubbleSide(message.sender_id) === 'right'">
             <span class="sender" :style="{ color: senderColor(resolveSenderStableName(message.sender_id)) }">
               {{ resolveSenderDisplayName(message.sender_id) }}
@@ -277,6 +278,12 @@ onBeforeUnmount(() => {
 
 .time {
   color: var(--text-tertiary);
+}
+
+.badge-immediate {
+  font-size: 0.72rem;
+  color: #f59e0b;
+  line-height: 1;
 }
 
 .bubble,

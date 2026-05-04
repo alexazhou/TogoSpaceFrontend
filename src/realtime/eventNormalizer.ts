@@ -131,6 +131,8 @@ export function normalizeWsEventPayload(payload: unknown): FrontendRealtimeEvent
         sender_id: Number(raw.sender_id ?? 0),
         content: String(raw.content ?? ''),
         time: String(raw.time ?? ''),
+        seq: typeof raw.seq === 'number' ? raw.seq : null,
+        insert_immediately: Boolean(raw.insert_immediately),
       },
     };
   }
