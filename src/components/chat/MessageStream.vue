@@ -9,10 +9,12 @@ const props = defineProps<{
   messages: MessageInfo[];
   memberProfiles: RoomMemberProfile[];
   workingAgent?: RoomMemberProfile | null;
+  escalatingMessageIds?: number[];
 }>();
 
 const emit = defineEmits<{
   clickWorkingAgent: [agentId: number];
+  escalateMessage: [messageId: number];
 }>();
 
 const { t } = useI18n();
@@ -86,6 +88,10 @@ const floatingMessages = computed(() => props.messages.filter((message) => messa
 
 function messageKey(message: MessageInfo, index: number): string {
   return String(message.db_id ?? `${message.time}-${message.sender_id}-${index}`);
+}
+
+function isEscalatingMessage(message: MessageInfo): boolean {
+  return message.db_id !== null && Boolean(props.escalatingMessageIds?.includes(message.db_id));
 }
 
 function updateScrollbarState(): void {
@@ -247,6 +253,15 @@ onBeforeUnmount(() => {
           class="floating-message-status floating-message-status--pending-immediate"
           title="立即注入，等待发布"
         >⚡ 等待注入</span>
+        <button
+          v-if="resolveMessageStatus(message) === 'queued' && message.db_id !== null"
+          type="button"
+          class="floating-message-action"
+          :disabled="isEscalatingMessage(message)"
+          @click="emit('escalateMessage', message.db_id)"
+        >
+          {{ isEscalatingMessage(message) ? t('chat.guidingNow') : t('chat.guideNow') }}
+        </button>
       </div>
     </div>
   </div>
@@ -501,6 +516,35 @@ onBeforeUnmount(() => {
   background: color-mix(in srgb, #f59e0b 14%, white 86%);
 }
 
+.floating-message-action {
+  flex-shrink: 0;
+  min-height: 24px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--interactive-focus-border) 38%, var(--border-default) 62%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-chat) 70%, var(--surface-panel) 30%);
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    color 140ms ease,
+    opacity 140ms ease;
+}
+
+.floating-message-action:hover:not(:disabled) {
+  border-color: var(--interactive-focus-border);
+  background: color-mix(in srgb, var(--interactive-selected) 18%, var(--surface-panel) 82%);
+}
+
+.floating-message-action:disabled {
+  opacity: 0.58;
+  cursor: default;
+}
+
 .floating-message-content {
   min-width: 0;
   flex: 1;
@@ -530,6 +574,12 @@ onBeforeUnmount(() => {
 
 :global(html.bp-compact) .floating-message-content {
   font-size: 0.8rem;
+}
+
+:global(html.bp-compact) .floating-message-action {
+  min-height: 22px;
+  padding: 0 8px;
+  font-size: 0.68rem;
 }
 
 .working-indicator {

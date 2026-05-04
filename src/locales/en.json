@@ -152,10 +152,13 @@
     "observeMode": "Observe mode active. Please send messages in private rooms.",
     "teamDisabled": "This team is disabled. Please enable it before sending messages.",
     "sendFailed": "Failed to send message.",
+    "escalateFailed": "Failed to guide message immediately.",
     "waitingSpeaker": "Waiting for {name} to speak",
     "processing": "{name} processing",
     "insertImmediately": "Insert Immediately",
-    "insertImmediatelyTip": "Message will be injected before the agent reads next"
+    "insertImmediatelyTip": "Message will be injected before the agent reads next",
+    "guideNow": "Guide Now",
+    "guidingNow": "Guiding..."
   },
   "console": {
     "loadFailed": "Failed to load messages. Check network or backend status.",

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { postRoomMessage } from '../../api';
+import { escalateMessageToImmediate, postRoomMessage } from '../../api';
 import { useConsoleMessageScroll } from '../../composables/useConsoleMessageScroll';
 import { displayName } from '../../utils';
 import ChatPanel from '../chat/ChatPanel.vue';
@@ -33,6 +33,7 @@ const emit = defineEmits<{
 const messageViewport = useTemplateRef('messageViewport');
 const draft = defineModel<string>('draft', { default: '' });
 const insertImmediately = ref(false);
+const escalatingMessageIds = ref<number[]>([]);
 
 const {
   shouldFollowMessages,
@@ -161,6 +162,24 @@ async function handleSubmit(): Promise<void> {
   }
 }
 
+async function handleEscalateMessage(messageId: number): Promise<void> {
+  if (!props.currentRoom || escalatingMessageIds.value.includes(messageId)) {
+    return;
+  }
+
+  emit('updateError', '');
+  escalatingMessageIds.value = [...escalatingMessageIds.value, messageId];
+
+  try {
+    await escalateMessageToImmediate(props.currentRoom.room_id, messageId);
+  } catch (error) {
+    emit('updateError', t('chat.escalateFailed'));
+    console.error(error);
+  } finally {
+    escalatingMessageIds.value = escalatingMessageIds.value.filter((id) => id !== messageId);
+  }
+}
+
 watch(
   () => props.currentRoom?.room_id ?? null,
   async () => {
@@ -202,10 +221,12 @@ onBeforeUnmount(() => {
       :draft="draft"
       :composer-notice="composerNotice"
       :insert-immediately="insertImmediately"
+      :escalating-message-ids="escalatingMessageIds"
       @update-draft="draft = $event"
       @update-insert-immediately="insertImmediately = $event"
       @submit="handleSubmit"
       @click-working-agent="emit('clickWorkingAgent', $event)"
+      @escalate-message="handleEscalateMessage"
     />
   </div>
 </template>

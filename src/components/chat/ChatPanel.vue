@@ -16,6 +16,7 @@ const props = defineProps<{
   draft: string;
   composerNotice: string;
   insertImmediately?: boolean;
+  escalatingMessageIds?: number[];
 }>();
 
 const emit = defineEmits<{
@@ -23,6 +24,7 @@ const emit = defineEmits<{
   updateInsertImmediately: [value: boolean];
   submit: [];
   clickWorkingAgent: [agentId: number];
+  escalateMessage: [messageId: number];
 }>();
 
 const { t } = useI18n();
@@ -129,7 +131,9 @@ function handleEnterKey(e: KeyboardEvent): void {
         :messages="messages"
         :member-profiles="memberProfiles"
         :working-agent="workingAgent"
+        :escalating-message-ids="escalatingMessageIds"
         @click-working-agent="emit('clickWorkingAgent', $event)"
+        @escalate-message="emit('escalateMessage', $event)"
       />
     </div>
 

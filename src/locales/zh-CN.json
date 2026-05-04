@@ -152,10 +152,13 @@
     "observeMode": "当前为观察模式，请在私聊房间向对应 Agent 发送消息。",
     "teamDisabled": "当前团队已停用，请先启用再发送消息。",
     "sendFailed": "消息发送失败。",
+    "escalateFailed": "立即引导失败。",
     "waitingSpeaker": "等待 {name} 发言",
     "processing": "{name} 处理中",
     "insertImmediately": "立即注入",
-    "insertImmediatelyTip": "消息将在 Agent 下次读取前注入到对话流"
+    "insertImmediatelyTip": "消息将在 Agent 下次读取前注入到对话流",
+    "guideNow": "立即引导",
+    "guidingNow": "引导中..."
   },
   "console": {
     "loadFailed": "加载消息失败，请检查网络或后端状态。",
