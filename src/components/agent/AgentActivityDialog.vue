@@ -427,20 +427,22 @@ watch(
               </section>
 
               <section class="agent-supervise-section">
-                <div class="agent-supervise-section__editor" :class="{ 'is-focused': superviseFocused }">
-                  <textarea
-                    ref="superviseTextareaRef"
-                    v-model="superviseContent"
-                    class="agent-supervise-section__textarea"
-                    :placeholder="t('agent.supervise.placeholder')"
-                    rows="1"
-                    :disabled="supervising"
-                    @focus="superviseFocused = true"
-                    @blur="superviseFocused = false"
-                    @input="autoGrowSupervise"
-                    @keydown.ctrl.enter.prevent="sendSupervise"
-                    @keydown.meta.enter.prevent="sendSupervise"
-                  />
+                <div class="agent-supervise-section__input-row">
+                  <div class="agent-supervise-section__editor" :class="{ 'is-focused': superviseFocused }">
+                    <textarea
+                      ref="superviseTextareaRef"
+                      v-model="superviseContent"
+                      class="agent-supervise-section__textarea"
+                      :placeholder="t('agent.supervise.placeholder')"
+                      rows="1"
+                      :disabled="supervising"
+                      @focus="superviseFocused = true"
+                      @blur="superviseFocused = false"
+                      @input="autoGrowSupervise"
+                      @keydown.ctrl.enter.prevent="sendSupervise"
+                      @keydown.meta.enter.prevent="sendSupervise"
+                    />
+                  </div>
                   <button
                     type="button"
                     class="agent-supervise-section__send"
@@ -887,12 +889,19 @@ watch(
   box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.5);
 }
 
+.agent-supervise-section__input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
 .agent-supervise-section__editor {
+  flex: 1;
+  min-width: 0;
   background: var(--surface-input);
   border: 1px solid color-mix(in srgb, var(--border-subtle) 78%, var(--border-default) 22%);
   border-radius: 8px;
   overflow: hidden;
-  position: relative;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease;
@@ -909,13 +918,13 @@ watch(
   resize: none;
   border: none;
   border-radius: 0;
-  padding: 9px 70px 9px 12px;
+  padding: 7px 10px;
   font-size: 0.8rem;
   font-family: inherit;
   background: transparent;
   color: var(--text-primary);
   line-height: 1.4;
-  min-height: 36px;
+  min-height: 30px;
   max-height: 160px;
   overflow-y: auto;
   outline: none;
@@ -931,9 +940,7 @@ watch(
 }
 
 .agent-supervise-section__send {
-  position: absolute;
-  right: 7px;
-  bottom: 7px;
+  flex-shrink: 0;
   border: 0;
   border-radius: 6px;
   padding: 5px 10px;
@@ -942,6 +949,7 @@ watch(
   font-weight: 700;
   cursor: pointer;
   font-size: 0.74rem;
+  white-space: nowrap;
   transition: opacity 0.15s;
 }
 
