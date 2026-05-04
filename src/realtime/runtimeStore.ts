@@ -55,6 +55,28 @@ function normalizeMessage(teamId: number, raw: RawMessageInfo): MessageInfo {
   };
 }
 
+function compareMessages(left: MessageInfo, right: MessageInfo): number {
+  if (left.seq !== null && right.seq !== null) {
+    return left.seq - right.seq;
+  }
+  if (left.seq !== null) {
+    return -1;
+  }
+  if (right.seq !== null) {
+    return 1;
+  }
+
+  if (left.db_id !== null && right.db_id !== null) {
+    return left.db_id - right.db_id;
+  }
+
+  return left.time.localeCompare(right.time);
+}
+
+function sortMessages(messages: MessageInfo[]): MessageInfo[] {
+  return [...messages].sort(compareMessages);
+}
+
 function resolveMessageSenderDisplayName(teamId: number, senderId: number): string {
   if (senderId === -1) {
     return 'OPERATOR';
@@ -194,7 +216,7 @@ export async function loadTeamRooms(teamId: number): Promise<RoomState[]> {
 export function seedRoomMessages(roomId: number, messages: MessageInfo[]): void {
   roomMessagesState.value = {
     ...roomMessagesState.value,
-    [roomId]: [...messages],
+    [roomId]: sortMessages(messages),
   };
   syncTotalMessageCount();
 }
@@ -335,7 +357,7 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
     if (!alreadyExists) {
       roomMessagesState.value = {
         ...roomMessagesState.value,
-        [event.roomId]: [...currentMessages, nextMessage],
+        [event.roomId]: sortMessages([...currentMessages, nextMessage]),
       };
     }
 
@@ -357,7 +379,7 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
       updated[existingIndex] = updatedMessage;
       roomMessagesState.value = {
         ...roomMessagesState.value,
-        [event.roomId]: updated,
+        [event.roomId]: sortMessages(updated),
       };
     }
 
