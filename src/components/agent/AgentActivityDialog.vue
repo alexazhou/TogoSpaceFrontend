@@ -37,6 +37,8 @@ const errorMessage = ref('');
 const superviseContent = ref('');
 const supervising = ref(false);
 const superviseError = ref('');
+const superviseFocused = ref(false);
+const superviseTextareaRef = ref<HTMLTextAreaElement | null>(null);
 const activitiesErrorMessage = ref('');
 const shouldFollowActivities = ref(true);
 const hasAutoScrolledForCurrentAgent = ref(false);
@@ -239,11 +241,21 @@ async function sendSupervise(): Promise<void> {
   try {
     await superviseAgent(props.agentId, superviseContent.value.trim());
     superviseContent.value = '';
+    if (superviseTextareaRef.value) {
+      superviseTextareaRef.value.style.height = '';
+    }
   } catch (error) {
     superviseError.value = error instanceof Error ? error.message : String(error);
   } finally {
     supervising.value = false;
   }
+}
+
+function autoGrowSupervise(): void {
+  const el = superviseTextareaRef.value;
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
 }
 
 watch(
@@ -415,25 +427,31 @@ watch(
               </section>
 
               <section class="agent-supervise-section">
-                <h4 class="agent-supervise-section__title">{{ t('agent.supervise.title') }}</h4>
-                <div class="agent-supervise-section__input-row">
+                <div class="agent-supervise-section__editor" :class="{ 'is-focused': superviseFocused }">
                   <textarea
+                    ref="superviseTextareaRef"
                     v-model="superviseContent"
                     class="agent-supervise-section__textarea"
                     :placeholder="t('agent.supervise.placeholder')"
-                    rows="3"
+                    rows="1"
                     :disabled="supervising"
+                    @focus="superviseFocused = true"
+                    @blur="superviseFocused = false"
+                    @input="autoGrowSupervise"
                     @keydown.ctrl.enter.prevent="sendSupervise"
                     @keydown.meta.enter.prevent="sendSupervise"
                   />
-                  <button
-                    type="button"
-                    class="agent-supervise-section__send"
-                    :disabled="supervising || !superviseContent.trim()"
-                    @click="sendSupervise"
-                  >
-                    {{ supervising ? t('agent.supervise.sending') : t('agent.supervise.send') }}
-                  </button>
+                  <div class="agent-supervise-section__foot">
+                    <span class="agent-supervise-section__hint">Ctrl+Enter</span>
+                    <button
+                      type="button"
+                      class="agent-supervise-section__send"
+                      :disabled="supervising || !superviseContent.trim()"
+                      @click="sendSupervise"
+                    >
+                      {{ supervising ? t('agent.supervise.sending') : t('agent.supervise.send') }}
+                    </button>
+                  </div>
                 </div>
                 <p v-if="superviseError" class="agent-supervise-section__error">{{ superviseError }}</p>
               </section>
@@ -863,75 +881,90 @@ watch(
 }
 
 .agent-supervise-section {
-  padding: 12px 16px 16px;
-  border-top: 1px solid var(--color-border, #e5e7eb);
+  padding: 8px 10px 10px;
   flex-shrink: 0;
   background: color-mix(in srgb, var(--panel-bg) 97%, var(--surface-soft) 3%);
   border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
-  border-top: none;
+  border-top: 1px solid var(--border-subtle);
   border-radius: 0 0 18px 18px;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.5);
 }
 
-.agent-supervise-section__title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-secondary, #6b7280);
-  margin: 0 0 8px;
+.agent-supervise-section__editor {
+  background: var(--surface-input);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 78%, var(--border-default) 22%);
+  border-radius: 8px;
+  overflow: hidden;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
-.agent-supervise-section__input-row {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
+.agent-supervise-section__editor.is-focused {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 2px var(--input-focus-ring);
 }
 
 .agent-supervise-section__textarea {
-  flex: 1;
+  display: block;
+  width: 100%;
   resize: none;
-  border: 1px solid var(--color-border, #d1d5db);
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 0.85rem;
+  border: none;
+  border-radius: 0;
+  padding: 9px 12px 4px;
+  font-size: 0.8rem;
   font-family: inherit;
-  background: var(--color-bg-input, #fff);
-  color: var(--color-text, #111827);
+  background: transparent;
+  color: var(--text-primary);
   line-height: 1.4;
-  min-height: 60px;
-  transition: border-color 0.15s;
+  min-height: 32px;
+  max-height: 160px;
+  overflow-y: auto;
+  outline: none;
 }
 
-.agent-supervise-section__textarea:focus {
-  outline: none;
-  border-color: var(--color-accent, #4f46e5);
+.agent-supervise-section__textarea::placeholder {
+  color: var(--text-secondary);
 }
 
 .agent-supervise-section__textarea:disabled {
-  opacity: 0.6;
-}
-
-.agent-supervise-section__send {
-  flex-shrink: 0;
-  padding: 8px 14px;
-  border: none;
-  border-radius: 6px;
-  background: var(--color-accent, #4f46e5);
-  color: #fff;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.15s;
-  align-self: flex-end;
-}
-
-.agent-supervise-section__send:disabled {
-  opacity: 0.45;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
+.agent-supervise-section__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 4px 8px 7px;
+}
+
+.agent-supervise-section__hint {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  line-height: 1;
+}
+
+.agent-supervise-section__send {
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 10px;
+  background: var(--interactive-selected);
+  color: var(--text-primary);
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.74rem;
+  transition: opacity 0.15s;
+}
+
+.agent-supervise-section__send:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
 .agent-supervise-section__error {
-  margin: 6px 0 0;
-  font-size: 0.78rem;
+  margin: 5px 4px 0;
+  font-size: 0.75rem;
   color: var(--color-error, #ef4444);
 }</style>
