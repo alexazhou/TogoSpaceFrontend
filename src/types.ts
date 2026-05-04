@@ -64,11 +64,13 @@ export interface RoomInfo {
 }
 
 export interface MessageInfo {
+  db_id: number | null;
   sender_id: number;
+  sender_display_name: string;
   content: string;
   time: string;
-  seq?: number | null;
-  insert_immediately?: boolean;
+  seq: number | null;
+  insert_immediately: boolean;
 }
 
 export interface WsMessageEvent {

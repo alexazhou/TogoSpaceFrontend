@@ -45,7 +45,9 @@ function syncTotalMessageCount(): void {
 
 function normalizeMessage(teamId: number, raw: RawMessageInfo): MessageInfo {
   return {
+    db_id: raw.id,
     sender_id: raw.agent_id,
+    sender_display_name: resolveMessageSenderDisplayName(teamId, raw.agent_id),
     content: raw.content,
     time: raw.send_time,
     seq: raw.seq,
@@ -314,7 +316,7 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
         return {
           ...room,
           preview: formatPreview(
-            resolveMessageSenderDisplayName(event.teamId, nextMessage.sender_id),
+            nextMessage.sender_display_name || resolveMessageSenderDisplayName(event.teamId, nextMessage.sender_id),
             nextMessage.content,
           ),
           unread: shouldResetUnread ? 0 : room.unread + 1,
@@ -323,15 +325,39 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
     );
 
     const currentMessages = roomMessagesState.value[event.roomId] ?? [];
-    const alreadyExists = currentMessages.some((message) =>
-      message.sender_id === nextMessage.sender_id
-      && message.content === nextMessage.content
-      && message.time === nextMessage.time,
-    );
+    const alreadyExists = nextMessage.db_id !== null
+      ? currentMessages.some((m) => m.db_id === nextMessage.db_id)
+      : currentMessages.some((m) =>
+          m.sender_id === nextMessage.sender_id
+          && m.content === nextMessage.content
+          && m.time === nextMessage.time,
+        );
     if (!alreadyExists) {
       roomMessagesState.value = {
         ...roomMessagesState.value,
         [event.roomId]: [...currentMessages, nextMessage],
+      };
+    }
+
+    if (activeTeamId.value === event.teamId && activeRoomId.value === event.roomId) {
+      syncTotalMessageCount();
+    }
+    return;
+  }
+
+  if (event.type === 'message_changed') {
+    const updatedMessage: MessageInfo = event.message;
+    const currentMessages = roomMessagesState.value[event.roomId] ?? [];
+    const existingIndex = updatedMessage.db_id !== null
+      ? currentMessages.findIndex((m) => m.db_id === updatedMessage.db_id)
+      : -1;
+
+    if (existingIndex >= 0) {
+      const updated = [...currentMessages];
+      updated[existingIndex] = updatedMessage;
+      roomMessagesState.value = {
+        ...roomMessagesState.value,
+        [event.roomId]: updated,
       };
     }
 

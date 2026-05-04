@@ -12,7 +12,13 @@ export type FrontendRealtimeEvent =
     teamId: number;
     roomId: number;
     roomName: string;
-    senderId: number;
+    message: MessageInfo;
+  }
+  | {
+    type: 'message_changed';
+    teamId: number;
+    roomId: number;
+    roomName: string;
     message: MessageInfo;
   }
   | {
@@ -113,7 +119,7 @@ export function normalizeWsEventPayload(payload: unknown): FrontendRealtimeEvent
   const raw = payload as RawRecord;
   const eventType = String(raw.event ?? '').trim().toLowerCase();
 
-  if (eventType === 'message') {
+  if (eventType === 'message' || eventType === 'message_changed') {
     const gtRoom = raw.gt_room as RawRecord | undefined;
     const teamId = Number(gtRoom?.team_id ?? 0);
     const roomId = Number(gtRoom?.id ?? 0);
@@ -121,19 +127,27 @@ export function normalizeWsEventPayload(payload: unknown): FrontendRealtimeEvent
       return null;
     }
 
+    const gtMessage = raw.gt_message as RawRecord | undefined;
+    if (!gtMessage) {
+      return null;
+    }
+
+    const message: MessageInfo = {
+      db_id: typeof gtMessage.db_id === 'number' ? gtMessage.db_id : null,
+      sender_id: Number(gtMessage.sender_id ?? 0),
+      sender_display_name: String(gtMessage.sender_display_name ?? ''),
+      content: String(gtMessage.content ?? ''),
+      time: String(gtMessage.send_time ?? ''),
+      seq: typeof gtMessage.seq === 'number' ? gtMessage.seq : null,
+      insert_immediately: Boolean(gtMessage.insert_immediately),
+    };
+
     return {
-      type: 'message',
+      type: eventType === 'message' ? 'message' : 'message_changed',
       teamId,
       roomId,
       roomName: String(gtRoom?.name ?? ''),
-      senderId: Number(raw.sender_id ?? 0),
-      message: {
-        sender_id: Number(raw.sender_id ?? 0),
-        content: String(raw.content ?? ''),
-        time: String(raw.time ?? ''),
-        seq: typeof raw.seq === 'number' ? raw.seq : null,
-        insert_immediately: Boolean(raw.insert_immediately),
-      },
+      message,
     };
   }
 

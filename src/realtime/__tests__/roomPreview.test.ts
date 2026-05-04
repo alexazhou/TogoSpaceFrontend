@@ -6,7 +6,7 @@ describe('resolveRoomPreview', () => {
   it('builds preview from the latest cached message', () => {
     const preview = resolveRoomPreview({
       messages: [
-        { sender_id: 1, content: 'hello world', time: '2026-04-26 00:00:00' },
+        { db_id: 1, sender_id: 1, sender_display_name: 'Alice', content: 'hello world', time: '2026-04-26 00:00:00', seq: 1, insert_immediately: false },
       ],
       resolveSenderDisplayName: () => 'Alice',
     });
