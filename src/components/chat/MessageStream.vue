@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getAgentAvatarUrl } from '../../avatar';
-import { nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { MessageInfo, RoomMemberProfile } from '../../types';
 import { bubbleSide, displayName, formatTime } from '../../utils';
@@ -81,6 +81,13 @@ function resolveMessageStatus(message: MessageInfo): MessageStatus {
   return message.insert_immediately ? 'pending-immediate' : 'queued';
 }
 
+const streamMessages = computed(() => props.messages.filter((message) => message.seq !== null));
+const floatingMessages = computed(() => props.messages.filter((message) => message.seq === null));
+
+function messageKey(message: MessageInfo, index: number): string {
+  return String(message.db_id ?? `${message.time}-${message.sender_id}-${index}`);
+}
+
 function updateScrollbarState(): void {
   const stream = streamRef.value;
   if (!stream) {
@@ -145,8 +152,8 @@ onBeforeUnmount(() => {
 <template>
   <div ref="streamRef" class="message-stream" :class="{ 'has-scrollbar': hasScrollbar }">
     <div
-      v-for="(message, index) in messages"
-      :key="message.db_id ?? `${message.time}-${message.sender_id}-${index}`"
+      v-for="(message, index) in streamMessages"
+      :key="messageKey(message, index)"
       class="message-row"
       :class="`side-${bubbleSide(message.sender_id)}`"
     >
@@ -192,7 +199,7 @@ onBeforeUnmount(() => {
             />
           </template>
         </div>
-        <div class="bubble" :class="{ 'bubble--pending': message.seq === null }">{{ message.content }}</div>
+        <div class="bubble">{{ message.content }}</div>
       </template>
     </div>
 
@@ -215,6 +222,32 @@ onBeforeUnmount(() => {
         <span class="dot"></span>
         <span class="dot"></span>
       </span>
+    </div>
+
+    <div v-if="floatingMessages.length" class="floating-messages-dock">
+      <div
+        v-for="(message, index) in floatingMessages"
+        :key="messageKey(message, index)"
+        class="floating-message-bar"
+      >
+        <img
+          v-if="bubbleSide(message.sender_id) !== 'center'"
+          class="floating-message-avatar"
+          :src="getAgentAvatarUrl(resolveSenderStableName(message.sender_id))"
+          :alt="`${resolveSenderDisplayName(message.sender_id)} avatar`"
+        />
+        <div class="floating-message-content">{{ message.content }}</div>
+        <span
+          v-if="resolveMessageStatus(message) === 'queued'"
+          class="floating-message-status floating-message-status--queued"
+          title="消息排队中，等待 Agent 回复后注入"
+        >⏳ 排队中</span>
+        <span
+          v-else-if="resolveMessageStatus(message) === 'pending-immediate'"
+          class="floating-message-status floating-message-status--pending-immediate"
+          title="立即注入，等待发布"
+        >⚡ 等待注入</span>
+      </div>
     </div>
   </div>
 </template>
@@ -343,10 +376,6 @@ onBeforeUnmount(() => {
   transition: opacity 0.25s ease;
 }
 
-.bubble--pending {
-  opacity: 0.55;
-}
-
 .side-right .bubble {
   background: var(--bubble-right);
   color: var(--bubble-right-text);
@@ -412,6 +441,95 @@ onBeforeUnmount(() => {
 :global(html.bp-compact) .working-indicator {
   padding: 10px 8px;
   font-size: 0.76rem;
+}
+
+.floating-messages-dock {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+  padding: 8px 0 2px;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.floating-message-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--interactive-focus-border) 14%, var(--border-default) 86%);
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.floating-message-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 28%, transparent);
+  background: color-mix(in srgb, var(--surface-elevated) 84%, var(--border-default) 16%);
+}
+
+.floating-message-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.floating-message-status--queued {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--surface-panel-muted) 78%, var(--surface-panel) 22%);
+}
+
+.floating-message-status--pending-immediate {
+  color: #b66a00;
+  background: color-mix(in srgb, #f59e0b 14%, white 86%);
+}
+
+.floating-message-content {
+  min-width: 0;
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+:global(html.bp-compact) .floating-messages-dock {
+  gap: 4px;
+  padding-top: 8px;
+}
+
+:global(html.bp-compact) .floating-message-bar {
+  padding: 7px 10px;
+  border-radius: 12px;
+}
+
+:global(html.bp-compact) .floating-message-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+}
+
+:global(html.bp-compact) .floating-message-content {
+  font-size: 0.8rem;
 }
 
 .working-indicator {
