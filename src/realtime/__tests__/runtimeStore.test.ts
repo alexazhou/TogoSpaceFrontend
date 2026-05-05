@@ -1,6 +1,44 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { applyRealtimeEvent, clearRuntimeStore, getRoomMessages, seedRoomMessages } from '../runtimeStore';
-import type { MessageInfo } from '../../types';
+import { scheduleNotRunningReason, scheduleState, totalMessageCount } from '../../appUiState';
+import type { AgentInfo, MessageInfo, RoomState } from '../../types';
+import {
+  applyRealtimeEvent,
+  clearRuntimeStore,
+  getAgentStatus,
+  getRoomMessages,
+  getTeamRooms,
+  seedRoomMessages,
+  seedTeamAgents,
+  seedTeamRooms,
+  setActiveRealtimeContext,
+} from '../runtimeStore';
+
+function createAgent(overrides: Partial<AgentInfo>): AgentInfo {
+  return {
+    id: 1,
+    name: 'Alpha',
+    i18n: {},
+    model: '',
+    status: 'idle',
+    ...overrides,
+  };
+}
+
+function createRoom(overrides: Partial<RoomState>): RoomState {
+  return {
+    room_id: 3,
+    room_name: 'general',
+    i18n: {},
+    room_type: 'group',
+    state: 'idle',
+    need_scheduling: false,
+    agents: [1],
+    current_turn_agent_id: null,
+    preview: '旧预览',
+    unread: 0,
+    ...overrides,
+  };
+}
 
 function createMessage(overrides: Partial<MessageInfo>): MessageInfo {
   return {
@@ -15,13 +53,60 @@ function createMessage(overrides: Partial<MessageInfo>): MessageInfo {
   };
 }
 
-describe('runtimeStore message ordering', () => {
+describe('runtimeStore realtime events', () => {
   beforeEach(() => {
     clearRuntimeStore();
   });
 
   afterEach(() => {
     clearRuntimeStore();
+  });
+
+  it('updates preview and unread count for inactive rooms on message events', () => {
+    seedTeamAgents(2, [createAgent({ id: 5, name: 'Alice' })]);
+    seedTeamRooms(2, [createRoom({ room_id: 9, agents: [5], preview: '旧内容' })]);
+
+    applyRealtimeEvent({
+      type: 'message',
+      teamId: 2,
+      roomId: 9,
+      roomName: 'general',
+      message: createMessage({
+        db_id: 11,
+        sender_id: 5,
+        sender_display_name: '',
+        content: '新的进展',
+        time: '2026-05-04 22:30:00',
+      }),
+    });
+
+    const room = getTeamRooms(2)[0];
+    expect(room?.preview).toBe('Alice: 新的进展');
+    expect(room?.unread).toBe(1);
+    expect(getRoomMessages(9)).toHaveLength(1);
+  });
+
+  it('keeps unread at zero and syncs total count for the active room', () => {
+    seedTeamRooms(2, [createRoom({ room_id: 4, unread: 3 })]);
+    seedRoomMessages(4, [createMessage({ db_id: 21, content: '已有消息' })]);
+    setActiveRealtimeContext(2, 4);
+
+    applyRealtimeEvent({
+      type: 'message',
+      teamId: 2,
+      roomId: 4,
+      roomName: 'general',
+      message: createMessage({
+        db_id: 22,
+        content: '最新消息',
+        time: '2026-05-04 22:35:00',
+      }),
+    });
+
+    const room = getTeamRooms(2)[0];
+    expect(room?.unread).toBe(0);
+    expect(totalMessageCount.value).toBe(2);
+    expect(getRoomMessages(4).map((message) => message.db_id)).toEqual([21, 22]);
   });
 
   it('re-sorts messages when a queued message receives seq via message_changed', () => {
@@ -41,5 +126,62 @@ describe('runtimeStore message ordering', () => {
     const messages = getRoomMessages(3);
     expect(messages.map((message) => message.db_id)).toEqual([27, 28]);
     expect(messages.map((message) => message.seq)).toEqual([0, 1]);
+  });
+
+  it('updates agent and room state from realtime status events', () => {
+    seedTeamAgents(2, [createAgent({ id: 8, status: 'idle' })]);
+    seedTeamRooms(2, [createRoom({ room_id: 6, state: 'idle', need_scheduling: false })]);
+
+    applyRealtimeEvent({
+      type: 'agent_status',
+      teamId: 2,
+      agentId: 8,
+      status: 'active',
+    });
+    applyRealtimeEvent({
+      type: 'room_status',
+      teamId: 2,
+      roomId: 6,
+      state: 'scheduling',
+      needScheduler: true,
+      currentTurnAgentId: 8,
+    });
+
+    expect(getAgentStatus(8)).toBe('active');
+    const room = getTeamRooms(2)[0];
+    expect(room?.state).toBe('scheduling');
+    expect(room?.need_scheduling).toBe(true);
+    expect(room?.current_turn_agent_id).toBe(8);
+  });
+
+  it('adds rooms only once and syncs schedule state events', () => {
+    seedTeamRooms(2, [createRoom({ room_id: 6 })]);
+
+    const newRoom = createRoom({
+      room_id: 7,
+      room_name: 'ops',
+      preview: '初始预览',
+      unread: 0,
+    });
+
+    applyRealtimeEvent({
+      type: 'room_added',
+      teamId: 2,
+      room: newRoom,
+    });
+    applyRealtimeEvent({
+      type: 'room_added',
+      teamId: 2,
+      room: newRoom,
+    });
+    applyRealtimeEvent({
+      type: 'schedule_state',
+      scheduleState: 'BLOCKED',
+      notRunningReason: 'manual_pause',
+    });
+
+    expect(getTeamRooms(2).map((room) => room.room_id)).toEqual([6, 7]);
+    expect(scheduleState.value).toBe('blocked');
+    expect(scheduleNotRunningReason.value).toBe('manual_pause');
   });
 });

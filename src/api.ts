@@ -285,6 +285,9 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     if (error instanceof Error && error.message === 'Auth required') {
       throw error;
     }
+    if (error instanceof Error && error.message === 'Backend unavailable') {
+      throw error;
+    }
 
     showGlobalRequestError({
       title: t('error.cannotConnectTitle'),

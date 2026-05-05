@@ -224,3 +224,31 @@ export function subscribeRealtimeEvents(listener: RealtimeListener): () => void 
     listeners.delete(listener);
   };
 }
+
+export function __resetWsClientForTests(): void {
+  started = false;
+  activeSocketToken += 1;
+
+  if (reconnectTimer !== null) {
+    window.clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+  if (reconnectCountdownTimer !== null) {
+    window.clearInterval(reconnectCountdownTimer);
+    reconnectCountdownTimer = null;
+  }
+  if (connectTimeoutTimer !== null) {
+    window.clearTimeout(connectTimeoutTimer);
+    connectTimeoutTimer = null;
+  }
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+
+  listeners.clear();
+  reconnectAttempt = 0;
+  reconnectProgress.value = 0;
+  connectionState.value = 'disconnected';
+  showTokenDialog.value = false;
+}
