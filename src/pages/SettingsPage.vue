@@ -3,19 +3,18 @@ import '../theme/legacy-aliases.css';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import { deleteTeam, clearTeamData, getAgents, getAgentsByTeamId, getDeptTree, getTeamDetail, setTeamEnabled, updateTeam } from '../api';
-import { connectionState, showGlobalSuccessToast, showQuickInit, totalMessageCount } from '../appUiState';
+import { deleteTeam, clearTeamData, getAgents, getTeamDetail, setTeamEnabled, updateTeam } from '../api';
+import { showGlobalSuccessToast, showQuickInit, totalMessageCount } from '../appUiState';
 import ModelsSettingsSection from '../components/settings/ModelsSettingsSection.vue';
 import RolesSettingsSection from '../components/settings/RolesSettingsSection.vue';
 import SettingsNavSidebar from '../components/settings/SettingsNavSidebar.vue';
 import TeamsSettingsSection from '../components/settings/TeamsSettingsSection.vue';
-import { countDeptHierarchyLevels, countDeptNodes } from '../components/settings/teamSummary';
 import ConfirmDialog from '../components/ui/ConfirmDialog.vue';
 import { useSettingsNavItems } from '../components/settings/settingsNavItems';
-import { DEFAULT_SETTINGS_SECTION, isSettingsRouteSection } from '../components/settings/sections';
+import { useSettingsRouting } from '../composables/useSettingsRouting';
+import { useTeamSummaries } from '../composables/useTeamSummaries';
 import { loadTeams, teams, teamsLoadFailed } from '../teamStore';
 import type { AgentInfo, TeamDetail } from '../types';
-import type { SettingsBreadcrumbItem } from '../components/settings/types';
 
 const route = useRoute();
 const router = useRouter();
@@ -25,14 +24,6 @@ totalMessageCount.value = 0;
 
 const teamId = computed(() => Number(route.params.teamId));
 const agents = ref<AgentInfo[]>([]);
-const teamSummaries = ref<Record<number, {
-  activeMemberCount: number;
-  offBoardMemberCount: number;
-  roomCount: number;
-  deptCount: number;
-  hierarchyLevelCount: number;
-  workingDirectory: string;
-}>>({});
 const selectedTeamDetail = ref<TeamDetail | null>(null);
 const teamInfoDraft = ref({
   name: '',
@@ -76,25 +67,28 @@ const settingsMainRef = ref<HTMLElement | null>(null);
 const settingsScrollbarHovered = ref(false);
 
 const navItems = useSettingsNavItems();
-
-const routeSection = computed(() =>
-  typeof route.params.section === 'string' ? route.params.section : '',
-);
-const currentSectionId = computed(() =>
-  isSettingsRouteSection(routeSection.value) ? routeSection.value : DEFAULT_SETTINGS_SECTION,
-);
-const currentNavItem = computed(() =>
-  navItems.value.find((item) => item.id === currentSectionId.value) ?? navItems.value[0],
-);
-const isTeamDetailView = computed(() => currentSectionId.value === 'teams' && detailTeamId.value !== null);
-const topbarBackLabel = computed(() => isTeamDetailView.value ? t('settings.backToTeams') : t('settings.back'));
-const detailTeamId = computed(() => {
-  const raw = route.query.detailTeamId;
-  if (typeof raw !== 'string') {
-    return null;
-  }
-  const value = Number(raw);
-  return Number.isFinite(value) ? value : null;
+const { loadTeamSummaries, teamSummaries } = useTeamSummaries(teams);
+const {
+  breadcrumbItems,
+  currentSectionId,
+  detailTeamId,
+  goBack,
+  handleBreadcrumbNavigate,
+  openCreateTeam,
+  openSection,
+  openTeamDetail,
+  clearTeamDetail,
+  topbarBackLabel,
+} = useSettingsRouting({
+  route,
+  router,
+  teamId,
+  navItems,
+  selectedTeamDetail,
+  openQuickInit: () => {
+    showQuickInit.value = true;
+  },
+  t,
 });
 
 watch(
@@ -138,88 +132,6 @@ const hasTeamInfoChanges = computed(() => {
     teamInfoDraft.value.rules !== String(selectedTeamDetail.value.config?.rules || '')
   );
 });
-const breadcrumbItems = computed<SettingsBreadcrumbItem[]>(() => {
-  const items: SettingsBreadcrumbItem[] = [
-    { key: 'settings', label: t('settings.title'), current: false },
-    {
-      key: `section-${currentNavItem.value.id}`,
-      label: currentNavItem.value.label,
-      current: detailTeamId.value === null,
-    },
-  ];
-
-  if (currentSectionId.value === 'teams' && selectedTeamDetail.value) {
-    items[items.length - 1].current = false;
-    items.push({
-      key: 'team-detail',
-      label: selectedTeamDetail.value.name,
-      current: true,
-    });
-  }
-
-  return items;
-});
-function openSection(sectionId: string): void {
-  if (sectionId === 'quickInit') {
-    showQuickInit.value = true;
-    return;
-  }
-
-  router.push({
-    name: 'settings',
-    params: { teamId: teamId.value, section: sectionId },
-    query: sectionId === 'teams' && detailTeamId.value ? { detailTeamId: String(detailTeamId.value) } : {},
-  }).catch(console.error);
-}
-
-function handleBreadcrumbNavigate(key: string): void {
-  if (key === 'settings') {
-    openSection(DEFAULT_SETTINGS_SECTION);
-    return;
-  }
-
-  if (key === 'team-detail') {
-    clearTeamDetail();
-    return;
-  }
-
-  if (key.startsWith('section-')) {
-    const sectionId = key.slice('section-'.length);
-    if (sectionId === 'teams') {
-      clearTeamDetail();
-      return;
-    }
-    openSection(sectionId);
-  }
-}
-
-function goBack(): void {
-  if (isTeamDetailView.value) {
-    clearTeamDetail();
-    return;
-  }
-  router.push({ name: 'console', params: { teamId: teamId.value } }).catch(console.error);
-}
-
-function openCreateTeam(): void {
-  router.push({ name: 'team-create' }).catch(console.error);
-}
-
-function openTeamDetail(targetTeamId: number): void {
-  router.push({
-    name: 'settings',
-    params: { teamId: teamId.value, section: 'teams' },
-    query: { detailTeamId: String(targetTeamId) },
-  }).catch(console.error);
-}
-
-function clearTeamDetail(): void {
-  router.push({
-    name: 'settings',
-    params: { teamId: teamId.value, section: 'teams' },
-  }).catch(console.error);
-}
-
 function updateSettingsScrollbarHover(event: PointerEvent): void {
   const element = settingsMainRef.value;
   if (!element) {
@@ -241,41 +153,6 @@ function updateSettingsScrollbarHover(event: PointerEvent): void {
 
 function clearSettingsScrollbarHover(): void {
   settingsScrollbarHovered.value = false;
-}
-
-async function loadTeamSummaries(): Promise<void> {
-  const entries = await Promise.all(
-    teams.value.map(async (team) => {
-      try {
-        const [detail, deptTree, teamAgents] = await Promise.all([
-          getTeamDetail(team.id),
-          getDeptTree(team.id),
-          getAgentsByTeamId(team.id),
-        ]);
-        const activeMemberCount = teamAgents.filter((agent) => String(agent.employ_status ?? '').toUpperCase() !== 'OFF_BOARD').length;
-        const offBoardMemberCount = teamAgents.filter((agent) => String(agent.employ_status ?? '').toUpperCase() === 'OFF_BOARD').length;
-        return [team.id, {
-          activeMemberCount,
-          offBoardMemberCount,
-          roomCount: detail.rooms.length,
-          deptCount: countDeptNodes(deptTree),
-          hierarchyLevelCount: countDeptHierarchyLevels(deptTree),
-          workingDirectory: detail.working_directory || team.working_directory || '',
-        }] as const;
-      } catch (error) {
-        console.error(error);
-        return [team.id, {
-          activeMemberCount: 0,
-          offBoardMemberCount: 0,
-          roomCount: 0,
-          deptCount: 0,
-          hierarchyLevelCount: 0,
-          workingDirectory: team.working_directory || '',
-        }] as const;
-      }
-    }),
-  );
-  teamSummaries.value = Object.fromEntries(entries);
 }
 
 async function loadSelectedTeamDetail(targetTeamId: number | null): Promise<void> {
@@ -507,32 +384,6 @@ function formatDateTime(value: string): string {
     hour12: false,
   }).format(date);
 }
-
-watch(
-  () => teams.value.map((team) => team.id),
-  (teamIds) => {
-    if (!teamIds.length) {
-      teamSummaries.value = {};
-      return;
-    }
-
-    loadTeamSummaries().catch(console.error);
-  },
-  { immediate: true },
-);
-
-watch(
-  () => route.params.section,
-  (section) => {
-    if (typeof section !== 'string' || !isSettingsRouteSection(section)) {
-      router.replace({
-        name: 'settings',
-        params: { teamId: teamId.value, section: DEFAULT_SETTINGS_SECTION },
-      }).catch(console.error);
-    }
-  },
-  { immediate: true },
-);
 
 watch(
   [currentSectionId, detailTeamId],

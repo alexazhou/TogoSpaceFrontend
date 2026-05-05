@@ -136,6 +136,7 @@ describe('runtimeStore realtime events', () => {
       type: 'agent_status',
       teamId: 2,
       agentId: 8,
+      agentName: 'Alpha',
       status: 'active',
     });
     applyRealtimeEvent({
@@ -176,7 +177,7 @@ describe('runtimeStore realtime events', () => {
     });
     applyRealtimeEvent({
       type: 'schedule_state',
-      scheduleState: 'BLOCKED',
+      scheduleState: 'blocked',
       notRunningReason: 'manual_pause',
     });
 
