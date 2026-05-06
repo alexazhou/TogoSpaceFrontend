@@ -795,7 +795,6 @@ watch(
   gap: 4px;
   padding: 0 10px 10px;
   scroll-padding-bottom: 16px;
-  scroll-snap-type: y mandatory;
   box-sizing: border-box;
 }
 
@@ -803,11 +802,6 @@ watch(
   content: '';
   display: block;
   height: 12px;
-}
-
-.agent-activity-list :deep(.agent-activity-item) {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 .agent-activity-empty {
