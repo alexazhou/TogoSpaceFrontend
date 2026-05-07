@@ -27,7 +27,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const isPrivateRoom = computed(() => props.currentRoom?.room_type === 'private');
 const hasBanner = computed(() => Boolean(props.errorMessage || props.reloadingMessages));
 const membersOpen = ref(false);
 const isDraftComposing = ref(false);
@@ -135,7 +134,7 @@ function handleEnterKey(e: KeyboardEvent): void {
       />
     </div>
 
-    <form v-if="isPrivateRoom && !composerNotice" class="composer active" @submit.prevent="handleComposerSubmit">
+    <form v-if="currentRoom && !composerNotice" class="composer active" @submit.prevent="handleComposerSubmit">
       <div class="composer-editor">
         <textarea
           :value="draft"

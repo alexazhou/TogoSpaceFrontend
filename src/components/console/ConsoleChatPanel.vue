@@ -41,12 +41,17 @@ const {
   cleanupMessageScroll,
 } = useConsoleMessageScroll(messageViewport);
 const { t } = useI18n();
+const OPERATOR_MEMBER_ID = -1;
+
+const canOperatorCompose = computed(() => (
+  Boolean(props.currentRoom && props.currentRoom.agents.includes(OPERATOR_MEMBER_ID))
+));
 
 const composerNotice = computed(() => {
   if (!props.teamEnabled) {
     return t('chat.teamDisabled');
   }
-  if (!props.currentRoom || props.currentRoom.room_type === 'private') {
+  if (!props.currentRoom || canOperatorCompose.value) {
     return '';
   }
   return t('chat.observeMode');
@@ -145,7 +150,7 @@ const memberProfiles = computed<RoomMemberProfile[]>(() => {
 
 async function handleSubmit(): Promise<void> {
   const content = draft.value.trim();
-  if (!content || !props.currentRoom || props.currentRoom.room_type !== 'private') {
+  if (!content || !props.currentRoom || !canOperatorCompose.value) {
     return;
   }
 
