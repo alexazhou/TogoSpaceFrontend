@@ -484,7 +484,7 @@ watch(
   overflow: hidden;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 8px;
+  gap: 2px;
   padding: 10px 16px 16px;
   border-radius: 20px;
   box-shadow:
@@ -494,10 +494,9 @@ watch(
 
 .agent-detail-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  min-height: 52px;
 }
 
 .agent-detail-head > div {
@@ -710,7 +709,7 @@ watch(
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 10px 6px;
+  padding: 6px 10px 6px;
 }
 
 .agent-activity-panel__title-line {
