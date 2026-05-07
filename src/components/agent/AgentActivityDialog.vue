@@ -343,10 +343,7 @@ watch(
     <div v-if="open" class="agent-detail-overlay" @click.self="emit('close')">
       <section class="agent-detail-dialog panel">
         <div class="agent-detail-head">
-          <div>
-            <p class="agent-detail-eyebrow">Agent Status Card</p>
-            <h3>{{ displayAgentName }}</h3>
-          </div>
+          <p class="agent-detail-eyebrow">Agent Status Card</p>
           <button type="button" class="agent-detail-close" :aria-label="t('common.close')" @click="emit('close')">×</button>
         </div>
 
@@ -494,7 +491,7 @@ watch(
 
 .agent-detail-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
