@@ -325,7 +325,6 @@ watch(
     if (!open || !listEl || count === 0) {
       return;
     }
-    syncActivityFollowState();
     if (!hasAutoScrolledForCurrentAgent.value) {
       hasAutoScrolledForCurrentAgent.value = true;
       scrollActivitiesToBottom().catch(console.error);

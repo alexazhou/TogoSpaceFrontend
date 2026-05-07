@@ -464,7 +464,7 @@ const activityView = computed(() => {
         v-for="(msg, idx) in activityView.receivedMessages"
         :key="idx"
         class="agent-activity-item__received-message"
-      ><span class="agent-activity-item__received-sender">{{ msg.sender }}</span>{{ msg.content }}</p>
+      ><span class="agent-activity-item__received-sender">{{ msg.sender }}:</span> {{ msg.content }}</p>
     </template>
     <p v-if="activity.error_message" class="agent-activity-item__error">{{ activity.error_message }}</p>
   </article>
