@@ -673,6 +673,11 @@ watch(
   background: var(--status-dot-idle);
 }
 
+.agent-status-panel[data-status='active'] .status-dot {
+  background: var(--state-success);
+  box-shadow: none;
+}
+
 .agent-status-panel[data-status='failed'] .status-dot {
   background: var(--danger, #f85149);
   box-shadow: none;
