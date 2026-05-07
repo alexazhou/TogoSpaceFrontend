@@ -64,18 +64,7 @@ function normalizeAgentStatus(value: unknown): AgentStatus {
 }
 
 function normalizeActivityType(value: unknown): AgentActivityType {
-  const normalized = String(value ?? '').trim().toLowerCase();
-  if (
-    normalized === 'llm_infer'
-    || normalized === 'tool_call'
-    || normalized === 'compact'
-    || normalized === 'agent_state'
-    || normalized === 'reasoning'
-    || normalized === 'chat_reply'
-  ) {
-    return normalized;
-  }
-  return 'unknown';
+  return (String(value ?? '').trim().toLowerCase() || 'unknown') as AgentActivityType;
 }
 
 function normalizeActivityStatus(value: unknown): AgentActivityStatus {

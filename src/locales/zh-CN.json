@@ -106,6 +106,7 @@
       "sendMessage": "发言",
       "finishTurn": "结束行动",
       "compact": "上下文压缩",
+      "messageReceived": "收到消息",
       "unknown": "未知类型"
     },
     "tokenEstimate": "估算 {count}",

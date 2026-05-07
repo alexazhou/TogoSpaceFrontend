@@ -103,11 +103,24 @@ function activityTitle(activity: AgentActivity): string {
       return t('agent.activityType.toolCall');
     case 'compact':
       return t('agent.activityType.compact');
+    case 'message_received':
+      return t('agent.activityType.messageReceived');
     case 'unknown':
       return t('agent.activityType.unknown');
     default:
       return t('agent.activityType.unknown');
   }
+}
+
+function getReceivedMessages(activity: AgentActivity): Array<{ sender: string; content: string }> {
+  const messages = activity.metadata?.messages;
+  if (!Array.isArray(messages)) {
+    return [];
+  }
+  return messages.filter(
+    (m): m is { sender: string; content: string } =>
+      m != null && typeof m.sender === 'string' && typeof m.content === 'string',
+  );
 }
 
 function getActivityToolCommand(activity: AgentActivity): string {
@@ -313,7 +326,9 @@ const activityView = computed(() => {
     && currentToolName !== 'send_chat_msg'
     && Boolean(currentToolResult);
   const expandedMessage = activity.activity_type === 'tool_call' && currentToolName === 'send_chat_msg';
-  const expandedContent = activity.activity_type === 'reasoning' || expandedMessage || expandedToolResult;
+  const receivedMessages = getReceivedMessages(activity);
+  const expandedContent = activity.activity_type === 'reasoning' || expandedMessage || expandedToolResult
+    || (activity.activity_type === 'message_received' && receivedMessages.length > 0);
   const currentSummary = activitySummary(
     activity,
     currentToolName,
@@ -334,6 +349,7 @@ const activityView = computed(() => {
     expandedContent,
     expandedMessage,
     expandedToolResult,
+    receivedMessages,
     exitCode: currentExitCode,
     inlineTitle,
     metadataToolName: currentMetadataToolName,
@@ -442,6 +458,13 @@ const activityView = computed(() => {
         v-if="activityView.expandedToolResult"
         class="agent-activity-item__tool-result"
       >{{ activityView.toolResult }}</p>
+    </template>
+    <template v-if="activity.activity_type === 'message_received' && activityView.receivedMessages.length > 0">
+      <p
+        v-for="(msg, idx) in activityView.receivedMessages"
+        :key="idx"
+        class="agent-activity-item__received-message"
+      ><span class="agent-activity-item__received-sender">{{ msg.sender }}</span>{{ msg.content }}</p>
     </template>
     <p v-if="activity.error_message" class="agent-activity-item__error">{{ activity.error_message }}</p>
   </article>
@@ -800,6 +823,26 @@ const activityView = computed(() => {
 
 .agent-activity-item__tool-result--stderr {
   color: var(--danger, #f85149);
+}
+
+.agent-activity-item__received-message {
+  margin: 0;
+  padding-left: 22px;
+  color: var(--text);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.agent-activity-item__received-sender {
+  font-weight: 600;
+  color: var(--text-strong);
+  margin-right: 4px;
 }
 
 </style>

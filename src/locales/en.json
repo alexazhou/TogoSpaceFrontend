@@ -106,6 +106,7 @@
       "sendMessage": "Send Message",
       "finishTurn": "End Turn",
       "compact": "Context Compact",
+      "messageReceived": "Message Received",
       "unknown": "Unknown Type"
     },
     "tokenEstimate": "Est. {count}",
