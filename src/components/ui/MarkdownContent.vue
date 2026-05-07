@@ -96,17 +96,17 @@ onMounted(() => {
 .markdown-content {
   color: inherit;
   font: inherit;
+  --markdown-code-bg: var(--surface-panel);
+  --markdown-code-shadow: none;
+  --markdown-code-text: var(--text-primary);
+  --markdown-inline-code-bg: var(--surface-elevated);
+}
+
+:global(:root[data-theme='dark']) .markdown-content {
   --markdown-code-bg: var(--surface-panel-muted);
   --markdown-code-shadow: none;
   --markdown-code-text: var(--text-primary);
   --markdown-inline-code-bg: var(--surface-panel-muted);
-}
-
-:global(:root[data-theme='light']) .markdown-content {
-  --markdown-code-bg: var(--surface-panel-deep);
-  --markdown-code-shadow: none;
-  --markdown-code-text: var(--text-primary);
-  --markdown-inline-code-bg: var(--surface-elevated);
 }
 
 .markdown-content :deep(*) {
