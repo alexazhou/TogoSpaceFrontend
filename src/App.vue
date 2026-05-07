@@ -634,15 +634,15 @@ onBeforeUnmount(() => {
 
 .global-success-toast {
   width: min(360px, calc(100vw - 40px));
-  min-height: 64px;
-  padding: 16px 20px;
+  min-height: 44px;
+  padding: 10px 18px;
   border: 1px solid color-mix(in srgb, var(--state-success) 42%, var(--border-default) 58%);
-  border-radius: 18px;
+  border-radius: 14px;
   background: color-mix(in srgb, var(--state-success) 18%, var(--surface-panel) 82%);
   color: color-mix(in srgb, var(--state-success) 78%, var(--text-primary) 22%);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
-  font-size: 0.96rem;
-  line-height: 1.45;
+  font-size: 0.92rem;
+  line-height: 1.3;
   text-align: center;
   pointer-events: none;
   animation: success-toast-drop 0.22s ease-out;

@@ -97,22 +97,16 @@ onMounted(() => {
   color: inherit;
   font: inherit;
   --markdown-code-bg: var(--surface-panel-muted);
-  --markdown-code-border: rgba(255, 255, 255, 0.12);
   --markdown-code-shadow: none;
   --markdown-code-text: var(--text-primary);
   --markdown-inline-code-bg: var(--surface-panel-muted);
-  --markdown-code-copy-border: rgba(255, 255, 255, 0.12);
-  --markdown-code-copy-border-hover: rgba(255, 255, 255, 0.22);
 }
 
 :global(:root[data-theme='light']) .markdown-content {
   --markdown-code-bg: var(--surface-panel-deep);
-  --markdown-code-border: rgba(148, 163, 184, 0.35);
   --markdown-code-shadow: none;
   --markdown-code-text: var(--text-primary);
   --markdown-inline-code-bg: var(--surface-elevated);
-  --markdown-code-copy-border: rgba(148, 163, 184, 0.35);
-  --markdown-code-copy-border-hover: rgba(148, 163, 184, 0.52);
 }
 
 .markdown-content :deep(*) {
@@ -187,7 +181,7 @@ onMounted(() => {
   padding: 0.9rem 2.4rem 0.9rem 0.95rem;
   border-radius: 10px;
   background: var(--markdown-code-bg);
-  border: 1px solid var(--markdown-code-border);
+  border: none;
   box-shadow: var(--markdown-code-shadow);
 }
 
@@ -277,7 +271,7 @@ onMounted(() => {
   width: 22px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--markdown-code-copy-border);
+  border: none;
   border-radius: 6px;
   background: transparent;
   color: var(--text-secondary);
@@ -286,12 +280,10 @@ onMounted(() => {
   cursor: pointer;
   transition:
     background 140ms ease,
-    color 140ms ease,
-    border-color 140ms ease;
+    color 140ms ease;
 }
 
 .markdown-content :deep(.markdown-code-copy:hover) {
-  border-color: var(--markdown-code-copy-border-hover);
   color: var(--text-primary);
 }
 
