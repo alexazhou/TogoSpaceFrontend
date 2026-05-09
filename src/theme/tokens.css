@@ -72,6 +72,9 @@
   --scrollbar-track: #0d1a28;
   --scrollbar-thumb: #274968;
   --scrollbar-thumb-hover: #366286;
+  --markdown-code-scrollbar-track: transparent;
+  --markdown-code-scrollbar-thumb: color-mix(in srgb, var(--markdown-code-bg, var(--surface-panel)) 70%, var(--border-strong) 30%);
+  --markdown-code-scrollbar-thumb-hover: color-mix(in srgb, var(--markdown-code-bg, var(--surface-panel)) 58%, var(--border-strong) 42%);
   --toolbar-switch-off: #25384b;
   --toolbar-switch-handle: #d7e0ea;
   --theme-switch-icon-active: #e3eef8;

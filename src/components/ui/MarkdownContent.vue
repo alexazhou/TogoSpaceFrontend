@@ -15,6 +15,10 @@ const { t } = useI18n();
 const rootRef = ref<HTMLElement | null>(null);
 const renderedContent = computed(() => renderMarkdown(props.content, { inline: props.inline }));
 
+function codeBlockLanguage(pre: HTMLElement): string {
+  return pre.dataset.language?.trim() || 'text';
+}
+
 function enhanceCodeBlocks(): void {
   const root = rootRef.value;
   if (!root) {
@@ -30,14 +34,24 @@ function enhanceCodeBlocks(): void {
     const wrapper = document.createElement('div');
     wrapper.className = 'markdown-code-block';
 
+    const toolbar = document.createElement('div');
+    toolbar.className = 'markdown-code-toolbar';
+
+    const language = document.createElement('span');
+    language.className = 'markdown-code-language';
+    language.textContent = codeBlockLanguage(pre);
+
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'markdown-code-copy';
     button.setAttribute('aria-label', t('common.copy'));
     button.innerHTML = '<i class="fa-solid fa-copy" aria-hidden="true"></i>';
 
+    toolbar.appendChild(language);
+    toolbar.appendChild(button);
+
     pre.parentNode?.insertBefore(wrapper, pre);
-    wrapper.appendChild(button);
+    wrapper.appendChild(toolbar);
     wrapper.appendChild(pre);
   });
 }
@@ -127,7 +141,7 @@ onMounted(() => {
 .markdown-content :deep(* + blockquote),
 .markdown-content :deep(* + ul),
 .markdown-content :deep(* + ol),
-.markdown-content :deep(* + pre),
+.markdown-content :deep(* + .markdown-code-block),
 .markdown-content :deep(* + table),
 .markdown-content :deep(* + hr) {
   margin-top: 0.7em;
@@ -178,11 +192,36 @@ onMounted(() => {
 
 .markdown-content :deep(pre) {
   overflow-x: auto;
-  padding: 0.9rem 2.4rem 0.9rem 0.95rem;
-  border-radius: 10px;
-  background: var(--markdown-code-bg);
+  padding: 0 0.6rem 0.5rem;
+  border-radius: 0 0 8px 8px;
+  background: transparent;
   border: none;
   box-shadow: var(--markdown-code-shadow);
+  scrollbar-width: thin;
+  scrollbar-color: var(--markdown-code-scrollbar-thumb) var(--markdown-code-scrollbar-track);
+}
+
+.markdown-content :deep(pre::-webkit-scrollbar) {
+  width: 10px;
+  height: 10px;
+}
+
+.markdown-content :deep(pre::-webkit-scrollbar-track) {
+  background: var(--markdown-code-scrollbar-track);
+  border-radius: 999px;
+}
+
+.markdown-content :deep(pre::-webkit-scrollbar-thumb) {
+  min-width: 56px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--markdown-code-scrollbar-thumb);
+  background-clip: padding-box;
+}
+
+.markdown-content :deep(pre::-webkit-scrollbar-thumb:hover) {
+  background: var(--markdown-code-scrollbar-thumb-hover);
+  background-clip: padding-box;
 }
 
 .markdown-content :deep(code) {
@@ -200,6 +239,7 @@ onMounted(() => {
 .markdown-content :deep(pre code) {
   display: block;
   color: var(--markdown-code-text);
+  line-height: 1.45;
   white-space: pre;
 }
 
@@ -257,17 +297,34 @@ onMounted(() => {
 }
 
 .markdown-content :deep(.markdown-code-block) {
-  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--markdown-code-bg);
+}
+
+.markdown-content :deep(.markdown-code-toolbar) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  padding: 0.22rem 0.55rem 0;
+  color: var(--text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.markdown-content :deep(.markdown-code-language) {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .markdown-content :deep(.markdown-code-copy) {
-  position: absolute;
-  top: 0.48rem;
-  right: 0.5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  z-index: 1;
   width: 22px;
   height: 22px;
   padding: 0;

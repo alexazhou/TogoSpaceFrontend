@@ -39,7 +39,7 @@ describe('MarkdownContent', () => {
   it('renders code fences and task lists', async () => {
     const wrapper = mount(MarkdownContent, {
       props: {
-        content: '```ts\nconst answer = 42;\n```\n\n- [x] shipped',
+        content: '```ts\n\nconst answer = 42;\n\n```\n\n- [x] shipped',
       },
       global: {
         plugins: [i18n],
@@ -48,7 +48,9 @@ describe('MarkdownContent', () => {
     await flushPromises();
 
     expect(wrapper.find('pre.hljs code').text()).toContain('const answer = 42;');
+    expect(wrapper.find('pre.hljs code').text()).toBe('const answer = 42;');
     expect(wrapper.find('input[type="checkbox"]').element).toHaveProperty('checked', true);
+    expect(wrapper.find('.markdown-code-language').text()).toBe('ts');
     expect(wrapper.find('.markdown-code-copy').attributes('aria-label')).toBe('复制');
     expect(wrapper.find('.markdown-code-copy .fa-copy').exists()).toBe(true);
   });

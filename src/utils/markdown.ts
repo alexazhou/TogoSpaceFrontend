@@ -38,23 +38,47 @@ hljs.registerLanguage('xml', xml);
 hljs.registerLanguage('yaml', yaml);
 hljs.registerLanguage('yml', yaml);
 
+function normalizeFenceLanguage(language: string): string {
+  return language.trim().split(/\s+/)[0]?.toLowerCase() ?? '';
+}
+
+function escapeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function trimFenceBlankLines(content: string): string {
+  return content
+    .replace(/^(?:[ \t]*\r?\n)+/, '')
+    .replace(/(?:\r?\n[ \t]*)+$/, '');
+}
+
 const markdown = new MarkdownIt({
   html: false,
   linkify: true,
   typographer: true,
   breaks: true,
   highlight: (content: string, language: string) => {
-    if (language && hljs.getLanguage(language)) {
+    const normalizedContent = trimFenceBlankLines(content);
+    const normalizedLanguage = normalizeFenceLanguage(language);
+    const languageAttribute = normalizedLanguage
+      ? ` data-language="${escapeHtmlAttribute(normalizedLanguage)}"`
+      : '';
+
+    if (normalizedLanguage && hljs.getLanguage(normalizedLanguage)) {
       try {
-        const highlighted = hljs.highlight(content, { language, ignoreIllegals: true }).value;
-        return `<pre class="hljs"><code>${highlighted}</code></pre>`;
+        const highlighted = hljs.highlight(normalizedContent, { language: normalizedLanguage, ignoreIllegals: true }).value;
+        return `<pre class="hljs"${languageAttribute}><code>${highlighted}</code></pre>`;
       } catch {
         // Fall through to escaped fallback below.
       }
     }
 
-    const escaped = markdown.utils.escapeHtml(content);
-    return `<pre class="hljs"><code>${escaped}</code></pre>`;
+    const escaped = markdown.utils.escapeHtml(normalizedContent);
+    return `<pre class="hljs"${languageAttribute}><code>${escaped}</code></pre>`;
   },
 });
 
