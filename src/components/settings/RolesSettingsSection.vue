@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getRoleTemplates } from '../../api';
 import type { RoleTemplateSummary } from '../../types';
+import { displayName } from '../../utils';
 import RoleTemplateEditorDialog from './RoleTemplateEditorDialog.vue';
 import SettingsBreadcrumb from './SettingsBreadcrumb.vue';
 import type { SettingsBreadcrumbItem } from './types';
@@ -119,7 +120,7 @@ onMounted(() => {
             >
               <td class="roles-cell-id">#{{ template.id }}</td>
               <td class="roles-cell-name">
-                <strong>{{ template.name }}</strong>
+                <strong>{{ displayName(template) }}</strong>
               </td>
               <td>
                 <span

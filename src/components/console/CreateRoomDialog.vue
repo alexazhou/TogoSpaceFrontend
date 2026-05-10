@@ -7,6 +7,7 @@ import { createTeamRoom } from '../../api';
 import { showGlobalSuccessToast } from '../../appUiState';
 import { loadRoleTemplates, loadTeamAgents, loadTeamRooms } from '../../realtime/runtimeStore';
 import { useRoleTemplates, useTeamAgents } from '../../realtime/selectors';
+import { displayName } from '../../utils';
 import ConfirmDialog from '../ui/ConfirmDialog.vue';
 
 type CreateRoomMemberOption = {
@@ -48,7 +49,7 @@ const teamId = computed<number | null>(() => {
 const agents = useTeamAgents(teamId);
 const roleTemplates = useRoleTemplates();
 const roleTemplateNameMap = computed<Record<number, string>>(() =>
-  Object.fromEntries(roleTemplates.value.map((template) => [template.id, template.name])),
+  Object.fromEntries(roleTemplates.value.map((template) => [template.id, displayName(template)])),
 );
 
 const members = computed<CreateRoomMemberOption[]>(() =>

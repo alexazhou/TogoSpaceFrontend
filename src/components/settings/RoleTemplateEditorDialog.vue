@@ -9,6 +9,7 @@ import {
 } from '../../api';
 import { showGlobalSuccessToast } from '../../appUiState';
 import type { RoleTemplateDetail } from '../../types';
+import { displayName } from '../../utils';
 import ConfirmDialog from '../ui/ConfirmDialog.vue';
 
 type EditorMode = 'create' | 'edit';
@@ -63,9 +64,15 @@ const currentTypeLabel = computed(() => {
   return t('settings.roles.undefined');
 });
 
-const dialogTitle = computed(() => (
-  isCreating.value ? t('settings.roles.newTitle') : (form.value.name || t('settings.roles.detailFallback'))
-));
+const dialogTitle = computed(() => {
+  if (isCreating.value) {
+    return t('settings.roles.newTitle');
+  }
+  if (currentDetail.value) {
+    return displayName(currentDetail.value);
+  }
+  return form.value.name || t('settings.roles.detailFallback');
+});
 const dialogEyebrow = computed(() => (isCreating.value ? 'Create Template' : 'Template Detail'));
 const isSystemTemplate = computed(() => isSystemType(currentDetail.value?.type));
 const canDelete = computed(() => !isCreating.value && !!currentDetail.value && !isSystemTemplate.value && !isDeleting.value);
