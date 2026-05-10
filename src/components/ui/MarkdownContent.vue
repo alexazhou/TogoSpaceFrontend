@@ -262,8 +262,8 @@ onMounted(() => {
 .markdown-content :deep(:not(pre) > code) {
   padding: 0.16em 0.35em;
   border-radius: 4px;
-  background: var(--gray-700);
-  border: 1px solid var(--gray-600);
+  background: var(--gray-800);
+  border: 1px solid var(--gray-700);
   color: var(--text-primary);
 }
 
