@@ -80,6 +80,17 @@
   --toolbar-switch-handle: #d7e0ea;
   --theme-switch-icon-active: #e3eef8;
 
+  /* Neutral gray scale for elements that should not have color tinting. */
+  --gray-100: #f8f9fa;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #6c757d;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+
   /* Room list semantic tokens for badges, unread states, and card emphasis. */
   --room-private-border: rgba(210, 165, 95, 0.34);
   --room-private-bg: rgba(210, 165, 95, 0.1);
@@ -165,6 +176,17 @@
   --toolbar-switch-off: rgba(15, 23, 42, 0.18);
   --toolbar-switch-handle: #ffffff;
   --theme-switch-icon-active: #4b7fc0;
+
+  /* Neutral gray scale for elements that should not have color tinting. */
+  --gray-100: #212529;
+  --gray-200: #343a40;
+  --gray-300: #495057;
+  --gray-400: #6c757d;
+  --gray-500: #adb5bd;
+  --gray-600: #ced4da;
+  --gray-700: #dee2e6;
+  --gray-800: #e9ecef;
+  --gray-900: #f8f9fa;
 
   /* Room list semantic tokens for badges, unread states, and card emphasis. */
   --room-private-border: rgba(196, 137, 12, 0.42);

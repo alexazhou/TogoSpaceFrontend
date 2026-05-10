@@ -302,19 +302,19 @@ onMounted(() => {
 .markdown-content :deep(th),
 .markdown-content :deep(td) {
   padding: 0.48rem 0.62rem;
-  border: 1px solid color-mix(in srgb, var(--border-default) 36%, transparent);
+  border: 1px solid var(--gray-600);
   text-align: left;
   vertical-align: top;
 }
 
 .markdown-content :deep(th) {
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--surface-panel-muted) 72%, transparent);
+  background: var(--surface-panel-muted);
 }
 
 .markdown-content :deep(hr) {
   border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--border-default) 44%, transparent);
+  border-top: 1px solid var(--gray-600);
 }
 
 .markdown-content :deep(input[type='checkbox']) {
