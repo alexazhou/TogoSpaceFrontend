@@ -175,10 +175,7 @@ function getSendMessagePrefix(): string {
   return t('agent.sendToRoomPrefix', { room: roomName.value });
 }
 
-function getFinishTurnRoomLabel(activity: AgentActivity): string {
-  if (activity.activity_type !== 'tool_call' || toolName.value !== 'finish_chat_turn') {
-    return '';
-  }
+function getTaskRoomDisplayName(activity: AgentActivity): string {
   const taskRoomId = activity.metadata?.task_room_id;
   if (typeof taskRoomId !== 'number') {
     return '';
@@ -187,7 +184,21 @@ function getFinishTurnRoomLabel(activity: AgentActivity): string {
   if (!room) {
     return '';
   }
-  return t('agent.finishTurnRoomLabel', { room: displayName({ name: room.room_name, i18n: room.i18n }) });
+  return displayName({ name: room.room_name, i18n: room.i18n });
+}
+
+function getTaskRoomLabel(activity: AgentActivity): string {
+  if (
+    activity.activity_type !== 'message_received'
+    && !(activity.activity_type === 'tool_call' && toolName.value === 'finish_chat_turn')
+  ) {
+    return '';
+  }
+  const taskRoomName = getTaskRoomDisplayName(activity);
+  if (!taskRoomName) {
+    return '';
+  }
+  return t('agent.finishTurnRoomLabel', { room: taskRoomName });
 }
 
 function getExecuteBashStdout(activity: AgentActivity): string {
@@ -333,7 +344,7 @@ const activityView = computed(() => {
   const currentMetadataToolName = getActivityToolName(activity);
   const showToolName = shouldShowToolName(activity);
   const currentSendMessagePrefix = currentToolName === 'send_chat_msg' ? getSendMessagePrefix() : '';
-  const currentFinishTurnRoomLabel = getFinishTurnRoomLabel(activity);
+  const currentTaskRoomLabel = getTaskRoomLabel(activity);
   const executeBashResult = activity.activity_type === 'tool_call' && currentToolName === 'execute_bash';
   const currentStdout = executeBashResult ? getExecuteBashStdout(activity) : '';
   const currentStderr = executeBashResult ? getExecuteBashStderr(activity) : '';
@@ -368,7 +379,7 @@ const activityView = computed(() => {
     expandedContent,
     expandedMessage,
     expandedToolResult,
-    finishTurnRoomLabel: currentFinishTurnRoomLabel,
+    taskRoomLabel: currentTaskRoomLabel,
     receivedMessages,
     exitCode: currentExitCode,
     inlineTitle,
@@ -424,6 +435,10 @@ const activityView = computed(() => {
         </span>
       </span>
       <strong v-if="activityView.inlineTitle" class="agent-activity-item__title">{{ activityView.title }}</strong>
+      <strong
+        v-if="activity.activity_type === 'tool_call' && activityView.toolName === 'send_chat_msg'"
+        class="agent-activity-item__title"
+      >{{ activityView.title }}</strong>
       <span
         v-if="activityView.showToolName"
         class="agent-activity-item__chip agent-activity-item__chip--mono agent-activity-item__tool-name"
@@ -463,11 +478,11 @@ const activityView = computed(() => {
       <span v-if="activityView.tokenText" class="agent-activity-item__tail">
         <span class="agent-activity-item__tokens">{{ activityView.tokenText }}</span>
       </span>
-      <span v-if="activityView.finishTurnRoomLabel" class="agent-activity-item__tail">
+      <span v-if="activityView.taskRoomLabel" class="agent-activity-item__tail">
         <span
           class="agent-activity-item__finish-turn-room"
-          :title="activityView.finishTurnRoomLabel"
-        >{{ activityView.finishTurnRoomLabel }}</span>
+          :title="activityView.taskRoomLabel"
+        >{{ activityView.taskRoomLabel }}</span>
       </span>
     </div>
     <template v-if="activityView.executeBashResult">
