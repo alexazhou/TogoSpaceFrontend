@@ -221,6 +221,7 @@
     "emptyNameError": "成员名称不能为空",
     "duplicateNameError": "成员名称“{name}”已存在",
     "emptyDeptNameError": "部门名称不能为空",
+    "unassignedDepartment": "未分配部门",
     "subtitle": "成员"
   },
   "member": {

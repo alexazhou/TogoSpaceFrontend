@@ -221,6 +221,7 @@
     "emptyNameError": "Member name cannot be empty",
     "duplicateNameError": "Member name \"{name}\" already exists",
     "emptyDeptNameError": "Department name cannot be empty",
+    "unassignedDepartment": "Unassigned",
     "subtitle": "Member"
   },
   "member": {

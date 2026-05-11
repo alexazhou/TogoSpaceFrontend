@@ -26,6 +26,18 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const showDepartmentAction = computed(() => props.node.kind === 'member' && !!props.node.children.length);
+const nodeOverline = computed(() => {
+  if (props.node.kind === 'pending') {
+    return '';
+  }
+  if (props.node.hasDepartment === false) {
+    return props.node.departmentName || t('teamTree.unassignedDepartment');
+  }
+  if (!showDepartmentAction.value) {
+    return '';
+  }
+  return props.node.departmentName || '';
+});
 
 function handlePrimaryAction(): void {
   if (props.node.kind !== 'member' || props.readonly || props.showEditAction) {
@@ -107,11 +119,15 @@ function buildChildShellStyle(child: TeamGraphNode): Record<string, string> {
     <div class="member-card-anchor">
       <AgentCardBase
         class="member-node member-card-button"
-        :class="{ 'top-level-node': topLevel, 'team-root': root }"
+        :class="{
+          'top-level-node': topLevel,
+          'team-root': root,
+          'member-node--unassigned': node.kind === 'member' && node.hasDepartment === false,
+        }"
         :empty="node.kind === 'pending'"
         :readonly="readonly"
         :title="node.kind === 'pending' ? '+' : node.name"
-        :overline="node.kind === 'pending' || !showDepartmentAction ? '' : (node.departmentName || '')"
+        :overline="nodeOverline"
         :subtitle="node.subtitle"
         :employee-number="node.employeeNumber"
         :avatar-name="node.kind === 'pending' ? '' : node.avatarName"
@@ -260,6 +276,17 @@ function buildChildShellStyle(child: TeamGraphNode): Record<string, string> {
   display: grid;
   justify-items: center;
   align-content: start;
+}
+
+.member-node--unassigned {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--focus-border) 38%, var(--team-create-node-border) 62%);
+  background: color-mix(in srgb, var(--surface-soft) 94%, var(--selected) 6%);
+}
+
+.member-node--unassigned:hover {
+  border-color: color-mix(in srgb, var(--focus-border) 62%, var(--team-create-node-border) 38%);
+  background: color-mix(in srgb, var(--surface-soft) 88%, var(--selected) 12%);
 }
 
 .member-card-button {

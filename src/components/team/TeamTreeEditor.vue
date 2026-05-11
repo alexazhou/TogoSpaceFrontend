@@ -24,6 +24,7 @@ type DraftOrgNode = {
   kind: 'member' | 'pending';
   agentId: number | null;
   deptId: number | null;
+  hasAssignedDepartment: boolean;
   memberName: string;
   roleTemplateId: number | null;
   model: string;
@@ -91,12 +92,13 @@ function cloneDraftOrgNode(node: DraftOrgNode | null): DraftOrgNode | null {
   };
 }
 
-function createPendingNode(): DraftOrgNode {
+function createPendingNode(hasAssignedDepartment = false): DraftOrgNode {
   return {
     id: createDraftNodeId('pending'),
     kind: 'pending',
     agentId: null,
     deptId: null,
+    hasAssignedDepartment,
     memberName: '',
     roleTemplateId: null,
     model: '',
@@ -195,6 +197,7 @@ function createMemberNode(
   agent: AgentInfo | undefined,
   options?: {
     deptId?: number | null;
+    hasAssignedDepartment?: boolean;
     deptName?: string;
     deptResponsibility?: string;
     children?: DraftOrgNode[];
@@ -205,6 +208,7 @@ function createMemberNode(
     kind: 'member',
     agentId: typeof agent?.id === 'number' ? agent.id : null,
     deptId: typeof options?.deptId === 'number' ? options.deptId : null,
+    hasAssignedDepartment: options?.hasAssignedDepartment ?? false,
     memberName,
     roleTemplateId: agent?.role_template_id ?? null,
     model: agent?.model || '',
@@ -223,6 +227,7 @@ function buildFallbackOrgTree(agents: AgentInfo[]): DraftOrgNode | null {
   }
 
   return createMemberNode(leader.name, leader, {
+    hasAssignedDepartment: false,
     children: agents.slice(1).map((agent) => createMemberNode(agent.name, agent)),
   });
 }
@@ -251,6 +256,9 @@ function buildDraftOrgNodeFromDeptTree(
       return createMemberNode(
         agentsById.get(agentId)!.name,
         agentsById.get(agentId),
+        {
+          hasAssignedDepartment: true,
+        },
       );
     });
 
@@ -264,6 +272,7 @@ function buildDraftOrgNodeFromDeptTree(
     managerAgent,
     {
       deptId: node.id ?? null,
+      hasAssignedDepartment: true,
       deptName: node.name,
       deptResponsibility: node.responsibility,
       children: [...extraMemberNodes, ...childNodes],
@@ -290,7 +299,9 @@ function buildDraftOrgTree(tree: DeptTreeNode | null, agents: AgentInfo[]): Draf
   }
 
   const extraAgents = agents.filter((agent) => typeof agent.id === 'number' && !visitedIds.has(agent.id));
-  root.children.push(...extraAgents.map((agent) => createMemberNode(agent.name, agent)));
+  root.children.push(...extraAgents.map((agent) => createMemberNode(agent.name, agent, {
+    hasAssignedDepartment: false,
+  })));
   return root;
 }
 
@@ -649,7 +660,8 @@ function toGraphNode(node: DraftOrgNode, teamName: string): TeamGraphNode {
     kind: 'member',
     agentId: node.agentId,
     name: node.memberName,
-    departmentName: node.deptName,
+    departmentName: node.hasAssignedDepartment ? node.deptName : t('teamTree.unassignedDepartment'),
+    hasDepartment: node.hasAssignedDepartment,
     subtitle: resolveRoleTemplateNameById(node.roleTemplateId),
     employeeNumber: node.employeeNumber,
     avatarName: node.memberName,
@@ -945,7 +957,9 @@ function saveMemberEditor(): void {
   }
 
   if (editingPendingSlotId.value) {
+    const pendingNode = findNodeById(nextTree, editingPendingSlotId.value);
     const nextNode = createMemberNode(nextMemberName, undefined, {
+      hasAssignedDepartment: pendingNode?.hasAssignedDepartment ?? false,
       deptName: '',
       deptResponsibility: '',
     });
@@ -997,7 +1011,7 @@ function addSubordinate(parentNodeId: string): void {
     parentNode.deptName = buildNextAutoDepartmentName();
   }
 
-  parentNode.children.push(createPendingNode());
+  parentNode.children.push(createPendingNode(true));
   draftOrgTree.value = nextTree;
   teamMemberStatus.value = '';
 }
