@@ -794,9 +794,9 @@ export async function getAgentActivities(agentId: number): Promise<AgentActivity
   return (data.activities ?? []).map(normalizeAgentActivity);
 }
 
-export async function getAgentTasks(agentId: number): Promise<AgentTask[]> {
+export async function getAgentTasks(agentId: number, includeClosed = false): Promise<AgentTask[]> {
   const data = await requestJson<{ tasks: RawAgentTask[] }>(
-    withSearch(`/agents/${agentId}/tasks.json`, { include_closed: 0, limit: 30 }),
+    withSearch(`/agents/${agentId}/tasks.json`, { include_closed: includeClosed ? 1 : 0, limit: 30 }),
   );
   return (data.tasks ?? []).map(normalizeAgentTask);
 }

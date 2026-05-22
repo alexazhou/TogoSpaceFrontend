@@ -98,6 +98,11 @@
     "loadingTasks": "Loading agent tasks…",
     "noActivities": "No activity records.",
     "noTasks": "No open tasks.",
+    "taskFilterAll": "All",
+    "taskFilterDone": "Done",
+    "taskFilterUndone": "Open",
+    "taskFilterNoTasksDone": "No completed tasks.",
+    "taskFilterNoTasksAll": "No tasks.",
     "noTaskDescription": "No task description.",
     "taskDetail": "Task Detail",
     "activityState": {

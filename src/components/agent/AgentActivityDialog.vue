@@ -49,6 +49,7 @@ const tasksLoading = ref(false);
 const tasks = ref<AgentTask[]>([]);
 const teamAgents = ref<AgentInfo[]>([]);
 const activeTab = ref<'activities' | 'tasks'>('activities');
+const taskFilter = ref<'all' | 'done' | 'undone'>('undone');
 const selectedTask = ref<AgentTask | null>(null);
 const shouldFollowActivities = ref(true);
 const hasAutoScrolledForCurrentAgent = ref(false);
@@ -134,7 +135,16 @@ const visibleActivities = computed(() =>
     .filter((a) => a.activity_type !== 'agent_state')
     .slice(-30),
 );
-const visibleTasks = computed(() => tasks.value.slice(0, 30));
+const DONE_STATUSES = new Set(['DONE', 'CANCELLED']);
+
+const visibleTasks = computed(() => {
+  const filtered = taskFilter.value === 'all'
+    ? tasks.value
+    : taskFilter.value === 'done'
+      ? tasks.value.filter((t) => DONE_STATUSES.has(t.status))
+      : tasks.value.filter((t) => !DONE_STATUSES.has(t.status));
+  return filtered.slice(0, 30);
+});
 
 function formatTaskDateTime(value: string | null): string {
   if (!value) {
@@ -248,7 +258,7 @@ async function loadTasks(): Promise<void> {
   tasksErrorMessage.value = '';
 
   try {
-    tasks.value = await getAgentTasks(props.agentId);
+    tasks.value = await getAgentTasks(props.agentId, taskFilter.value !== 'undone');
   } catch (error) {
     tasksErrorMessage.value = t('agent.tasksLoadFailed');
     console.error(error);
@@ -551,10 +561,30 @@ watch(
                   </div>
                 </template>
                 <template v-else>
+                  <div class="agent-task-filter">
+                    <button
+                      type="button"
+                      class="agent-task-filter__btn"
+                      :class="{ 'is-active': taskFilter === 'undone' }"
+                      @click="taskFilter = 'undone'; loadTasks()"
+                    >{{ t('agent.taskFilterUndone') }}</button>
+                    <button
+                      type="button"
+                      class="agent-task-filter__btn"
+                      :class="{ 'is-active': taskFilter === 'done' }"
+                      @click="taskFilter = 'done'; loadTasks()"
+                    >{{ t('agent.taskFilterDone') }}</button>
+                    <button
+                      type="button"
+                      class="agent-task-filter__btn"
+                      :class="{ 'is-active': taskFilter === 'all' }"
+                      @click="taskFilter = 'all'; loadTasks()"
+                    >{{ t('agent.taskFilterAll') }}</button>
+                  </div>
                   <div v-if="tasksErrorMessage" class="error-banner">{{ tasksErrorMessage }}</div>
                   <div v-else-if="tasksLoading && !visibleTasks.length" class="loading-card">{{ t('agent.loadingTasks') }}</div>
                   <div v-else-if="!tasksLoading && !visibleTasks.length" class="agent-activity-empty">
-                    {{ t('agent.noTasks') }}
+                    {{ taskFilter === 'undone' ? t('agent.noTasks') : taskFilter === 'done' ? t('agent.taskFilterNoTasksDone') : t('agent.taskFilterNoTasksAll') }}
                   </div>
                   <div v-else class="agent-task-list sidebar-scroll">
                     <article
@@ -588,7 +618,7 @@ watch(
                 </template>
               </section>
 
-              <section class="agent-supervise-section">
+              <section v-if="activeTab === 'activities'" class="agent-supervise-section">
                 <div class="agent-supervise-section__input-row">
                   <div class="agent-supervise-section__editor" :class="{ 'is-focused': superviseFocused }">
                     <textarea
@@ -1092,6 +1122,34 @@ watch(
   flex-direction: column;
   gap: 6px;
   padding: 8px 10px 8px;
+}
+
+.agent-task-filter {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px 4px;
+}
+
+.agent-task-filter__btn {
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.agent-task-filter__btn:hover {
+  background: color-mix(in srgb, var(--surface-soft) 60%, transparent);
+  color: var(--text-primary);
+}
+
+.agent-task-filter__btn.is-active {
+  background: color-mix(in srgb, var(--interactive-selected) 22%, var(--surface-pill) 78%);
+  border-color: color-mix(in srgb, var(--interactive-selected) 34%, var(--panel-border) 66%);
+  color: var(--text-strong);
 }
 
 .agent-task-card {

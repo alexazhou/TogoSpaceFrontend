@@ -98,6 +98,11 @@
     "loadingTasks": "正在加载 Agent 任务…",
     "noActivities": "暂无活动记录。",
     "noTasks": "当前没有未完成任务。",
+    "taskFilterAll": "全部任务",
+    "taskFilterDone": "已完成",
+    "taskFilterUndone": "未完成",
+    "taskFilterNoTasksDone": "暂无已完成任务。",
+    "taskFilterNoTasksAll": "暂无任务。",
     "noTaskDescription": "暂无任务说明。",
     "taskDetail": "任务详情",
     "activityState": {
