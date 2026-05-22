@@ -357,6 +357,7 @@ const activityView = computed(() => {
     && Boolean(currentToolResult);
   const expandedMessage = activity.activity_type === 'tool_call' && currentToolName === 'send_chat_msg';
   const sendChatMsgContent = expandedMessage ? getSendMessageContent(activity) : '';
+  const sendChatMsgTruncated = sendChatMsgContent.split('\n').length > 5 || sendChatMsgContent.length > 350;
   const sendChatMsgError = expandedMessage && activity.status === 'failed'
     ? (currentErrorMessage || currentToolResult)
     : '';
@@ -391,6 +392,7 @@ const activityView = computed(() => {
     model: currentModel,
     sendChatMsgContent,
     sendChatMsgError,
+    sendChatMsgTruncated,
     sendMessagePrefix: currentSendMessagePrefix,
     showErrorMessage: Boolean(currentErrorMessage) && currentErrorMessage !== currentToolResult && !expandedMessage,
     showSummary: Boolean(currentSummary),
@@ -488,6 +490,7 @@ const activityView = computed(() => {
       </span>
     </div>
     <p v-if="activityView.sendChatMsgContent" class="agent-activity-item__send-chat-content">{{ activityView.sendChatMsgContent }}</p>
+    <p v-if="activityView.sendChatMsgTruncated && !activityView.sendChatMsgError" class="agent-activity-item__content-more">...</p>
     <p v-if="activityView.sendChatMsgError" class="agent-activity-item__error">调用失败：{{ activityView.sendChatMsgError }}</p>
     <template v-if="activityView.executeBashResult">
       <p
@@ -813,6 +816,14 @@ const activityView = computed(() => {
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__send-chat-content {
   color: color-mix(in srgb, var(--danger, #f85149) 68%, var(--text) 32%);
+}
+
+.agent-activity-item__content-more {
+  margin: 0;
+  padding-left: 22px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.2;
 }
 
 .agent-activity-item__error {
