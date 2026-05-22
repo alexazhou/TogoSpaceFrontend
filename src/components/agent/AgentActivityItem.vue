@@ -308,7 +308,7 @@ function activitySummary(
 ): string {
   if (activity.activity_type === 'tool_call') {
     if (summaryToolName === 'send_chat_msg') {
-      return getSendMessageContent(activity);
+      return '';
     }
     if (summaryToolName === 'finish_chat_turn') {
       return '';
@@ -356,6 +356,10 @@ const activityView = computed(() => {
     && (!isFinishTurnActivity || activity.status === 'failed')
     && Boolean(currentToolResult);
   const expandedMessage = activity.activity_type === 'tool_call' && currentToolName === 'send_chat_msg';
+  const sendChatMsgContent = expandedMessage ? getSendMessageContent(activity) : '';
+  const sendChatMsgError = expandedMessage && activity.status === 'failed'
+    ? (currentErrorMessage || currentToolResult)
+    : '';
   const receivedMessages = getReceivedMessages(activity);
   const expandedContent = activity.activity_type === 'reasoning' || expandedMessage || expandedToolResult
     || (activity.activity_type === 'message_received' && receivedMessages.length > 0);
@@ -385,8 +389,10 @@ const activityView = computed(() => {
     inlineTitle,
     metadataToolName: currentMetadataToolName,
     model: currentModel,
+    sendChatMsgContent,
+    sendChatMsgError,
     sendMessagePrefix: currentSendMessagePrefix,
-    showErrorMessage: Boolean(currentErrorMessage) && currentErrorMessage !== currentToolResult,
+    showErrorMessage: Boolean(currentErrorMessage) && currentErrorMessage !== currentToolResult && !expandedMessage,
     showSummary: Boolean(currentSummary),
     showToolArguments: showToolName && Boolean(currentToolArguments),
     showToolName,
@@ -435,10 +441,6 @@ const activityView = computed(() => {
         </span>
       </span>
       <strong v-if="activityView.inlineTitle" class="agent-activity-item__title">{{ activityView.title }}</strong>
-      <strong
-        v-if="activity.activity_type === 'tool_call' && activityView.toolName === 'send_chat_msg'"
-        class="agent-activity-item__title"
-      >{{ activityView.title }}</strong>
       <span
         v-if="activityView.showToolName"
         class="agent-activity-item__chip agent-activity-item__chip--mono agent-activity-item__tool-name"
@@ -485,6 +487,8 @@ const activityView = computed(() => {
         >{{ activityView.taskRoomLabel }}</span>
       </span>
     </div>
+    <p v-if="activityView.sendChatMsgContent" class="agent-activity-item__send-chat-content">{{ activityView.sendChatMsgContent }}</p>
+    <p v-if="activityView.sendChatMsgError" class="agent-activity-item__error">调用失败：{{ activityView.sendChatMsgError }}</p>
     <template v-if="activityView.executeBashResult">
       <p
         v-if="activityView.stdout"
@@ -794,12 +798,30 @@ const activityView = computed(() => {
   color: var(--muted);
 }
 
+.agent-activity-item__send-chat-content {
+  margin: 0;
+  padding-left: 22px;
+  color: var(--text);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+}
+
+.agent-activity-item[data-status='failed'] .agent-activity-item__send-chat-content {
+  color: color-mix(in srgb, var(--danger, #f85149) 68%, var(--text) 32%);
+}
+
 .agent-activity-item__error {
   margin: 0;
   color: var(--danger, #f85149);
   font-size: 0.7rem;
+  font-weight: 600;
   line-height: 1.35;
-  padding-left: 10px;
+  padding-left: 22px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
