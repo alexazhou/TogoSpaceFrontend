@@ -79,6 +79,11 @@
   --toolbar-switch-off: #25384b;
   --toolbar-switch-handle: #d7e0ea;
   --theme-switch-icon-active: #e3eef8;
+  --chat-bubble-left-bg: #3d454d;
+  --chat-bubble-left-code-bg: #262c31;
+  --markdown-code-bg-default: #2f353b;
+  --markdown-inline-code-bg-default: #3b4147;
+  --markdown-table-header-bg-default: #2a3138;
 
   /* Neutral gray scale for elements that should not have color tinting. */
   --gray-100: #f8f9fa;
@@ -176,6 +181,11 @@
   --toolbar-switch-off: rgba(15, 23, 42, 0.18);
   --toolbar-switch-handle: #ffffff;
   --theme-switch-icon-active: #4b7fc0;
+  --chat-bubble-left-bg: #edf3fa;
+  --chat-bubble-left-code-bg: #fcfefe;
+  --markdown-code-bg-default: #f4f6f8;
+  --markdown-inline-code-bg-default: #eef2f5;
+  --markdown-table-header-bg-default: #f8fbfe;
 
   /* Neutral gray scale for elements that should not have color tinting. */
   --gray-100: #212529;

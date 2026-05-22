@@ -140,17 +140,17 @@ onMounted(() => {
 .markdown-content {
   color: inherit;
   font: inherit;
-  --markdown-code-bg: var(--surface-panel);
+  --markdown-code-bg: var(--markdown-code-bg-default, var(--surface-panel));
   --markdown-code-shadow: none;
   --markdown-code-text: var(--text-primary);
-  --markdown-inline-code-bg: var(--surface-elevated);
+  --markdown-inline-code-bg: var(--markdown-inline-code-bg-default, var(--surface-elevated));
 }
 
 :global(:root[data-theme='dark']) .markdown-content {
-  --markdown-code-bg: var(--surface-panel-muted);
+  --markdown-code-bg: var(--markdown-code-bg-default, var(--surface-panel-muted));
   --markdown-code-shadow: none;
   --markdown-code-text: var(--text-primary);
-  --markdown-inline-code-bg: var(--surface-panel-muted);
+  --markdown-inline-code-bg: var(--markdown-inline-code-bg-default, var(--surface-panel-muted));
 }
 
 .markdown-content :deep(*) {
@@ -310,7 +310,7 @@ onMounted(() => {
 
 .markdown-content :deep(th) {
   color: var(--text-primary);
-  background: var(--surface-panel-muted);
+  background: var(--markdown-table-header-bg-default, var(--surface-panel-muted));
 }
 
 .markdown-content :deep(hr) {

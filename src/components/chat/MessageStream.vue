@@ -438,6 +438,10 @@ onBeforeUnmount(() => {
   color: inherit;
 }
 
+.message-row.side-left .bubble :deep(.markdown-code-block) {
+  background: var(--chat-bubble-left-code-bg);
+}
+
 .side-right .bubble {
   background: var(--bubble-right);
   color: var(--bubble-right-text);

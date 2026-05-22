@@ -15,7 +15,7 @@
   --danger: var(--state-danger);
   --warn: var(--state-warning);
   --warn-track: var(--state-warning-track);
-  --bubble-left: #364657;
+  --bubble-left: var(--chat-bubble-left-bg);
   --bubble-left-text: color-mix(in srgb, var(--text-primary) 92%, white 8%);
   --bubble-right: var(--interactive-selected);
   --bubble-right-text: var(--text-on-accent);
@@ -42,7 +42,7 @@
   --team-create-control-border: var(--border-default);
   --team-create-node-border: var(--border-default);
   --accent-soft: rgba(111, 130, 152, 0.12);
-  --bubble-left: #edf3fa;
+  --bubble-left: var(--chat-bubble-left-bg);
   --bubble-left-text: var(--text-primary);
   --bubble-right: #4f86c6;
   --settings-table-surface: color-mix(in srgb, var(--panel-bg) 92%, white 8%);
