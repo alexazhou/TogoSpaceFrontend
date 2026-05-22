@@ -88,6 +88,9 @@ function activityTitle(activity: AgentActivity): string {
     if (toolName.value === 'finish_chat_turn') {
       return t('agent.activityType.finishTurn');
     }
+    if (toolName.value === 'start_chat') {
+      return t('agent.activityType.startChat');
+    }
   }
 
   switch (activity.activity_type) {

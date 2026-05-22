@@ -116,6 +116,7 @@
       "toolCall": "Tool Call",
       "sendMessage": "Send Message",
       "finishTurn": "End Turn",
+      "startChat": "Start Chat",
       "compact": "Context Compact",
       "messageReceived": "Message Received",
       "unknown": "Unknown Type"
