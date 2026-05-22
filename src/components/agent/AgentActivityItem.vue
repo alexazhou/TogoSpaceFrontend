@@ -67,6 +67,7 @@ function shouldShowToolName(activity: AgentActivity): boolean {
   return activity.activity_type === 'tool_call'
     && toolName.value !== 'send_chat_msg'
     && toolName.value !== 'finish_chat_turn'
+    && toolName.value !== 'start_chat'
     && toolName.value.length > 0;
 }
 
