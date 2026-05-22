@@ -2,6 +2,9 @@ import type {
   AgentActivity,
   AgentActivityStatus,
   AgentActivityType,
+  AgentTask,
+  AgentTaskPriority,
+  AgentTaskStatus,
   AgentStatus,
   AgentDetail,
   AgentInfo,
@@ -77,6 +80,25 @@ type RawAgentActivity = Partial<AgentActivity> & {
   finished_at?: unknown;
   duration_ms?: unknown;
   metadata?: unknown;
+  created_at?: unknown;
+  updated_at?: unknown;
+};
+
+type RawAgentTask = Partial<AgentTask> & {
+  id?: unknown;
+  team_id?: unknown;
+  title?: unknown;
+  description?: unknown;
+  assignee_id?: unknown;
+  creator_id?: unknown;
+  manager_id?: unknown;
+  status?: unknown;
+  priority?: unknown;
+  parent_id?: unknown;
+  depends_on?: unknown;
+  room_id?: unknown;
+  result?: unknown;
+  block_reason?: unknown;
   created_at?: unknown;
   updated_at?: unknown;
 };
@@ -442,6 +464,55 @@ function normalizeAgentActivity(activity: RawAgentActivity): AgentActivity {
   };
 }
 
+function normalizeAgentTaskStatus(value?: unknown): AgentTaskStatus {
+  const normalized = String(value ?? '').trim().toUpperCase();
+  if (
+    normalized === 'TODO'
+    || normalized === 'PENDING'
+    || normalized === 'IN_PROGRESS'
+    || normalized === 'REVIEWING'
+    || normalized === 'ON_HOLD'
+    || normalized === 'DONE'
+    || normalized === 'CANCELLED'
+  ) {
+    return normalized;
+  }
+  return 'TODO';
+}
+
+function normalizeAgentTaskPriority(value?: unknown): AgentTaskPriority {
+  const normalized = String(value ?? '').trim().toUpperCase();
+  if (normalized === 'HIGH' || normalized === 'LOW') {
+    return normalized;
+  }
+  return 'NORMAL';
+}
+
+function normalizeAgentTask(task: RawAgentTask): AgentTask {
+  return {
+    id: Number(task.id ?? 0),
+    team_id: Number(task.team_id ?? 0),
+    title: String(task.title ?? ''),
+    description: typeof task.description === 'string' ? task.description : '',
+    assignee_id: Number(task.assignee_id ?? 0),
+    creator_id: Number(task.creator_id ?? 0),
+    manager_id: typeof task.manager_id === 'number' ? task.manager_id : null,
+    status: normalizeAgentTaskStatus(task.status),
+    priority: normalizeAgentTaskPriority(task.priority),
+    parent_id: typeof task.parent_id === 'number' ? task.parent_id : null,
+    depends_on: Array.isArray(task.depends_on)
+      ? task.depends_on
+        .map((item) => Number(item))
+        .filter((item) => Number.isFinite(item) && item > 0)
+      : [],
+    room_id: typeof task.room_id === 'number' ? task.room_id : null,
+    result: typeof task.result === 'string' ? task.result : '',
+    block_reason: typeof task.block_reason === 'string' ? task.block_reason : '',
+    created_at: typeof task.created_at === 'string' ? task.created_at : null,
+    updated_at: typeof task.updated_at === 'string' ? task.updated_at : null,
+  };
+}
+
 function normalizeTeamSummary(team: RawTeamSummary): TeamSummary {
   return {
     id: Number(team.id ?? 0),
@@ -721,6 +792,13 @@ export async function getAgentDetail(agentId: number): Promise<AgentDetail> {
 export async function getAgentActivities(agentId: number): Promise<AgentActivity[]> {
   const data = await requestJson<{ activities: RawAgentActivity[] }>(`/agents/${agentId}/activities.json`);
   return (data.activities ?? []).map(normalizeAgentActivity);
+}
+
+export async function getAgentTasks(agentId: number): Promise<AgentTask[]> {
+  const data = await requestJson<{ tasks: RawAgentTask[] }>(
+    withSearch(`/agents/${agentId}/tasks.json`, { include_closed: 0, limit: 30 }),
+  );
+  return (data.tasks ?? []).map(normalizeAgentTask);
 }
 
 export async function resumeAgent(agentId: number): Promise<{ status: string; agent_id: number; room_id: number }> {

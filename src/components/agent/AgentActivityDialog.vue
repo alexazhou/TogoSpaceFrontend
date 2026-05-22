@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { getAgentDetail, resumeAgent, stopAgent, superviseAgent } from '../../api';
+import { getAgentDetail, getAgentTasks, getAgentsByTeamId, resumeAgent, stopAgent, superviseAgent } from '../../api';
 import { connectionState, showGlobalSuccessToast } from '../../appUiState';
-import { displayName, formatConnectionState } from '../../utils';
+import { displayName, formatConnectionState, formatTime } from '../../utils';
 import { loadAgentActivities } from '../../realtime/runtimeStore';
 import { useAgentActivities, useAgentStatus } from '../../realtime/selectors';
 import AgentCardBase from './AgentCardBase.vue';
 import AgentActivityItem from './AgentActivityItem.vue';
 import type {
   AgentDetail,
+  AgentInfo,
+  AgentTask,
+  AgentTaskPriority,
+  AgentTaskStatus,
   AgentStatus,
 } from '../../types';
 
@@ -40,6 +44,12 @@ const superviseError = ref('');
 const superviseFocused = ref(false);
 const superviseTextareaRef = ref<HTMLTextAreaElement | null>(null);
 const activitiesErrorMessage = ref('');
+const tasksErrorMessage = ref('');
+const tasksLoading = ref(false);
+const tasks = ref<AgentTask[]>([]);
+const teamAgents = ref<AgentInfo[]>([]);
+const activeTab = ref<'activities' | 'tasks'>('activities');
+const selectedTask = ref<AgentTask | null>(null);
 const shouldFollowActivities = ref(true);
 const hasAutoScrolledForCurrentAgent = ref(false);
 
@@ -124,6 +134,64 @@ const visibleActivities = computed(() =>
     .filter((a) => a.activity_type !== 'agent_state')
     .slice(-30),
 );
+const visibleTasks = computed(() => tasks.value.slice(0, 30));
+
+function formatTaskDateTime(value: string | null): string {
+  if (!value) {
+    return '';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  return `${date.toLocaleDateString()} ${formatTime(value)}`.trim();
+}
+
+function taskStatusLabel(status: AgentTaskStatus): string {
+  return t(`agent.taskStatus.${status}`);
+}
+
+function taskPriorityLabel(priority: AgentTaskPriority): string {
+  return t(`agent.taskPriority.${priority}`);
+}
+
+function taskRefLabel(id: number | null): string {
+  if (typeof id === 'number' && id > 0) {
+    return `#${id}`;
+  }
+  return t('common.notSet');
+}
+
+function taskActorLabel(id: number | null): string {
+  if (typeof id !== 'number' || id <= 0) {
+    return t('common.notSet');
+  }
+  const matched = teamAgents.value.find((item) => item.id === id);
+  return matched ? displayName(matched) : `#${id}`;
+}
+
+function taskActorDetailLabel(id: number | null): string {
+  if (typeof id !== 'number' || id <= 0) {
+    return t('common.none');
+  }
+  const matched = teamAgents.value.find((item) => item.id === id);
+  return matched ? displayName(matched) : `#${id}`;
+}
+
+function taskRoomDetailLabel(id: number | null): string {
+  if (typeof id !== 'number' || id <= 0) {
+    return t('common.none');
+  }
+  return `#${id}`;
+}
+
+function openTaskDetail(task: AgentTask): void {
+  selectedTask.value = task;
+}
+
+function closeTaskDetail(): void {
+  selectedTask.value = null;
+}
 
 async function scrollActivitiesToBottom(): Promise<void> {
   await nextTick();
@@ -168,9 +236,31 @@ async function loadActivities(): Promise<void> {
   }
 }
 
+async function loadTasks(): Promise<void> {
+  if (!props.open || props.agentId === null) {
+    tasks.value = [];
+    tasksErrorMessage.value = '';
+    tasksLoading.value = false;
+    return;
+  }
+
+  tasksLoading.value = true;
+  tasksErrorMessage.value = '';
+
+  try {
+    tasks.value = await getAgentTasks(props.agentId);
+  } catch (error) {
+    tasksErrorMessage.value = t('agent.tasksLoadFailed');
+    console.error(error);
+  } finally {
+    tasksLoading.value = false;
+  }
+}
+
 async function loadDetail(): Promise<void> {
   if (!props.open || props.agentId === null) {
     agent.value = null;
+    teamAgents.value = [];
     errorMessage.value = '';
     loading.value = false;
     return;
@@ -181,6 +271,11 @@ async function loadDetail(): Promise<void> {
 
   try {
     agent.value = await getAgentDetail(props.agentId);
+    if (typeof agent.value.team_id === 'number' && agent.value.team_id > 0) {
+      teamAgents.value = await getAgentsByTeamId(agent.value.team_id);
+    } else {
+      teamAgents.value = [];
+    }
   } catch (error) {
     errorMessage.value = t('agent.infoLoadFailed');
     console.error(error);
@@ -265,10 +360,13 @@ function autoGrowSupervise(): void {
 watch(
   () => [props.open, props.agentId, props.agentName],
   () => {
+    activeTab.value = 'activities';
+    selectedTask.value = null;
     hasAutoScrolledForCurrentAgent.value = false;
     shouldFollowActivities.value = true;
     loadDetail().catch(console.error);
     loadActivities().catch(console.error);
+    loadTasks().catch(console.error);
   },
   { immediate: true },
 );
@@ -287,6 +385,7 @@ watch(
     }
     loadDetail().catch(console.error);
     loadActivities().catch(console.error);
+    loadTasks().catch(console.error);
   },
 );
 
@@ -396,34 +495,97 @@ watch(
               <section class="agent-activity-panel">
                 <div class="agent-activity-panel__head">
                   <div class="agent-activity-panel__title-line">
-                    <h4>{{ t('agent.activities') }}</h4>
-                    <p class="agent-activity-panel__eyebrow">Activity</p>
+                    <div class="agent-activity-panel__tabs" role="tablist" :aria-label="t('agent.panelTabs')">
+                      <button
+                        type="button"
+                        class="agent-activity-panel__tab"
+                        :class="{ 'is-active': activeTab === 'activities' }"
+                        :aria-selected="activeTab === 'activities'"
+                        @click="activeTab = 'activities'"
+                      >
+                        {{ t('agent.activities') }}
+                      </button>
+                      <button
+                        type="button"
+                        class="agent-activity-panel__tab"
+                        :class="{ 'is-active': activeTab === 'tasks' }"
+                        :aria-selected="activeTab === 'tasks'"
+                        @click="activeTab = 'tasks'"
+                      >
+                        {{ t('agent.tasks') }}
+                      </button>
+                    </div>
                   </div>
-                  <span class="agent-activity-panel__badge" :data-state="activityRealtimeState">
+                  <span
+                    v-if="activeTab === 'activities'"
+                    class="agent-activity-panel__badge"
+                    :data-state="activityRealtimeState"
+                  >
                     <span
                       class="agent-activity-panel__badge-dot"
                     ></span>
                     {{ activityBadgeLabel }}
                   </span>
+                  <span v-else class="agent-activity-panel__badge agent-activity-panel__badge--count">
+                    {{ t('agent.taskCount', { count: visibleTasks.length }) }}
+                  </span>
                 </div>
 
-                <div v-if="activitiesErrorMessage" class="error-banner">{{ activitiesErrorMessage }}</div>
-                <div v-else-if="activitiesLoading && !visibleActivities.length" class="loading-card">{{ t('agent.loadingActivities') }}</div>
-                <div v-else-if="!activitiesLoading && !visibleActivities.length" class="agent-activity-empty">
-                  {{ t('agent.noActivities') }}
-                </div>
-                <div
-                  v-else
-                  ref="activityListRef"
-                  class="agent-activity-list sidebar-scroll"
-                  @scroll="syncActivityFollowState"
-                >
-                  <AgentActivityItem
-                    v-for="activity in visibleActivities"
-                    :key="activity.id"
-                    :activity="activity"
-                  />
-                </div>
+                <template v-if="activeTab === 'activities'">
+                  <div v-if="activitiesErrorMessage" class="error-banner">{{ activitiesErrorMessage }}</div>
+                  <div v-else-if="activitiesLoading && !visibleActivities.length" class="loading-card">{{ t('agent.loadingActivities') }}</div>
+                  <div v-else-if="!activitiesLoading && !visibleActivities.length" class="agent-activity-empty">
+                    {{ t('agent.noActivities') }}
+                  </div>
+                  <div
+                    v-else
+                    ref="activityListRef"
+                    class="agent-activity-list sidebar-scroll"
+                    @scroll="syncActivityFollowState"
+                  >
+                    <AgentActivityItem
+                      v-for="activity in visibleActivities"
+                      :key="activity.id"
+                      :activity="activity"
+                    />
+                  </div>
+                </template>
+                <template v-else>
+                  <div v-if="tasksErrorMessage" class="error-banner">{{ tasksErrorMessage }}</div>
+                  <div v-else-if="tasksLoading && !visibleTasks.length" class="loading-card">{{ t('agent.loadingTasks') }}</div>
+                  <div v-else-if="!tasksLoading && !visibleTasks.length" class="agent-activity-empty">
+                    {{ t('agent.noTasks') }}
+                  </div>
+                  <div v-else class="agent-task-list sidebar-scroll">
+                    <article
+                      v-for="task in visibleTasks"
+                      :key="task.id"
+                      class="agent-task-card"
+                      role="button"
+                      tabindex="0"
+                      @click="openTaskDetail(task)"
+                      @keydown.enter.prevent="openTaskDetail(task)"
+                      @keydown.space.prevent="openTaskDetail(task)"
+                    >
+                      <div class="agent-task-card__row">
+                        <h5>{{ task.title || t('common.unknown') }}</h5>
+                        <div class="agent-task-card__badges">
+                          <span class="agent-task-card__badge" :data-priority="task.priority">
+                            {{ taskPriorityLabel(task.priority) }}
+                          </span>
+                          <span class="agent-task-card__badge" :data-status="task.status">
+                            {{ taskStatusLabel(task.status) }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="agent-task-card__meta">
+                        <span>#{{ task.id }}</span>
+                        <span>{{ t('agent.taskCreator', { id: taskActorLabel(task.creator_id) }) }}</span>
+                        <span>{{ t('agent.taskAssignee', { id: taskActorLabel(task.assignee_id) }) }}</span>
+                      </div>
+                    </article>
+                  </div>
+                </template>
               </section>
 
               <section class="agent-supervise-section">
@@ -456,6 +618,94 @@ watch(
               </section>
             </div>
           </section>
+
+          <div
+            v-if="selectedTask"
+            class="agent-task-detail-overlay"
+            @click.self="closeTaskDetail"
+          >
+            <section class="agent-task-detail-modal">
+              <div class="agent-task-detail-modal__head">
+                <div class="agent-task-detail-modal__title-wrap">
+                  <p class="agent-task-detail-modal__eyebrow">{{ t('agent.taskDetail') }}</p>
+                  <h4>{{ selectedTask.title || t('common.unknown') }}</h4>
+                </div>
+                <button
+                  type="button"
+                  class="agent-task-detail-modal__close"
+                  :aria-label="t('common.close')"
+                  @click="closeTaskDetail"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div class="agent-task-detail-modal__badges">
+                <span class="agent-task-card__badge" :data-priority="selectedTask.priority">
+                  {{ taskPriorityLabel(selectedTask.priority) }}
+                </span>
+                <span class="agent-task-card__badge" :data-status="selectedTask.status">
+                  {{ taskStatusLabel(selectedTask.status) }}
+                </span>
+              </div>
+
+              <dl class="agent-task-detail-modal__grid">
+                <div>
+                  <dt>{{ t('agent.taskId') }}</dt>
+                  <dd>#{{ selectedTask.id }}</dd>
+                </div>
+                <div>
+                  <dt>{{ t('agent.taskCreatedAtLabel') }}</dt>
+                  <dd>{{ formatTaskDateTime(selectedTask.created_at) || t('common.notSet') }}</dd>
+                </div>
+                <div>
+                  <dt>{{ t('agent.taskCreatorLabel') }}</dt>
+                  <dd>{{ taskActorLabel(selectedTask.creator_id) }}</dd>
+                </div>
+                <div>
+                  <dt>{{ t('agent.taskAssigneeLabel') }}</dt>
+                  <dd>{{ taskActorLabel(selectedTask.assignee_id) }}</dd>
+                </div>
+                <div>
+                  <dt>{{ t('agent.taskManagerLabel') }}</dt>
+                  <dd>{{ taskActorDetailLabel(selectedTask.manager_id) }}</dd>
+                </div>
+                <div>
+                  <dt>{{ t('agent.taskRoomLabel') }}</dt>
+                  <dd>{{ taskRoomDetailLabel(selectedTask.room_id) }}</dd>
+                </div>
+              </dl>
+
+              <div class="agent-task-detail-modal__section">
+                <p class="agent-task-detail-modal__section-title">{{ t('agent.taskDescriptionLabel') }}</p>
+                <p class="agent-task-detail-modal__section-body">
+                  {{ selectedTask.description || t('agent.noTaskDescription') }}
+                </p>
+              </div>
+
+              <div class="agent-task-detail-modal__section">
+                <p class="agent-task-detail-modal__section-title">{{ t('agent.taskDependsOnLabel') }}</p>
+                <p class="agent-task-detail-modal__section-body">
+                  <template v-if="selectedTask.depends_on.length">
+                    {{ selectedTask.depends_on.map((id) => `#${id}`).join(', ') }}
+                  </template>
+                  <template v-else>
+                    {{ t('common.none') }}
+                  </template>
+                </p>
+              </div>
+
+              <div v-if="selectedTask.result" class="agent-task-detail-modal__section">
+                <p class="agent-task-detail-modal__section-title">{{ t('agent.taskResultLabel') }}</p>
+                <p class="agent-task-detail-modal__section-body">{{ selectedTask.result }}</p>
+              </div>
+
+              <div v-if="selectedTask.block_reason" class="agent-task-detail-modal__section">
+                <p class="agent-task-detail-modal__section-title">{{ t('agent.taskBlockReasonLabel') }}</p>
+                <p class="agent-task-detail-modal__section-body">{{ selectedTask.block_reason }}</p>
+              </div>
+            </section>
+          </div>
         </template>
       </section>
     </div>
@@ -689,6 +939,7 @@ watch(
   flex-direction: column;
   gap: 0;
   height: 100%;
+  position: relative;
 }
 
 .agent-activity-panel {
@@ -712,6 +963,7 @@ watch(
   justify-content: space-between;
   gap: 12px;
   padding: 6px 10px 6px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .agent-activity-panel__title-line {
@@ -721,12 +973,38 @@ watch(
   min-width: 0;
 }
 
-.agent-activity-panel__eyebrow {
-  margin: 0;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.66rem;
+.agent-activity-panel__tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.agent-activity-panel__tab {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.agent-activity-panel__tab:hover {
+  color: var(--text-strong);
+  background: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+}
+
+.agent-activity-panel__tab.is-active {
+  color: var(--text-strong);
+  background: color-mix(in srgb, var(--surface-pill) 82%, var(--surface-panel-muted) 18%);
+  border-color: color-mix(in srgb, var(--border-subtle) 78%, transparent);
 }
 
 .agent-activity-panel__head h4 {
@@ -746,6 +1024,11 @@ watch(
   color: color-mix(in srgb, var(--accent) 78%, var(--text) 22%);
   font-size: 0.68rem;
   font-weight: 600;
+}
+
+.agent-activity-panel__badge--count {
+  background: color-mix(in srgb, var(--surface-pill) 84%, var(--surface-panel-muted) 16%);
+  color: var(--text-secondary);
 }
 
 .agent-activity-panel__badge[data-state='connected'] {
@@ -802,6 +1085,225 @@ watch(
   box-sizing: border-box;
 }
 
+.agent-task-list {
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px 8px;
+}
+
+.agent-task-card {
+  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-panel) 86%, var(--surface-soft) 14%);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.agent-task-card:hover,
+.agent-task-card:focus-visible {
+  border-color: color-mix(in srgb, var(--interactive-selected) 34%, var(--panel-border) 66%);
+  background: color-mix(in srgb, var(--surface-panel) 74%, var(--surface-soft) 26%);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.agent-task-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.agent-task-card__row h5 {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+  color: var(--text-strong);
+  font-size: 0.88rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-task-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.agent-task-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.agent-task-card__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--surface-pill);
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.agent-task-card__badge[data-priority='HIGH'] {
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface-pill) 88%);
+  color: var(--danger);
+}
+
+.agent-task-card__badge[data-priority='LOW'] {
+  background: color-mix(in srgb, var(--good) 12%, var(--surface-pill) 88%);
+  color: var(--good);
+}
+
+.agent-task-card__badge[data-status='IN_PROGRESS'],
+.agent-task-card__badge[data-status='REVIEWING'] {
+  background: color-mix(in srgb, var(--interactive-selected) 22%, var(--surface-pill) 78%);
+  color: var(--accent);
+}
+
+.agent-task-card__badge[data-status='PENDING'],
+.agent-task-card__badge[data-status='ON_HOLD'] {
+  background: color-mix(in srgb, var(--warn) 14%, var(--surface-pill) 86%);
+  color: var(--warn);
+}
+
+.agent-task-detail-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: rgba(112, 133, 160, 0.16);
+  backdrop-filter: blur(4px);
+}
+
+.agent-task-detail-modal {
+  width: min(640px, 100%);
+  max-height: min(72vh, 100%);
+  overflow: auto;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
+  background: color-mix(in srgb, var(--panel-bg) 96%, var(--surface-soft) 4%);
+  box-shadow:
+    0 18px 36px rgba(40, 67, 102, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  padding: 16px 18px 18px;
+}
+
+.agent-task-detail-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.agent-task-detail-modal__title-wrap h4 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.agent-task-detail-modal__eyebrow {
+  margin: 0 0 4px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.66rem;
+}
+
+.agent-task-detail-modal__close {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.agent-task-detail-modal__close:hover {
+  background: color-mix(in srgb, var(--surface-soft) 90%, transparent);
+  color: var(--text-strong);
+}
+
+.agent-task-detail-modal__badges {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.agent-task-detail-modal__grid {
+  margin: 14px 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.agent-task-detail-modal__grid div {
+  min-width: 0;
+}
+
+.agent-task-detail-modal__grid dt {
+  margin: 0 0 3px;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.agent-task-detail-modal__grid dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.agent-task-detail-modal__section {
+  margin-top: 14px;
+}
+
+.agent-task-detail-modal__section-title {
+  margin: 0 0 6px;
+  color: var(--text-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.agent-task-detail-modal__section-body {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-soft) 84%, transparent);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .agent-activity-list::after {
   content: '';
   display: block;
@@ -813,9 +1315,6 @@ watch(
   display: grid;
   place-items: center;
   color: var(--muted);
-  border: 1px dashed color-mix(in srgb, var(--panel-border) 80%, transparent);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.48);
   margin: 0 10px 10px;
 }
 
@@ -874,6 +1373,14 @@ watch(
   .agent-activity-panel {
     min-height: 0;
     padding: 0;
+  }
+
+  .agent-task-detail-overlay {
+    padding: 12px;
+  }
+
+  .agent-task-detail-modal__grid {
+    grid-template-columns: 1fr;
   }
 }
 

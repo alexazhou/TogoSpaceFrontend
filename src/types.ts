@@ -51,6 +51,36 @@ export interface AgentActivity {
   updated_at?: string | null;
 }
 
+export type AgentTaskStatus =
+  | 'TODO'
+  | 'PENDING'
+  | 'IN_PROGRESS'
+  | 'REVIEWING'
+  | 'ON_HOLD'
+  | 'DONE'
+  | 'CANCELLED';
+
+export type AgentTaskPriority = 'HIGH' | 'NORMAL' | 'LOW';
+
+export interface AgentTask {
+  id: number;
+  team_id: number;
+  title: string;
+  description: string;
+  assignee_id: number;
+  creator_id: number;
+  manager_id: number | null;
+  status: AgentTaskStatus;
+  priority: AgentTaskPriority;
+  parent_id: number | null;
+  depends_on: number[];
+  room_id: number | null;
+  result: string;
+  block_reason: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 export interface RoomInfo {
   room_id: number;
   room_name: string;
