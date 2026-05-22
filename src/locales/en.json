@@ -164,6 +164,7 @@
     },
     "parseFailed": "Parse Failed",
     "sendToRoomPrefix": "To Room [{room}]: ",
+    "startChatTarget": "→ {agent}",
     "finishTurnRoomLabel": "Room [{room}]",
     "backupLabel": "Backup Agents",
     "cardSubtitle": "Agent",

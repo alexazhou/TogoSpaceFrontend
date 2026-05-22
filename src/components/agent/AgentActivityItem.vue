@@ -179,6 +179,18 @@ function getSendMessagePrefix(): string {
   return t('agent.sendToRoomPrefix', { room: roomName.value });
 }
 
+function getStartChatTarget(): string {
+  if (toolName.value !== 'start_chat') {
+    return '';
+  }
+  const toolArguments = props.activity.metadata?.tool_arguments;
+  if (!toolArguments || typeof toolArguments !== 'object') {
+    return '';
+  }
+  const agentName = readTrimmedString((toolArguments as { agent_name?: unknown }).agent_name);
+  return agentName ? t('agent.startChatTarget', { agent: agentName }) : '';
+}
+
 function getTaskRoomDisplayName(activity: AgentActivity): string {
   const taskRoomId = activity.metadata?.task_room_id;
   if (typeof taskRoomId !== 'number') {
@@ -348,6 +360,7 @@ const activityView = computed(() => {
   const currentMetadataToolName = getActivityToolName(activity);
   const showToolName = shouldShowToolName(activity);
   const currentSendMessagePrefix = currentToolName === 'send_chat_msg' ? getSendMessagePrefix() : '';
+  const currentStartChatTarget = currentToolName === 'start_chat' ? getStartChatTarget() : '';
   const currentTaskRoomLabel = getTaskRoomLabel(activity);
   const executeBashResult = activity.activity_type === 'tool_call' && currentToolName === 'execute_bash';
   const currentStdout = executeBashResult ? getExecuteBashStdout(activity) : '';
@@ -398,6 +411,7 @@ const activityView = computed(() => {
     sendChatMsgError,
     sendChatMsgTruncated,
     sendMessagePrefix: currentSendMessagePrefix,
+    startChatTarget: currentStartChatTarget,
     showErrorMessage: Boolean(currentErrorMessage) && currentErrorMessage !== currentToolResult && !expandedMessage,
     showSummary: Boolean(currentSummary),
     showToolArguments: showToolName && Boolean(currentToolArguments),
@@ -467,6 +481,11 @@ const activityView = computed(() => {
         class="agent-activity-item__chip"
         :title="activityView.sendMessagePrefix"
       >{{ activityView.sendMessagePrefix }}</span>
+      <span
+        v-if="activityView.startChatTarget"
+        class="agent-activity-item__chip"
+        :title="activityView.startChatTarget"
+      >{{ activityView.startChatTarget }}</span>
       <span
         v-if="activityView.showSummary"
         class="agent-activity-item__summary"
