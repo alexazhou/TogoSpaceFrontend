@@ -184,7 +184,7 @@ export interface TeamRoomDetail {
   i18n: EntityI18n;
   type?: string;
   initial_topic: string | null;
-  max_turns: number;
+  max_turns: number | null;
   agents: string[];
   agent_ids?: number[];
   biz_id?: string | null;
@@ -248,7 +248,7 @@ export interface CreateTeamPayload {
     name: string;
     members: string[];
     initial_topic: string;
-    max_turns: number;
+    max_turns?: number | null;
   }>;
 }
 

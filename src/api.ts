@@ -141,6 +141,7 @@ type RawTeamRoomDetail = {
   i18n?: unknown;
   type?: unknown;
   initial_topic?: unknown;
+  max_rounds?: unknown;
   max_turns?: unknown;
   agents?: unknown;
   agent_ids?: unknown;
@@ -539,13 +540,16 @@ function normalizeTeamMember(member: RawTeamMember): TeamMember {
 }
 
 function normalizeTeamRoomDetail(room: RawTeamRoomDetail): TeamRoomDetail {
+  const rawMaxTurns = typeof room.max_rounds === 'number'
+    ? room.max_rounds
+    : (typeof room.max_turns === 'number' ? room.max_turns : null);
   return {
     id: Number(room.id ?? 0),
     name: String(room.name ?? ''),
     i18n: normalizeEntityI18n(room.i18n),
     type: typeof room.type === 'string' ? room.type : undefined,
     initial_topic: typeof room.initial_topic === 'string' ? room.initial_topic : null,
-    max_turns: Number(room.max_turns ?? 0),
+    max_turns: rawMaxTurns,
     agents: Array.isArray(room.agents)
       ? room.agents.map((agent) => String(agent))
       : [],
@@ -634,12 +638,13 @@ export async function createTeamRoom(teamId: number, payload: {
   initial_topic?: string | null;
   max_turns?: number;
 }): Promise<{ status: string; room_name: string }> {
+  const { max_turns, ...rest } = payload;
   return requestJson(`/teams/${teamId}/rooms/create.json`, {
     method: 'POST',
     body: JSON.stringify({
       initial_topic: null,
-      max_turns: 100,
-      ...payload,
+      ...rest,
+      ...(max_turns !== undefined ? { max_rounds: max_turns } : {}),
     }),
   });
 }

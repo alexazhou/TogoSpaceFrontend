@@ -160,7 +160,7 @@ onMounted(() => {
               </div>
               <p>{{ i18nText(room.i18n, 'initial_topic', room.initial_topic || '无初始话题') }}</p>
               <div class="room-tile-meta">
-                <span>max_turns {{ room.max_turns }}</span>
+                <span>max_turns {{ room.max_turns ?? '未设置' }}</span>
                 <span>{{ roomMemberNames(room.id).join(' / ') }}</span>
               </div>
             </button>
