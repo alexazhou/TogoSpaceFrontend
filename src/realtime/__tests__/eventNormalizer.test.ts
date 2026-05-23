@@ -24,4 +24,40 @@ describe('normalizeWsEventPayload', () => {
       currentTurnAgentId: 42,
     });
   });
+
+  it('normalizes message_changed db_id from id fallback', () => {
+    const event = normalizeWsEventPayload({
+      event: 'message_changed',
+      gt_room: {
+        id: 11,
+        team_id: 7,
+        name: 'general',
+      },
+      gt_message: {
+        id: 28,
+        sender_id: -1,
+        sender_display_name: 'OPERATOR',
+        content: '测试',
+        send_time: '2026-05-24 00:05:57',
+        seq: 1,
+        insert_immediately: false,
+      },
+    });
+
+    expect(event).toEqual({
+      type: 'message_changed',
+      teamId: 7,
+      roomId: 11,
+      roomName: 'general',
+      message: {
+        db_id: 28,
+        sender_id: -1,
+        sender_display_name: 'OPERATOR',
+        content: '测试',
+        time: '2026-05-24 00:05:57',
+        seq: 1,
+        insert_immediately: false,
+      },
+    });
+  });
 });

@@ -127,8 +127,10 @@ export function normalizeWsEventPayload(payload: unknown): FrontendRealtimeEvent
       return null;
     }
 
+    const dbId = Number(gtMessage.db_id ?? gtMessage.id ?? NaN);
+
     const message: MessageInfo = {
-      db_id: typeof gtMessage.db_id === 'number' ? gtMessage.db_id : null,
+      db_id: Number.isFinite(dbId) && dbId > 0 ? dbId : null,
       sender_id: Number(gtMessage.sender_id ?? 0),
       sender_display_name: String(gtMessage.sender_display_name ?? ''),
       content: String(gtMessage.content ?? ''),
