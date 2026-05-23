@@ -81,6 +81,7 @@
   --theme-switch-icon-active: #e3eef8;
   --chat-bubble-left-bg: #3d454d;
   --chat-bubble-left-code-bg: #262c31;
+  --chat-floating-message-bg: #102031;
   --markdown-code-bg-default: #2f353b;
   --markdown-inline-code-bg-default: #3b4147;
   --markdown-table-header-bg-default: #2a3138;
@@ -183,6 +184,7 @@
   --theme-switch-icon-active: #4b7fc0;
   --chat-bubble-left-bg: #edf3fa;
   --chat-bubble-left-code-bg: #fcfefe;
+  --chat-floating-message-bg: #f6f9fc;
   --markdown-code-bg-default: #f4f6f8;
   --markdown-inline-code-bg-default: #eef2f5;
   --markdown-table-header-bg-default: #f8fbfe;

@@ -520,7 +520,6 @@ onBeforeUnmount(() => {
   margin-top: auto;
   padding: 8px 0 2px;
   background: transparent;
-  backdrop-filter: none;
 }
 
 .floating-message-bar {
@@ -531,8 +530,7 @@ onBeforeUnmount(() => {
   padding: 8px 12px;
   border: 1px solid color-mix(in srgb, var(--interactive-focus-border) 14%, var(--border-default) 86%);
   border-radius: 14px;
-  background: transparent;
-  box-shadow: none;
+  background: var(--chat-floating-message-bg);
 }
 
 .floating-message-avatar {
