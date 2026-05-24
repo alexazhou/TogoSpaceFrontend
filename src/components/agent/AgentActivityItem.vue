@@ -66,7 +66,7 @@ function activityStatusSymbol(status: AgentActivity['status']): string {
 function shouldShowToolName(activity: AgentActivity): boolean {
   return activity.activity_type === 'tool_call'
     && toolName.value !== 'send_chat_msg'
-    && toolName.value !== 'finish_chat_turn'
+    && toolName.value !== 'finish_action'
     && toolName.value !== 'start_chat'
     && toolName.value.length > 0;
 }
@@ -86,8 +86,8 @@ function activityTitle(activity: AgentActivity): string {
     if (toolName.value === 'send_chat_msg') {
       return t('agent.activityType.sendMessage');
     }
-    if (toolName.value === 'finish_chat_turn') {
-      return t('agent.activityType.finishTurn');
+    if (toolName.value === 'finish_action') {
+      return t('agent.activityType.finishAction');
     }
     if (toolName.value === 'start_chat') {
       return t('agent.activityType.startChat');
@@ -206,7 +206,7 @@ function getTaskRoomDisplayName(activity: AgentActivity): string {
 function getTaskRoomLabel(activity: AgentActivity): string {
   if (
     activity.activity_type !== 'message_received'
-    && !(activity.activity_type === 'tool_call' && toolName.value === 'finish_chat_turn')
+    && !(activity.activity_type === 'tool_call' && toolName.value === 'finish_action')
   ) {
     return '';
   }
@@ -214,7 +214,7 @@ function getTaskRoomLabel(activity: AgentActivity): string {
   if (!taskRoomName) {
     return '';
   }
-  return t('agent.finishTurnRoomLabel', { room: taskRoomName });
+  return t('agent.finishActionRoomLabel', { room: taskRoomName });
 }
 
 function getExecuteBashStdout(activity: AgentActivity): string {
@@ -326,7 +326,7 @@ function activitySummary(
     if (summaryToolName === 'send_chat_msg') {
       return '';
     }
-    if (summaryToolName === 'finish_chat_turn') {
+    if (summaryToolName === 'finish_action') {
       return '';
     }
     if (showToolName && toolArguments) {
@@ -355,7 +355,7 @@ function activitySummary(
 const activityView = computed(() => {
   const activity = props.activity;
   const currentToolName = toolName.value;
-  const isFinishTurnActivity = activity.activity_type === 'tool_call' && currentToolName === 'finish_chat_turn';
+  const isFinishTurnActivity = activity.activity_type === 'tool_call' && currentToolName === 'finish_action';
   const currentTitle = activityTitle(activity);
   const currentToolCommand = getActivityToolCommand(activity);
   const currentToolArguments = getActivityToolArguments(activity);
