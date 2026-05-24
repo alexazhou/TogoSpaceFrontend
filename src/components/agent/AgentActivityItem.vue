@@ -343,6 +343,9 @@ function activitySummary(
     return '';
   }
   if (detail && detail !== summaryToolName) {
+    if (activity.activity_type === 'reasoning') {
+      return `💭 ${detail}`;
+    }
     return detail;
   }
 
@@ -379,7 +382,7 @@ const activityView = computed(() => {
     ? (currentErrorMessage || currentToolResult)
     : '';
   const receivedMessages = getReceivedMessages(activity);
-  const expandedContent = activity.activity_type === 'reasoning' || expandedMessage || expandedToolResult
+  const expandedContent = activity.activity_type === 'chat_reply' || expandedMessage || expandedToolResult
     || (activity.activity_type === 'message_received' && receivedMessages.length > 0);
   const currentSummary = activitySummary(
     activity,
