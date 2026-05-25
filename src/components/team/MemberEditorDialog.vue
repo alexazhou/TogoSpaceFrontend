@@ -389,24 +389,24 @@ const selectedMemberAvatarSeed = computed(() => (
 }
 
 .member-editor-input--readonly {
-  border: 1px dashed color-mix(in srgb, var(--focus-border) 18%, var(--panel-border) 82%);
-  background: color-mix(in srgb, var(--surface-soft) 86%, var(--panel-bg) 14%);
-  color: color-mix(in srgb, var(--muted) 84%, var(--text-strong) 16%);
-  -webkit-text-fill-color: color-mix(in srgb, var(--muted) 84%, var(--text-strong) 16%);
+  border: 1px dashed var(--form-input-readonly-border);
+  background: var(--form-input-readonly-bg);
+  color: var(--form-input-readonly-text);
+  -webkit-text-fill-color: var(--form-input-readonly-text);
   box-shadow: none;
 }
 
 .member-editor-input--editable {
-  border: 1px solid color-mix(in srgb, var(--focus-border) 34%, var(--panel-border) 66%);
-  background: color-mix(in srgb, var(--surface-soft) 82%, var(--panel-bg) 18%);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--selected) 34%, transparent);
+  border: 1px solid var(--form-input-border);
+  background: var(--form-input-bg);
+  box-shadow: inset 0 0 0 1px var(--form-input-selected-inner);
 }
 
 .member-editor-input--editable:focus {
   border-color: var(--focus-border);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--focus-border) 38%, transparent),
-    0 0 0 3px color-mix(in srgb, var(--focus-border) 14%, transparent);
+    inset 0 0 0 1px var(--form-input-focus-inner),
+    0 0 0 3px var(--form-input-focus-ring);
 }
 
 .member-editor-field select {
@@ -422,8 +422,8 @@ const selectedMemberAvatarSeed = computed(() => (
 
 .member-editor-dialog--readonly .member-editor-field select:disabled {
   border-style: dashed;
-  color: color-mix(in srgb, var(--muted) 84%, var(--text-strong) 16%);
-  -webkit-text-fill-color: color-mix(in srgb, var(--muted) 84%, var(--text-strong) 16%);
+  color: var(--form-input-readonly-text);
+  -webkit-text-fill-color: var(--form-input-readonly-text);
 }
 
 .member-editor-input[readonly] {

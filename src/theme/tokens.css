@@ -66,6 +66,14 @@
   --banner-error-text: #de736f;
   --banner-error-border: color-mix(in srgb, var(--state-danger) 24%, var(--border-default) 76%);
   --panel-border-soft: color-mix(in srgb, var(--border-default) 48%, transparent);
+  --form-input-border: color-mix(in srgb, var(--focus-border) 34%, var(--panel-border) 66%);
+  --form-input-bg: color-mix(in srgb, var(--surface-soft) 82%, var(--panel-bg) 18%);
+  --form-input-focus-ring: color-mix(in srgb, var(--focus-border) 14%, transparent);
+  --form-input-focus-inner: color-mix(in srgb, var(--focus-border) 38%, transparent);
+  --form-input-selected-inner: color-mix(in srgb, var(--selected) 34%, transparent);
+  --form-input-readonly-border: color-mix(in srgb, var(--focus-border) 18%, var(--panel-border) 82%);
+  --form-input-readonly-bg: color-mix(in srgb, var(--surface-soft) 86%, var(--panel-bg) 14%);
+  --form-input-readonly-text: color-mix(in srgb, var(--muted) 84%, var(--text-strong) 16%);
 
   /* Utility chrome tokens for idle dots, scrollbars, and theme toggles. */
   --status-dot-idle: var(--text-tertiary);
@@ -85,6 +93,10 @@
   --markdown-code-bg-default: #2f353b;
   --markdown-inline-code-bg-default: #3b4147;
   --markdown-table-header-bg-default: #2a3138;
+  --markdown-link-color-default: color-mix(in srgb, var(--state-info) 88%, white 12%);
+  --markdown-link-hover-color-default: color-mix(in srgb, var(--state-info) 76%, white 24%);
+  --markdown-link-color-on-accent: #bfeaff;
+  --markdown-link-hover-color-on-accent: #e5f6ff;
 
   /* Neutral gray scale for elements that should not have color tinting. */
   --gray-100: #f8f9fa;
@@ -172,6 +184,14 @@
   --banner-error-text: #b94a45;
   --banner-error-border: color-mix(in srgb, var(--state-danger) 28%, var(--border-default) 72%);
   --panel-border-soft: var(--border-default);
+  --form-input-border: color-mix(in srgb, var(--focus-border) 34%, var(--panel-border) 66%);
+  --form-input-bg: color-mix(in srgb, var(--surface-soft) 82%, var(--panel-bg) 18%);
+  --form-input-focus-ring: color-mix(in srgb, var(--focus-border) 14%, transparent);
+  --form-input-focus-inner: color-mix(in srgb, var(--focus-border) 38%, transparent);
+  --form-input-selected-inner: color-mix(in srgb, var(--selected) 34%, transparent);
+  --form-input-readonly-border: color-mix(in srgb, var(--focus-border) 18%, var(--panel-border) 82%);
+  --form-input-readonly-bg: color-mix(in srgb, var(--surface-soft) 86%, var(--panel-bg) 14%);
+  --form-input-readonly-text: color-mix(in srgb, var(--muted) 84%, var(--text-strong) 16%);
 
   /* Utility chrome tokens for idle dots, scrollbars, and theme toggles. */
   --status-dot-idle: #98a9bd;
@@ -188,6 +208,10 @@
   --markdown-code-bg-default: #f4f6f8;
   --markdown-inline-code-bg-default: #eef2f5;
   --markdown-table-header-bg-default: #f8fbfe;
+  --markdown-link-color-default: #2f6fb2;
+  --markdown-link-hover-color-default: #245f9e;
+  --markdown-link-color-on-accent: #c6edff;
+  --markdown-link-hover-color-on-accent: #ebf8ff;
 
   /* Neutral gray scale for elements that should not have color tinting. */
   --gray-100: #212529;

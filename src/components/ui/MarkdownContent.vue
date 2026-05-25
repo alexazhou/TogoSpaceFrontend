@@ -144,6 +144,8 @@ onMounted(() => {
   --markdown-code-shadow: none;
   --markdown-code-text: var(--text-primary);
   --markdown-inline-code-bg: var(--markdown-inline-code-bg-default, var(--surface-elevated));
+  --markdown-link-color: var(--markdown-link-color-default, color-mix(in srgb, var(--state-info) 88%, white 12%));
+  --markdown-link-hover-color: var(--markdown-link-hover-color-default, color-mix(in srgb, var(--state-info) 76%, white 24%));
 }
 
 :global(:root[data-theme='dark']) .markdown-content {
@@ -284,14 +286,14 @@ onMounted(() => {
 }
 
 .markdown-content :deep(a) {
-  color: color-mix(in srgb, var(--state-info) 88%, white 12%);
+  color: var(--markdown-link-color);
   text-decoration: underline;
   text-underline-offset: 0.14em;
   word-break: break-word;
 }
 
 .markdown-content :deep(a:hover) {
-  color: color-mix(in srgb, var(--state-info) 76%, white 24%);
+  color: var(--markdown-link-hover-color);
 }
 
 .markdown-content :deep(table) {

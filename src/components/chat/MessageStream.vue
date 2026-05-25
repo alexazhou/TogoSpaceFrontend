@@ -449,6 +449,11 @@ onBeforeUnmount(() => {
   box-shadow: var(--bubble-right-shadow, none);
 }
 
+.message-row.side-right .bubble :deep(.markdown-content) {
+  --markdown-link-color: var(--markdown-link-color-on-accent);
+  --markdown-link-hover-color: var(--markdown-link-hover-color-on-accent);
+}
+
 .system-note {
   text-align: center;
   color: color-mix(in srgb, var(--text-secondary) 78%, var(--text-primary) 22%);

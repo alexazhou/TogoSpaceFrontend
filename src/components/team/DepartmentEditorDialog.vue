@@ -135,31 +135,36 @@ const { t } = useI18n();
 
 .department-editor-input {
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--focus-border) 34%, var(--panel-border) 66%);
+  border: 1px solid var(--form-input-border);
   border-radius: 12px;
-  background: color-mix(in srgb, #fff 88%, var(--surface-soft) 12%);
+  background: var(--form-input-bg);
   color: var(--text-strong);
   padding: 14px 18px;
   font-size: 0.98rem;
   outline: none;
+  box-shadow: inset 0 0 0 1px var(--form-input-selected-inner);
   transition:
     border-color 0.18s ease,
     background 0.18s ease,
     box-shadow 0.18s ease;
 }
 
+.department-editor-input::placeholder {
+  color: var(--hint-text);
+}
+
 .department-editor-input:focus {
   border-color: var(--focus-border);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--focus-border) 38%, transparent),
-    0 0 0 3px color-mix(in srgb, var(--focus-border) 14%, transparent);
+    inset 0 0 0 1px var(--form-input-focus-inner),
+    0 0 0 3px var(--form-input-focus-ring);
 }
 
 .department-editor-input--readonly {
-  border: 1px dashed color-mix(in srgb, var(--focus-border) 18%, var(--panel-border) 82%);
-  background: color-mix(in srgb, var(--surface-soft) 86%, var(--panel-bg) 14%);
-  color: color-mix(in srgb, var(--muted) 84%, var(--text-strong) 16%);
-  -webkit-text-fill-color: color-mix(in srgb, var(--muted) 84%, var(--text-strong) 16%);
+  border: 1px dashed var(--form-input-readonly-border);
+  background: var(--form-input-readonly-bg);
+  color: var(--form-input-readonly-text);
+  -webkit-text-fill-color: var(--form-input-readonly-text);
   box-shadow: none;
 }
 
@@ -175,8 +180,8 @@ const { t } = useI18n();
 }
 
 .department-editor-dialog--readonly .department-editor-input:focus {
-  border: 1px dashed color-mix(in srgb, var(--focus-border) 18%, var(--panel-border) 82%);
-  background: color-mix(in srgb, var(--surface-soft) 86%, var(--panel-bg) 14%);
+  border: 1px dashed var(--form-input-readonly-border);
+  background: var(--form-input-readonly-bg);
   box-shadow: none;
 }
 
