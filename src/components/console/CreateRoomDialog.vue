@@ -13,6 +13,7 @@ import ConfirmDialog from '../ui/ConfirmDialog.vue';
 type CreateRoomMemberOption = {
   id: number;
   name: string;
+  avatarName: string;
   subtitle?: string | null;
   status?: 'active' | 'idle' | 'failed';
 };
@@ -63,7 +64,8 @@ const members = computed<CreateRoomMemberOption[]>(() =>
     )
     .map((agent) => ({
       id: agent.id,
-      name: agent.name,
+      name: displayName(agent),
+      avatarName: agent.name,
       subtitle: agent.special === 'operator'
         ? t('createRoom.operator')
         : agent.special === 'system'
@@ -246,7 +248,7 @@ watch(
               <span v-if="isSelected(member.id)" class="create-room-member-check">✓</span>
               <img
                 class="create-room-member-avatar"
-                :src="getAgentAvatarUrl(member.name)"
+                :src="getAgentAvatarUrl(member.avatarName)"
                 :alt="`${member.name} avatar`"
               />
               <div class="create-room-member-body">
