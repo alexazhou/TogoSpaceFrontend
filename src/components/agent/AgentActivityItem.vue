@@ -66,6 +66,7 @@ function activityStatusSymbol(status: AgentActivity['status']): string {
 function shouldShowToolName(activity: AgentActivity): boolean {
   return activity.activity_type === 'tool_call'
     && toolName.value !== 'send_chat_msg'
+    && toolName.value !== 'update_task'
     && toolName.value !== 'finish_action'
     && toolName.value !== 'start_chat'
     && toolName.value.length > 0;
@@ -85,6 +86,9 @@ function activityTitle(activity: AgentActivity): string {
   if (activity.activity_type === 'tool_call') {
     if (toolName.value === 'send_chat_msg') {
       return t('agent.activityType.sendMessage');
+    }
+    if (toolName.value === 'update_task') {
+      return t('agent.activityType.updateTask');
     }
     if (toolName.value === 'finish_action') {
       return t('agent.activityType.finishAction');
