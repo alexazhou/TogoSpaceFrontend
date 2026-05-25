@@ -463,7 +463,6 @@ onBeforeUnmount(() => {
   line-height: 1.5;
   font-size: 0.76rem;
   letter-spacing: 0.01em;
-  white-space: pre-wrap;
 }
 
 :global(html.bp-layout-narrow) .bubble,
