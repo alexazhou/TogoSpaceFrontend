@@ -61,6 +61,8 @@ const workingAgent = computed<RoomMemberProfile | null>(() => {
   return null;
 });
 
+const isDeptRoom = computed(() => props.currentRoom?.tags?.includes('DEPT') ?? false);
+
 watch(
   () => props.currentRoom?.room_id ?? null,
   () => {
@@ -129,7 +131,7 @@ function handleEnterKey(e: KeyboardEvent): void {
         <button
           type="button"
           class="chat-members-button chat-settings-button"
-          :disabled="!currentRoom"
+          :disabled="!currentRoom || isDeptRoom"
           @click="openRoomSettings"
         >
           <i class="fa-solid fa-gear" aria-hidden="true"></i>

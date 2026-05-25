@@ -33,9 +33,11 @@ const teamId = computed<number | null>(() => {
   return Number.isFinite(value) ? value : null;
 });
 
+const isDeptRoom = computed(() => props.room?.tags?.includes('DEPT') ?? false);
 const trimmedRoomName = computed(() => roomName.value.trim());
 const canSubmit = computed(() => (
   Boolean(props.room)
+  && !isDeptRoom.value
   && Boolean(trimmedRoomName.value)
   && trimmedRoomName.value !== (props.room?.room_name ?? '')
   && !submitting.value
@@ -102,6 +104,7 @@ watch(
         </div>
 
         <div v-if="errorMessage" class="room-settings-error">{{ errorMessage }}</div>
+        <div v-if="isDeptRoom" class="room-settings-notice">{{ t('roomSettings.deptRoomNotice') }}</div>
 
         <label class="room-settings-field">
           <span>{{ t('roomSettings.nameLabel') }}</span>
@@ -109,6 +112,7 @@ watch(
             v-model="roomName"
             type="text"
             maxlength="64"
+            :disabled="isDeptRoom"
             :placeholder="t('roomSettings.namePlaceholder')"
           />
         </label>
@@ -167,6 +171,15 @@ watch(
   font-size: 1.15rem;
   line-height: 1.2;
   color: var(--text-primary);
+}
+
+.room-settings-notice {
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--text-secondary) 20%, transparent);
+  background: color-mix(in srgb, var(--text-secondary) 8%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.84rem;
 }
 
 .room-settings-error {

@@ -329,7 +329,8 @@
     "nameLabel": "Room Name",
     "namePlaceholder": "Enter room name",
     "saveSuccess": "Room settings saved",
-    "saveFailed": "Failed to save room settings."
+    "saveFailed": "Failed to save room settings.",
+    "deptRoomNotice": "Department rooms cannot be renamed"
   },
   "quickInit": {
     "eyebrow": "Quick Setup",
