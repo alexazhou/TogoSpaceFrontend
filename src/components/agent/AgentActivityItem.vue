@@ -133,7 +133,9 @@ function getActivityTaskTitle(activity: AgentActivity): string {
   // 优先从 tool_result 中取（后端通常会返回最新的 task 对象）
   const toolResult = activity.metadata?.tool_result;
   if (toolResult && typeof toolResult === 'object') {
-    const title = readTrimmedString((toolResult as { title?: unknown }).title);
+    // 兼容两种格式：直接在 result 中，或在 result.task 中
+    const title = readTrimmedString((toolResult as { title?: unknown }).title)
+      || readTrimmedString((toolResult as { task?: { title?: unknown } }).task?.title);
     if (title) {
       return title;
     }
