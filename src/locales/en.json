@@ -120,6 +120,7 @@
       "chatReply": "Self Talk",
       "toolCall": "Tool Call",
       "sendMessage": "Send Message",
+      "createTask": "Create Task",
       "updateTask": "Update Task",
       "finishAction": "Finish Action",
       "startChat": "Start Chat",

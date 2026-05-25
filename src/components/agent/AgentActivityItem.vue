@@ -66,6 +66,7 @@ function activityStatusSymbol(status: AgentActivity['status']): string {
 function shouldShowToolName(activity: AgentActivity): boolean {
   return activity.activity_type === 'tool_call'
     && toolName.value !== 'send_chat_msg'
+    && toolName.value !== 'create_task'
     && toolName.value !== 'update_task'
     && toolName.value !== 'finish_action'
     && toolName.value !== 'start_chat'
@@ -86,6 +87,9 @@ function activityTitle(activity: AgentActivity): string {
   if (activity.activity_type === 'tool_call') {
     if (toolName.value === 'send_chat_msg') {
       return t('agent.activityType.sendMessage');
+    }
+    if (toolName.value === 'create_task') {
+      return t('agent.activityType.createTask');
     }
     if (toolName.value === 'update_task') {
       return t('agent.activityType.updateTask');
@@ -118,6 +122,35 @@ function activityTitle(activity: AgentActivity): string {
     default:
       return t('agent.activityType.unknown');
   }
+}
+
+function getActivityTaskTitle(activity: AgentActivity): string {
+  const toolNameValue = toolName.value;
+  if (toolNameValue !== 'create_task' && toolNameValue !== 'update_task') {
+    return '';
+  }
+
+  // 优先从 tool_result 中取（后端通常会返回最新的 task 对象）
+  const toolResult = activity.metadata?.tool_result;
+  if (toolResult && typeof toolResult === 'object') {
+    const title = readTrimmedString((toolResult as { title?: unknown }).title);
+    if (title) {
+      return title;
+    }
+  }
+
+  // 兜底：如果是 create_task，可以从参数里取
+  if (toolNameValue === 'create_task') {
+    const toolArguments = activity.metadata?.tool_arguments;
+    if (toolArguments && typeof toolArguments === 'object') {
+      const title = readTrimmedString((toolArguments as { title?: unknown }).title);
+      if (title) {
+        return title;
+      }
+    }
+  }
+
+  return '';
 }
 
 function getReceivedMessages(activity: AgentActivity): Array<{ sender: string; content: string }> {
@@ -327,7 +360,7 @@ function activitySummary(
   toolCommand: string,
 ): string {
   if (activity.activity_type === 'tool_call') {
-    if (summaryToolName === 'send_chat_msg') {
+    if (summaryToolName === 'send_chat_msg' || summaryToolName === 'create_task' || summaryToolName === 'update_task') {
       return '';
     }
     if (summaryToolName === 'finish_action') {
@@ -388,6 +421,7 @@ const activityView = computed(() => {
   const receivedMessages = getReceivedMessages(activity);
   const expandedContent = activity.activity_type === 'chat_reply' || expandedMessage || expandedToolResult
     || (activity.activity_type === 'message_received' && receivedMessages.length > 0);
+  const currentTaskTitle = getActivityTaskTitle(activity);
   const currentSummary = activitySummary(
     activity,
     currentToolName,
@@ -414,6 +448,7 @@ const activityView = computed(() => {
     inlineTitle,
     metadataToolName: currentMetadataToolName,
     model: currentModel,
+    taskTitle: currentTaskTitle,
     sendChatMsgContent,
     sendChatMsgError,
     sendChatMsgTruncated,
@@ -493,6 +528,11 @@ const activityView = computed(() => {
         class="agent-activity-item__chip"
         :title="activityView.startChatTarget"
       >{{ activityView.startChatTarget }}</span>
+      <span
+        v-if="activityView.taskTitle"
+        class="agent-activity-item__chip"
+        :title="activityView.taskTitle"
+      >{{ activityView.taskTitle }}</span>
       <span
         v-if="activityView.showSummary"
         class="agent-activity-item__summary"

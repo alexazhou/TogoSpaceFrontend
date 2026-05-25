@@ -120,6 +120,7 @@
       "chatReply": "自言自语",
       "toolCall": "工具调用",
       "sendMessage": "发言",
+      "createTask": "创建任务",
       "updateTask": "更新任务",
       "finishAction": "结束行动",
       "startChat": "发起聊天",
