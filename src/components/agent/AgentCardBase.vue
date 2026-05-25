@@ -172,6 +172,11 @@ const normalizedOverline = computed(() => props.overline?.trim() || '');
   width: calc(100% - (2 * var(--entity-card-padding-x)) - var(--entity-overline-clearance));
 }
 
+/* graph variant stacks badge above overline, no horizontal clearance needed */
+.entity-card--graph.has-overline.has-badge .entity-card__overline {
+  width: calc(100% - (2 * var(--entity-card-padding-x)));
+}
+
 .entity-card__title {
   position: absolute;
   top: var(--entity-title-top);
