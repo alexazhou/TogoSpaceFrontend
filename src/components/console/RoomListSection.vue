@@ -187,7 +187,7 @@ function isDeptRoom(room: RoomState): boolean {
   align-items: center;
   height: 18px;
   padding: 0 7px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 0.66rem;
   line-height: 1;
   white-space: nowrap;

@@ -5,7 +5,7 @@ import { displayName } from '../../utils';
 import type { AgentInfo } from '../../types';
 
 defineProps<{
-  agents: AgentInfo[];
+  agents: Array<AgentInfo & { departmentPath?: string | null; isDepartmentLeader?: boolean }>;
 }>();
 
 const emit = defineEmits<{
@@ -49,8 +49,9 @@ function selectAgent(agent: AgentInfo): void {
           <div class="agent-copy">
             <strong class="agent-name-line">
               <span class="agent-name">{{ displayName(agent) }}</span>
+              <span v-if="agent.isDepartmentLeader" class="agent-leader-badge">{{ t('agent.departmentLeader') }}</span>
             </strong>
-            <p>{{ agent.model }}</p>
+            <p>{{ agent.departmentPath || agent.model }}</p>
           </div>
         </div>
         <div class="agent-state" :data-state="agent.status">
@@ -81,7 +82,7 @@ function selectAgent(agent: AgentInfo): void {
 
 .agent-list::-webkit-scrollbar-track {
   background: var(--scrollbar-track);
-  border-radius: 999px;
+  border-radius: 6px;
 }
 
 .agent-list::-webkit-scrollbar-thumb {
@@ -140,7 +141,7 @@ function selectAgent(agent: AgentInfo): void {
 
 .agent-name-line {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   font-size: 0.84rem;
   line-height: 1.1;
@@ -151,6 +152,23 @@ function selectAgent(agent: AgentInfo): void {
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-leader-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--state-success) 24%, var(--border-default) 76%);
+  background: color-mix(in srgb, var(--state-success) 12%, var(--surface-panel) 88%);
+  color: color-mix(in srgb, var(--state-success) 84%, var(--text-primary) 16%);
+  font-size: 0.66rem;
+  font-weight: 400;
+  line-height: 1.1;
   white-space: nowrap;
 }
 

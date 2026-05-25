@@ -172,6 +172,7 @@
     "startChatTarget": "→ {agent}",
     "finishActionRoomLabel": "Room [{room}]",
     "backupLabel": "Backup Agents",
+    "departmentLeader": "Leader",
     "cardSubtitle": "Agent",
     "searchPlaceholder": "Search Agents",
     "agentLoadFailed": "Failed to load agents",

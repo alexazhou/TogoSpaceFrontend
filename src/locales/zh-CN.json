@@ -172,6 +172,7 @@
     "startChatTarget": "→ {agent}",
     "finishActionRoomLabel": "房间【{room}】",
     "backupLabel": "备选Agent",
+    "departmentLeader": "主管",
     "cardSubtitle": "智能体",
     "searchPlaceholder": "搜索Agent",
     "agentLoadFailed": "Agent 加载失败",

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useTeamAgents } from '../../realtime/selectors';
+import { useTeamAgentsWithDepartmentPath } from '../../realtime/selectors';
 import AgentListSection from '../agent/AgentListSection.vue';
 
 const props = defineProps<{
@@ -11,7 +11,7 @@ const emit = defineEmits<{
   selectAgent: [agentId: number];
 }>();
 
-const agents = useTeamAgents(() => props.teamId);
+const agents = useTeamAgentsWithDepartmentPath(() => props.teamId);
 const visibleAgents = computed(() =>
   agents.value.filter((agent) =>
     !agent.special && String(agent.employ_status ?? '').toUpperCase() !== 'OFF_BOARD',
