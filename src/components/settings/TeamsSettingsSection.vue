@@ -83,7 +83,7 @@ const disabledTeams = computed(() => props.teams.filter((team) => !team.enabled)
           :slogan="teamInfoDraft.slogan"
           :rules="teamInfoDraft.rules"
           :editable-name="true"
-          :show-working-directory="false"
+          :show-working-directory="true"
           @update:name="emit('update:name', $event)"
           @update:working-directory="emit('update:workingDirectory', $event)"
           @update:slogan="emit('update:slogan', $event)"

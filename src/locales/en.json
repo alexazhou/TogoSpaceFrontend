@@ -239,7 +239,7 @@
     "slogan": "Team Slogan",
     "responsibility": "Team Responsibility",
     "namePlaceholder": "e.g.: alpha-delivery",
-    "workDirPlaceholder": "e.g.: /workspace/alpha-delivery",
+    "workDirPlaceholder": "e.g.: /workspace/alpha-delivery (usually not required)",
     "sloganPlaceholder": "e.g.: Silicon power, excellent capability",
     "responsibilityPlaceholder": "e.g.: 1. Core business dev 2. Improve system availability"
   },
