@@ -5,6 +5,7 @@ import { escalateMessageToImmediate, postRoomMessage } from '../../api';
 import { useConsoleMessageScroll } from '../../composables/useConsoleMessageScroll';
 import { displayName } from '../../utils';
 import ChatPanel from '../chat/ChatPanel.vue';
+import RoomSettingsDialog from './RoomSettingsDialog.vue';
 import type {
   AgentInfo,
   DeptTreeNode,
@@ -29,6 +30,7 @@ const emit = defineEmits<{
   updateError: [value: string];
   clickWorkingAgent: [agentId: number];
   clickAgent: [agentId: number];
+  roomUpdated: [];
 }>();
 
 const messageViewport = useTemplateRef('messageViewport');
@@ -43,6 +45,7 @@ const {
 } = useConsoleMessageScroll(messageViewport);
 const { t } = useI18n();
 const OPERATOR_MEMBER_ID = -1;
+const roomSettingsOpen = ref(false);
 
 const canOperatorCompose = computed(() => (
   Boolean(props.currentRoom && props.currentRoom.agents.includes(OPERATOR_MEMBER_ID))
@@ -184,6 +187,21 @@ async function handleEscalateMessage(messageId: number): Promise<void> {
   }
 }
 
+function openRoomSettings(): void {
+  if (!props.currentRoom) {
+    return;
+  }
+  roomSettingsOpen.value = true;
+}
+
+function closeRoomSettings(): void {
+  roomSettingsOpen.value = false;
+}
+
+function handleRoomUpdated(): void {
+  emit('roomUpdated');
+}
+
 watch(
   () => props.currentRoom?.room_id ?? null,
   async () => {
@@ -230,6 +248,13 @@ onBeforeUnmount(() => {
       @click-agent="emit('clickAgent', $event)"
       @click-working-agent="emit('clickWorkingAgent', $event)"
       @escalate-message="handleEscalateMessage"
+      @open-room-settings="openRoomSettings"
+    />
+    <RoomSettingsDialog
+      :open="roomSettingsOpen"
+      :room="currentRoom"
+      @close="closeRoomSettings"
+      @updated="handleRoomUpdated"
     />
   </div>
 </template>

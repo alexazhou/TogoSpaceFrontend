@@ -319,6 +319,14 @@
     "noMembersLabel": "无",
     "noRole": "未配置角色"
   },
+  "roomSettings": {
+    "title": "房间设置",
+    "openButton": "设置",
+    "nameLabel": "房间名称",
+    "namePlaceholder": "请输入房间名称",
+    "saveSuccess": "房间设置已保存",
+    "saveFailed": "房间设置保存失败。"
+  },
   "quickInit": {
     "eyebrow": "快速初始化",
     "title": "快速初始化",

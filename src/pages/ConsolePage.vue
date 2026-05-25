@@ -341,6 +341,7 @@ onBeforeUnmount(() => {
           @update-error="errorMessage = $event"
           @click-agent="openAgent"
           @click-working-agent="openAgent"
+          @room-updated="refreshAll().catch(console.error)"
         />
       </div>
     </div>

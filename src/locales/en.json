@@ -319,6 +319,14 @@
     "noMembersLabel": "None",
     "noRole": "No role configured"
   },
+  "roomSettings": {
+    "title": "Room Settings",
+    "openButton": "Settings",
+    "nameLabel": "Room Name",
+    "namePlaceholder": "Enter room name",
+    "saveSuccess": "Room settings saved",
+    "saveFailed": "Failed to save room settings."
+  },
   "quickInit": {
     "eyebrow": "Quick Setup",
     "title": "Quick Init",

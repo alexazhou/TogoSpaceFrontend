@@ -24,6 +24,7 @@ const emit = defineEmits<{
   clickWorkingAgent: [agentId: number];
   clickAgent: [agentId: number];
   escalateMessage: [messageId: number];
+  openRoomSettings: [];
 }>();
 
 const { t } = useI18n();
@@ -78,6 +79,13 @@ function closeMembers(): void {
   membersOpen.value = false;
 }
 
+function openRoomSettings(): void {
+  if (!props.currentRoom) {
+    return;
+  }
+  emit('openRoomSettings');
+}
+
 function handleComposerSubmit(): void {
   if (isDraftComposing.value) {
     return;
@@ -117,6 +125,15 @@ function handleEnterKey(e: KeyboardEvent): void {
           @click="toggleMembers"
         >
           {{ t('chat.membersLabel', { count: currentMembers.length }) }}
+        </button>
+        <button
+          type="button"
+          class="chat-members-button chat-settings-button"
+          :disabled="!currentRoom"
+          @click="openRoomSettings"
+        >
+          <i class="fa-solid fa-gear" aria-hidden="true"></i>
+          <span>{{ t('roomSettings.openButton') }}</span>
         </button>
       </div>
     </div>
@@ -172,7 +189,10 @@ function handleEnterKey(e: KeyboardEvent): void {
 
           <div v-if="currentMembers.length" class="chat-members-grid">
             <article v-for="member in currentMembers" :key="member.name" class="chat-member-card">
-              <span v-if="member.employee_number !== null" class="chat-member-card__employee">#{{ member.employee_number }}</span>
+              <span
+                v-if="member.employee_number !== null && member.employee_number >= 0"
+                class="chat-member-card__employee"
+              >#{{ member.employee_number }}</span>
               <div class="chat-member-card__avatar-wrap">
                 <span v-if="member.is_leader" class="chat-member-card__leader-flag">Leader</span>
                 <img class="chat-member-card__avatar" :src="getAgentAvatarUrl(member.name)" :alt="`${displayName(member)} avatar`" />
@@ -233,7 +253,7 @@ function handleEnterKey(e: KeyboardEvent): void {
 
 .chat-side-info {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
@@ -253,10 +273,18 @@ function handleEnterKey(e: KeyboardEvent): void {
   white-space: nowrap;
 }
 
+.chat-settings-button {
+  gap: 6px;
+}
+
+.chat-settings-button i {
+  font-size: 0.78rem;
+}
+
 .chat-head-pill {
   position: relative;
   min-height: 28px;
-  padding: 4px 12px 2px;
+  padding: 4px 10px 2px;
   border-radius: 8px;
   font-weight: 600;
 }
@@ -301,7 +329,7 @@ function handleEnterKey(e: KeyboardEvent): void {
 
 .chat-members-button {
   min-height: 28px;
-  padding: 4px 12px 2px;
+  padding: 4px 10px 2px;
   border-radius: 8px;
   cursor: pointer;
   transition:

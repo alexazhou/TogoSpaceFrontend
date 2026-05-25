@@ -649,6 +649,15 @@ export async function createTeamRoom(teamId: number, payload: {
   });
 }
 
+export async function updateTeamRoom(teamId: number, roomId: number, payload: {
+  name?: string;
+}): Promise<{ status: string; room_name: string }> {
+  return requestJson(`/teams/${teamId}/rooms/${roomId}/modify.json`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function getTeams(): Promise<TeamSummary[]> {
   const data = await requestJson<{ teams: RawTeamSummary[] }>('/teams/list.json');
   return data.teams.map(normalizeTeamSummary);
