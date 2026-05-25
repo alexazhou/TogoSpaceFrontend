@@ -117,6 +117,8 @@ function activityTitle(activity: AgentActivity): string {
       return t('agent.activityType.compact');
     case 'message_received':
       return t('agent.activityType.messageReceived');
+    case 'task_received':
+      return t('agent.activityType.taskReceived');
     case 'unknown':
       return t('agent.activityType.unknown');
     default:
@@ -125,6 +127,10 @@ function activityTitle(activity: AgentActivity): string {
 }
 
 function getActivityTaskTitle(activity: AgentActivity): string {
+  if (activity.activity_type === 'task_received') {
+    return readTrimmedString(activity.detail);
+  }
+
   const toolNameValue = toolName.value;
   if (toolNameValue !== 'create_task' && toolNameValue !== 'update_task') {
     return '';
@@ -373,6 +379,10 @@ function activitySummary(
     }
   }
 
+  if (activity.activity_type === 'task_received') {
+    return '';
+  }
+
   if (toolCommand) {
     return toolCommand;
   }
@@ -436,7 +446,7 @@ const activityView = computed(() => {
     || showToolName
     || (activity.activity_type === 'llm_infer' && Boolean(currentModel))
     || (activity.activity_type !== 'tool_call' && Boolean(currentMetadataToolName))
-  );
+  ) || activity.activity_type === 'message_received';
 
   return {
     durationText: formatDuration(activity.duration_ms),

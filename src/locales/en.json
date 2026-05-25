@@ -126,6 +126,7 @@
       "startChat": "Start Chat",
       "compact": "Context Compact",
       "messageReceived": "Message Received",
+      "taskReceived": "Task Reminder",
       "unknown": "Unknown Type"
     },
     "tokenEstimate": "Est. {count}",

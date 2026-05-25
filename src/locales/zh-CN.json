@@ -126,6 +126,7 @@
       "startChat": "发起聊天",
       "compact": "上下文压缩",
       "messageReceived": "收到消息",
+      "taskReceived": "收到任务提醒",
       "unknown": "未知类型"
     },
     "tokenEstimate": "估算 {count}",

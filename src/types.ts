@@ -7,6 +7,7 @@ export type AgentActivityType =
   | 'reasoning'
   | 'chat_reply'
   | 'message_received'
+  | 'task_received'
   | 'unknown';
 export type AgentActivityStatus = 'started' | 'succeeded' | 'failed' | 'cancelled';
 export type RoomType = 'private' | 'group';
