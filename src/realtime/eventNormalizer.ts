@@ -222,7 +222,7 @@ export function normalizeWsEventPayload(payload: unknown): FrontendRealtimeEvent
     const agentIds = Array.isArray(gtRoom?.agent_ids)
       ? (gtRoom.agent_ids as unknown[])
         .map((id) => Number(id))
-        .filter((id) => !Number.isNaN(id) && id > 0 && id !== -2)
+        .filter((id) => !Number.isNaN(id) && id !== 0 && id !== -2)
       : [];
     const room: RoomState = {
       room_id: roomId,
