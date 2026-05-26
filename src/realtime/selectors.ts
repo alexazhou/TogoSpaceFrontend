@@ -13,6 +13,7 @@ import {
   getAgentActivities,
   getAgentStatus,
   getDeptTreeState,
+  getRoomMessageHistoryState,
   getRoomMessages,
   getRoleTemplatesState,
   getTeamAgents,
@@ -79,6 +80,10 @@ export function useTeamRooms(teamId: MaybeRefOrGetter<number | null>) {
 
 export function useRoomMessages(roomId: MaybeRefOrGetter<number | null>) {
   return computed<MessageInfo[]>(() => getRoomMessages(toValue(roomId)));
+}
+
+export function useRoomMessageHistory(roomId: MaybeRefOrGetter<number | null>) {
+  return computed(() => getRoomMessageHistoryState(toValue(roomId)));
 }
 
 export function useAgentActivities(agentId: MaybeRefOrGetter<number | null>) {

@@ -6,6 +6,7 @@ import {
   clearRuntimeStore,
   getAgentActivities,
   getAgentStatus,
+  getRoomMessageHistoryState,
   getRoomMessages,
   getTeamRooms,
   seedRoomMessages,
@@ -244,5 +245,58 @@ describe('runtimeStore realtime events', () => {
     expect(getTeamRooms(2).map((room) => room.room_id)).toEqual([6, 7]);
     expect(scheduleState.value).toBe('blocked');
     expect(scheduleNotRunningReason.value).toBe('manual_pause');
+  });
+});
+
+describe('runtimeStore message history state', () => {
+  beforeEach(() => {
+    clearRuntimeStore();
+  });
+
+  afterEach(() => {
+    clearRuntimeStore();
+  });
+
+  it('returns default history state for unknown room', () => {
+    expect(getRoomMessageHistoryState(null)).toEqual({ hasMoreHistory: false, loadingHistory: false });
+    expect(getRoomMessageHistoryState(999)).toEqual({ hasMoreHistory: false, loadingHistory: false });
+  });
+
+  it('seedRoomMessages stores hasMoreHistory flag', () => {
+    seedRoomMessages(1, [createMessage({ db_id: 10 })], { hasMoreHistory: true });
+    expect(getRoomMessageHistoryState(1).hasMoreHistory).toBe(true);
+    expect(getRoomMessages(1)).toHaveLength(1);
+  });
+
+  it('seedRoomMessages without hasMoreHistory defaults to false', () => {
+    seedRoomMessages(1, [createMessage({ db_id: 10 })]);
+    expect(getRoomMessageHistoryState(1).hasMoreHistory).toBe(false);
+  });
+
+  it('seedRoomMessages with preserveExisting merges messages and preserves hasMoreHistory', () => {
+    seedRoomMessages(1, [createMessage({ db_id: 20, content: 'newer' })], { hasMoreHistory: true });
+    seedRoomMessages(1, [createMessage({ db_id: 10, content: 'older' })], {
+      preserveExisting: true,
+      hasMoreHistory: false,
+    });
+
+    const messages = getRoomMessages(1);
+    expect(messages.map((m) => m.db_id)).toEqual([10, 20]);
+    expect(getRoomMessageHistoryState(1).hasMoreHistory).toBe(false);
+  });
+
+  it('realtime message event preserves hasMoreHistory', () => {
+    seedRoomMessages(5, [createMessage({ db_id: 30 })], { hasMoreHistory: true });
+
+    applyRealtimeEvent({
+      type: 'message',
+      teamId: 1,
+      roomId: 5,
+      roomName: 'test',
+      message: createMessage({ db_id: 31, content: 'new', time: '2026-05-04 22:40:00' }),
+    });
+
+    expect(getRoomMessageHistoryState(5).hasMoreHistory).toBe(true);
+    expect(getRoomMessages(5)).toHaveLength(2);
   });
 });

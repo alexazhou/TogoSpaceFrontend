@@ -206,6 +206,7 @@
     "idle": "空闲",
     "membersLabel": "成员{count}",
     "loadingMessages": "正在加载消息…",
+    "loadingOlderMessages": "正在加载更早消息…",
     "inputPlaceholder": "在此输入消息...",
     "sendHint": "按 Enter 发送，Shift + Enter 换行",
     "send": "发送",

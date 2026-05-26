@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   roomsRef: null as Ref<RoomState[]> | null,
   agentsRef: null as Ref<AgentInfo[]> | null,
   messagesRef: null as Ref<MessageInfo[]> | null,
+  messageHistoryRef: null as Ref<{ hasMoreHistory: boolean; loadingHistory: boolean }> | null,
+  loadOlderRoomMessagesStateMock: vi.fn(),
   loadRoomMessagesStateMock: vi.fn(),
   loadTeamAgentsMock: vi.fn(),
   loadTeamRoomsMock: vi.fn(),
@@ -16,9 +18,11 @@ vi.mock('../../realtime/selectors', () => ({
   useTeamRooms: () => mocks.roomsRef,
   useTeamAgents: () => mocks.agentsRef,
   useRoomMessages: () => mocks.messagesRef,
+  useRoomMessageHistory: () => mocks.messageHistoryRef,
 }));
 
 vi.mock('../../realtime/runtimeStore', () => ({
+  loadOlderRoomMessagesState: mocks.loadOlderRoomMessagesStateMock,
   loadRoomMessagesState: mocks.loadRoomMessagesStateMock,
   loadTeamAgents: mocks.loadTeamAgentsMock,
   loadTeamRooms: mocks.loadTeamRoomsMock,
@@ -50,6 +54,8 @@ describe('useConsoleRuntimeState', () => {
     mocks.roomsRef = ref([]);
     mocks.agentsRef = ref([]);
     mocks.messagesRef = ref([]);
+    mocks.messageHistoryRef = ref({ hasMoreHistory: false, loadingHistory: false });
+    mocks.loadOlderRoomMessagesStateMock.mockReset();
     mocks.loadRoomMessagesStateMock.mockReset();
     mocks.loadTeamAgentsMock.mockReset();
     mocks.loadTeamRoomsMock.mockReset();
@@ -148,5 +154,17 @@ describe('useConsoleRuntimeState', () => {
 
     state.clearRuntimeContext();
     expect(mocks.setActiveRealtimeContextMock).toHaveBeenLastCalledWith(null, null);
+  });
+
+  it('loads older messages for the selected room', async () => {
+    const { state } = mountHarness({ teamId: 8 });
+
+    mocks.loadRoomMessagesStateMock.mockResolvedValue([]);
+    mocks.loadOlderRoomMessagesStateMock.mockResolvedValue([]);
+
+    await state.loadRoomMessages(18);
+    await state.loadOlderMessages();
+
+    expect(mocks.loadOlderRoomMessagesStateMock).toHaveBeenCalledWith(8, 18);
   });
 });

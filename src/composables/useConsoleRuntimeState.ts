@@ -1,6 +1,12 @@
 import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue';
-import { loadRoomMessagesState, loadTeamAgents, loadTeamRooms, setActiveRealtimeContext } from '../realtime/runtimeStore';
-import { useRoomMessages, useTeamAgents, useTeamRooms } from '../realtime/selectors';
+import {
+  loadOlderRoomMessagesState,
+  loadRoomMessagesState,
+  loadTeamAgents,
+  loadTeamRooms,
+  setActiveRealtimeContext,
+} from '../realtime/runtimeStore';
+import { useRoomMessageHistory, useRoomMessages, useTeamAgents, useTeamRooms } from '../realtime/selectors';
 import type { AgentInfo, RoomState } from '../types';
 
 type LoadRoomMessagesOptions = {
@@ -21,6 +27,7 @@ export function useConsoleRuntimeState(options: UseConsoleRuntimeStateOptions) {
   const rooms = useTeamRooms(() => toValue(options.teamId));
   const agents = useTeamAgents(() => toValue(options.teamId));
   const messages = useRoomMessages(selectedRoomId);
+  const messageHistory = useRoomMessageHistory(selectedRoomId);
   const currentRoom = computed(
     () => rooms.value.find((room) => room.room_id === selectedRoomId.value) ?? null,
   );
@@ -58,6 +65,14 @@ export function useConsoleRuntimeState(options: UseConsoleRuntimeStateOptions) {
     }
   }
 
+  async function loadOlderMessages(): Promise<void> {
+    const roomId = selectedRoomId.value;
+    if (roomId === null) {
+      return;
+    }
+    await loadOlderRoomMessagesState(toValue(options.teamId), roomId);
+  }
+
   function clearSelectedRoom(): void {
     selectedRoomId.value = null;
     setActiveRealtimeContext(toValue(options.teamId), null);
@@ -79,11 +94,14 @@ export function useConsoleRuntimeState(options: UseConsoleRuntimeStateOptions) {
     agents,
     currentRoom,
     messages,
+    hasMoreHistory: computed(() => messageHistory.value.hasMoreHistory),
+    loadingOlderMessages: computed(() => messageHistory.value.loadingHistory),
     rooms,
     selectedRoomId,
     clearSelectedRoom,
     refreshRuntimeState,
     loadRoomMessages,
+    loadOlderMessages,
     clearRuntimeContext,
   };
 }

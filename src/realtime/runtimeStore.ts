@@ -23,14 +23,21 @@ import type { FrontendRealtimeEvent } from './eventNormalizer';
 import { resolveRoomPreview } from './roomPreview';
 import { subscribeRealtimeEvents } from './wsClient';
 
+type RoomMessagesEntry = {
+  messages: MessageInfo[];
+  hasMoreHistory: boolean;
+  loadingHistory: boolean;
+};
+
 const teamAgentsState = ref<Record<number, AgentInfo[]>>({});
 const teamRoomsState = ref<Record<number, RoomState[]>>({});
-const roomMessagesState = ref<Record<number, MessageInfo[]>>({});
+const roomMessagesState = ref<Record<number, RoomMessagesEntry>>({});
 const agentActivitiesState = ref<Record<number, AgentActivity[]>>({});
 const agentStatusState = ref<Record<number, AgentStatus>>({});
 const teamDeptTreeState = ref<Record<number, DeptTreeNode | null>>({});
 const roleTemplatesState = ref<RoleTemplateSummary[]>([]);
 const MAX_AGENT_ACTIVITY_ITEMS = 100;
+const ROOM_MESSAGES_PAGE_SIZE = 20;
 
 const activeTeamId = ref<number | null>(null);
 const activeRoomId = ref<number | null>(null);
@@ -41,7 +48,7 @@ function syncTotalMessageCount(): void {
     return;
   }
 
-  totalMessageCount.value = roomMessagesState.value[activeRoomId.value]?.length ?? 0;
+  totalMessageCount.value = getRoomEntry(activeRoomId.value).messages.length;
 }
 
 function normalizeMessage(teamId: number, raw: RawMessageInfo): MessageInfo {
@@ -78,6 +85,41 @@ function sortMessages(messages: MessageInfo[]): MessageInfo[] {
   return [...messages].sort(compareMessages);
 }
 
+function messageIdentity(message: MessageInfo): string {
+  if (message.db_id !== null) {
+    return `db:${message.db_id}`;
+  }
+  return `tmp:${message.sender_id}:${message.time}:${message.content}`;
+}
+
+function mergeMessages(messages: MessageInfo[]): MessageInfo[] {
+  const uniqueMessages = new Map<string, MessageInfo>();
+  for (const message of messages) {
+    uniqueMessages.set(messageIdentity(message), message);
+  }
+  return sortMessages([...uniqueMessages.values()]);
+}
+
+function getRoomEntry(roomId: number): RoomMessagesEntry {
+  return roomMessagesState.value[roomId] ?? { messages: [], hasMoreHistory: false, loadingHistory: false };
+}
+
+function setRoomEntry(roomId: number, patch: Partial<RoomMessagesEntry>): void {
+  roomMessagesState.value = {
+    ...roomMessagesState.value,
+    [roomId]: { ...getRoomEntry(roomId), ...patch },
+  };
+}
+
+function resolveOldestLoadedMessageId(messages: MessageInfo[]): number | null {
+  for (const message of messages) {
+    if (message.db_id !== null) {
+      return message.db_id;
+    }
+  }
+  return null;
+}
+
 function resolveMessageSenderDisplayName(teamId: number, senderId: number): string {
   if (senderId === -1) {
     return 'OPERATOR';
@@ -107,7 +149,7 @@ function refreshTeamRoomPreviews(teamId: number): void {
     rooms.map((room) => ({
       ...room,
       preview: resolveRoomPreview({
-        messages: roomMessagesState.value[room.room_id],
+        messages: getRoomEntry(room.room_id).messages,
         previousRoom: room,
         resolveSenderDisplayName: (senderId) => resolveMessageSenderDisplayName(teamId, senderId),
       }),
@@ -221,7 +263,7 @@ export async function loadTeamRooms(teamId: number): Promise<RoomState[]> {
   const rooms: RoomState[] = baseRooms.map((room) => ({
     ...room,
     preview: resolveRoomPreview({
-      messages: roomMessagesState.value[room.room_id],
+      messages: getRoomEntry(room.room_id).messages,
       previousRoom: (teamRoomsState.value[teamId] ?? []).find((item) => item.room_id === room.room_id) ?? null,
       resolveSenderDisplayName: (senderId) => resolveMessageSenderDisplayName(teamId, senderId),
     }),
@@ -233,20 +275,58 @@ export async function loadTeamRooms(teamId: number): Promise<RoomState[]> {
   return rooms;
 }
 
-export function seedRoomMessages(roomId: number, messages: MessageInfo[]): void {
-  roomMessagesState.value = {
-    ...roomMessagesState.value,
-    [roomId]: sortMessages(messages),
-  };
+export function seedRoomMessages(
+  roomId: number,
+  messages: MessageInfo[],
+  options?: {
+    preserveExisting?: boolean;
+    hasMoreHistory?: boolean;
+  },
+): void {
+  const currentMessages = options?.preserveExisting ? getRoomEntry(roomId).messages : [];
+  const nextMessages = mergeMessages([...currentMessages, ...messages]);
+  setRoomEntry(roomId, {
+    messages: nextMessages,
+    hasMoreHistory: options?.hasMoreHistory ?? getRoomEntry(roomId).hasMoreHistory,
+  });
   syncTotalMessageCount();
 }
 
 export async function loadRoomMessagesState(teamId: number, roomId: number): Promise<MessageInfo[]> {
-  const rawMessages = await fetchRoomMessages(roomId);
-  const messages = rawMessages.map((m) => normalizeMessage(teamId, m));
-  seedRoomMessages(roomId, messages);
+  const page = await fetchRoomMessages(roomId, { limit: ROOM_MESSAGES_PAGE_SIZE });
+  const messages = page.messages.map((m) => normalizeMessage(teamId, m));
+  seedRoomMessages(roomId, messages, { hasMoreHistory: page.hasMore });
   syncRoomPreview(teamId, roomId, messages);
   return messages;
+}
+
+export async function loadOlderRoomMessagesState(teamId: number, roomId: number): Promise<MessageInfo[]> {
+  const currentEntry = getRoomEntry(roomId);
+  if (!currentEntry.hasMoreHistory || currentEntry.loadingHistory) {
+    return [];
+  }
+  const oldestMessageId = resolveOldestLoadedMessageId(currentEntry.messages);
+  if (oldestMessageId === null) {
+    return [];
+  }
+
+  setRoomEntry(roomId, { loadingHistory: true });
+
+  try {
+    const page = await fetchRoomMessages(roomId, {
+      limit: ROOM_MESSAGES_PAGE_SIZE,
+      beforeId: oldestMessageId,
+    });
+    const messages = page.messages.map((message) => normalizeMessage(teamId, message));
+    seedRoomMessages(roomId, messages, {
+      preserveExisting: true,
+      hasMoreHistory: page.hasMore,
+    });
+    syncRoomPreview(teamId, roomId, getRoomEntry(roomId).messages);
+    return messages;
+  } finally {
+    setRoomEntry(roomId, { loadingHistory: false });
+  }
 }
 
 export function seedAgentActivities(agentId: number, activities: AgentActivity[]): void {
@@ -313,7 +393,21 @@ export function getRoomMessages(roomId: number | null): MessageInfo[] {
   if (roomId === null) {
     return [];
   }
-  return roomMessagesState.value[roomId] ?? [];
+  return getRoomEntry(roomId).messages;
+}
+
+export function getRoomMessageHistoryState(roomId: number | null): {
+  hasMoreHistory: boolean;
+  loadingHistory: boolean;
+} {
+  if (roomId === null) {
+    return {
+      hasMoreHistory: false,
+      loadingHistory: false,
+    };
+  }
+  const entry = getRoomEntry(roomId);
+  return { hasMoreHistory: entry.hasMoreHistory, loadingHistory: entry.loadingHistory };
 }
 
 export function getAgentActivities(agentId: number | null): AgentActivity[] {
@@ -365,7 +459,7 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
       }),
     );
 
-    const currentMessages = roomMessagesState.value[event.roomId] ?? [];
+    const currentMessages = getRoomEntry(event.roomId).messages;
     const alreadyExists = nextMessage.db_id !== null
       ? currentMessages.some((m) => m.db_id === nextMessage.db_id)
       : currentMessages.some((m) =>
@@ -374,10 +468,9 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
           && m.time === nextMessage.time,
         );
     if (!alreadyExists) {
-      roomMessagesState.value = {
-        ...roomMessagesState.value,
-        [event.roomId]: sortMessages([...currentMessages, nextMessage]),
-      };
+      setRoomEntry(event.roomId, {
+        messages: sortMessages([...currentMessages, nextMessage]),
+      });
     }
 
     if (activeTeamId.value === event.teamId && activeRoomId.value === event.roomId) {
@@ -388,7 +481,7 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
 
   if (event.type === 'message_changed') {
     const updatedMessage: MessageInfo = event.message;
-    const currentMessages = roomMessagesState.value[event.roomId] ?? [];
+    const currentMessages = getRoomEntry(event.roomId).messages;
     const existingIndex = updatedMessage.db_id !== null
       ? currentMessages.findIndex((m) => m.db_id === updatedMessage.db_id)
       : -1;
@@ -396,10 +489,7 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
     if (existingIndex >= 0) {
       const updated = [...currentMessages];
       updated[existingIndex] = updatedMessage;
-      roomMessagesState.value = {
-        ...roomMessagesState.value,
-        [event.roomId]: sortMessages(updated),
-      };
+      setRoomEntry(event.roomId, { messages: sortMessages(updated) });
     }
 
     if (activeTeamId.value === event.teamId && activeRoomId.value === event.roomId) {

@@ -206,6 +206,7 @@
     "idle": "Idle",
     "membersLabel": "Members {count}",
     "loadingMessages": "Loading messages…",
+    "loadingOlderMessages": "Loading earlier messages…",
     "inputPlaceholder": "Type a message here...",
     "sendHint": "Press Enter to send, Shift+Enter for new line",
     "send": "Send",

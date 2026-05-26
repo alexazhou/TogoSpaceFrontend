@@ -21,6 +21,8 @@ const props = defineProps<{
   deptTree: DeptTreeNode | null;
   roleTemplates: RoleTemplateSummary[];
   messages: MessageInfo[];
+  hasMoreHistory: boolean;
+  loadingOlderMessages: boolean;
   errorMessage: string;
   reloadingMessages: boolean;
   teamEnabled: boolean;
@@ -30,6 +32,7 @@ const emit = defineEmits<{
   updateError: [value: string];
   clickWorkingAgent: [agentId: number];
   clickAgent: [agentId: number];
+  loadOlderMessages: [];
   roomUpdated: [];
 }>();
 
@@ -238,6 +241,8 @@ onBeforeUnmount(() => {
       :current-room="currentRoom"
       :member-profiles="memberProfiles"
       :messages="messages"
+      :has-more-history="hasMoreHistory"
+      :loading-older-messages="loadingOlderMessages"
       :error-message="errorMessage"
       :reloading-messages="reloadingMessages"
       :draft="draft"
@@ -247,6 +252,7 @@ onBeforeUnmount(() => {
       @submit="handleSubmit"
       @click-agent="emit('clickAgent', $event)"
       @click-working-agent="emit('clickWorkingAgent', $event)"
+      @load-older-messages="emit('loadOlderMessages')"
       @escalate-message="handleEscalateMessage"
       @open-room-settings="openRoomSettings"
     />

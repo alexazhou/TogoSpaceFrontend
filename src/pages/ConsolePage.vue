@@ -62,12 +62,15 @@ async function navigateToRoom(roomId: number, replace = false): Promise<void> {
 const {
   agents,
   currentRoom,
+  hasMoreHistory,
+  loadingOlderMessages,
   messages,
   rooms,
   selectedRoomId,
   clearSelectedRoom,
   refreshRuntimeState,
   loadRoomMessages: loadRuntimeRoomMessages,
+  loadOlderMessages,
   clearRuntimeContext,
 } = useConsoleRuntimeState({
   teamId,
@@ -335,12 +338,15 @@ onBeforeUnmount(() => {
           :dept-tree="deptTree"
           :role-templates="roleTemplates"
           :messages="messages"
+          :has-more-history="hasMoreHistory"
+          :loading-older-messages="loadingOlderMessages"
           :error-message="errorMessage"
           :reloading-messages="reloadingMessages"
           :team-enabled="currentTeam?.enabled ?? true"
           @update-error="errorMessage = $event"
           @click-agent="openAgent"
           @click-working-agent="openAgent"
+          @load-older-messages="loadOlderMessages().catch(console.error)"
           @room-updated="refreshAll().catch(console.error)"
         />
       </div>

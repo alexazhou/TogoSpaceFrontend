@@ -14,6 +14,8 @@ const props = defineProps<{
   currentRoom: RoomState | null;
   memberProfiles: RoomMemberProfile[];
   messages: MessageInfo[];
+  hasMoreHistory: boolean;
+  loadingOlderMessages: boolean;
   errorMessage: string;
   reloadingMessages: boolean;
   draft: string;
@@ -26,6 +28,7 @@ const emit = defineEmits<{
   submit: [];
   clickWorkingAgent: [agentId: number];
   clickAgent: [agentId: number];
+  loadOlderMessages: [];
   escalateMessage: [messageId: number];
   openRoomSettings: [];
 }>();
@@ -387,9 +390,12 @@ onBeforeUnmount(() => {
         :messages="messages"
         :member-profiles="memberProfiles"
         :working-agent="workingAgent"
+        :has-more-history="hasMoreHistory"
+        :loading-older-messages="loadingOlderMessages"
         :escalating-message-ids="escalatingMessageIds"
         @click-agent="emit('clickAgent', $event)"
         @click-working-agent="emit('clickWorkingAgent', $event)"
+        @load-older-messages="emit('loadOlderMessages')"
         @escalate-message="emit('escalateMessage', $event)"
       />
     </div>

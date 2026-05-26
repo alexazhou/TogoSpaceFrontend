@@ -11,12 +11,15 @@ const props = defineProps<{
   messages: MessageInfo[];
   memberProfiles: RoomMemberProfile[];
   workingAgent?: RoomMemberProfile | null;
+  hasMoreHistory?: boolean;
+  loadingOlderMessages?: boolean;
   escalatingMessageIds?: number[];
 }>();
 
 const emit = defineEmits<{
   clickWorkingAgent: [agentId: number];
   clickAgent: [agentId: number];
+  loadOlderMessages: [];
   escalateMessage: [messageId: number];
 }>();
 
@@ -24,7 +27,11 @@ const { t } = useI18n();
 
 const streamRef = useTemplateRef('streamRef');
 const hasScrollbar = ref(false);
+const historyLoadRequested = ref(false);
 let resizeObserver: ResizeObserver | null = null;
+let pendingPrependAnchor: { scrollHeight: number; scrollTop: number } | null = null;
+
+const TOP_HISTORY_LOAD_THRESHOLD_PX = 24;
 
 const NAME_COLORS = [
   '#56d4b0',
@@ -145,13 +152,77 @@ function scrollToBottom(): void {
   if (stream) stream.scrollTop = stream.scrollHeight;
 }
 
+function requestOlderMessages(): void {
+  const stream = streamRef.value;
+  if (
+    !stream
+    || !props.hasMoreHistory
+    || props.loadingOlderMessages
+    || historyLoadRequested.value
+  ) {
+    return;
+  }
+
+  pendingPrependAnchor = {
+    scrollHeight: stream.scrollHeight,
+    scrollTop: stream.scrollTop,
+  };
+  historyLoadRequested.value = true;
+  emit('loadOlderMessages');
+}
+
+function maybeLoadOlderMessagesForShortViewport(): void {
+  const stream = streamRef.value;
+  if (!stream || !props.hasMoreHistory || props.loadingOlderMessages || historyLoadRequested.value) {
+    return;
+  }
+
+  if (stream.scrollHeight <= stream.clientHeight + 2) {
+    requestOlderMessages();
+  }
+}
+
+function restorePrependedHistoryAnchor(): void {
+  const stream = streamRef.value;
+  if (!stream) {
+    pendingPrependAnchor = null;
+    historyLoadRequested.value = false;
+    return;
+  }
+
+  if (pendingPrependAnchor) {
+    stream.scrollTop = pendingPrependAnchor.scrollTop + (stream.scrollHeight - pendingPrependAnchor.scrollHeight);
+  }
+  pendingPrependAnchor = null;
+  historyLoadRequested.value = false;
+}
+
+function handleStreamScroll(): void {
+  updateScrollbarState();
+
+  const stream = streamRef.value;
+  if (!stream) {
+    return;
+  }
+
+  if (stream.scrollTop <= TOP_HISTORY_LOAD_THRESHOLD_PX) {
+    requestOlderMessages();
+  }
+}
+
 watch(
   () => props.messages,
   async () => {
     const shouldScroll = isAtBottom();
     await nextTick();
     updateScrollbarState();
+    if (pendingPrependAnchor) {
+      restorePrependedHistoryAnchor();
+      maybeLoadOlderMessagesForShortViewport();
+      return;
+    }
     if (shouldScroll) scrollToBottom();
+    maybeLoadOlderMessagesForShortViewport();
   },
   { deep: true },
 );
@@ -166,27 +237,59 @@ watch(
   },
 );
 
+watch(
+  () => props.loadingOlderMessages,
+  async (loadingOlderMessages, previousLoadingOlderMessages) => {
+    if (!previousLoadingOlderMessages || loadingOlderMessages) {
+      return;
+    }
+
+    await nextTick();
+    if (pendingPrependAnchor) {
+      restorePrependedHistoryAnchor();
+    }
+    maybeLoadOlderMessagesForShortViewport();
+  },
+);
+
+watch(
+  () => props.hasMoreHistory,
+  async () => {
+    await nextTick();
+    maybeLoadOlderMessagesForShortViewport();
+  },
+);
+
 onMounted(() => {
   updateScrollbarState();
   scrollToBottom();
+  streamRef.value?.addEventListener('scroll', handleStreamScroll, { passive: true });
+  maybeLoadOlderMessagesForShortViewport();
   if (typeof ResizeObserver === 'undefined' || !streamRef.value) {
     return;
   }
 
   resizeObserver = new ResizeObserver(() => {
     updateScrollbarState();
+    maybeLoadOlderMessagesForShortViewport();
   });
   resizeObserver.observe(streamRef.value);
 });
 
 onBeforeUnmount(() => {
+  streamRef.value?.removeEventListener('scroll', handleStreamScroll);
   resizeObserver?.disconnect();
   resizeObserver = null;
+  pendingPrependAnchor = null;
 });
 </script>
 
 <template>
   <div ref="streamRef" class="message-stream" :class="{ 'has-scrollbar': hasScrollbar }">
+    <div v-if="loadingOlderMessages" class="history-loader">
+      {{ t('chat.loadingOlderMessages') }}
+    </div>
+
     <div
       v-for="(message, index) in streamMessages"
       :key="messageKey(message, index)"
@@ -318,6 +421,16 @@ onBeforeUnmount(() => {
   gap: 14px;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.history-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.2;
 }
 
 .message-stream::-webkit-scrollbar {

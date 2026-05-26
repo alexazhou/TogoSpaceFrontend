@@ -836,11 +836,35 @@ export type RawMessageInfo = {
   insert_immediately: boolean;
 };
 
-export async function getRoomMessages(roomId: number): Promise<RawMessageInfo[]> {
-  const data = await requestJson<{ messages: RawMessageInfo[] }>(
-    `/rooms/${roomId}/messages/list.json`,
+export type GetRoomMessagesOptions = {
+  limit?: number;
+  beforeId?: number | null;
+};
+
+export type RoomMessagesPage = {
+  messages: RawMessageInfo[];
+  hasMore: boolean;
+};
+
+export async function getRoomMessages(
+  roomId: number,
+  options?: GetRoomMessagesOptions,
+): Promise<RoomMessagesPage> {
+  const data = await requestJson<{
+    messages: RawMessageInfo[];
+    pagination?: {
+      has_more?: boolean;
+    };
+  }>(
+    withSearch(`/rooms/${roomId}/messages/list.json`, {
+      limit: options?.limit,
+      before_id: options?.beforeId,
+    }),
   );
-  return data.messages;
+  return {
+    messages: data.messages ?? [],
+    hasMore: Boolean(data.pagination?.has_more),
+  };
 }
 
 export async function postRoomMessage(roomId: number, content: string, insertImmediately = false): Promise<void> {
