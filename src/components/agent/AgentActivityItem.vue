@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getTeamRooms } from '../../realtime/runtimeStore';
 import type { AgentActivity } from '../../types';
 import { displayName } from '../../utils';
+import MarkdownContent from '../ui/MarkdownContent.vue';
 
 const { t } = useI18n();
 
 const props = defineProps<{
   activity: AgentActivity;
 }>();
+
+const chatReplyCollapsed = ref(true);
 
 function readTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
@@ -383,6 +386,10 @@ function activitySummary(
     return '';
   }
 
+  if (activity.activity_type === 'chat_reply') {
+    return '';
+  }
+
   if (toolCommand) {
     return toolCommand;
   }
@@ -448,7 +455,12 @@ const activityView = computed(() => {
     || (activity.activity_type !== 'tool_call' && Boolean(currentMetadataToolName))
   ) || activity.activity_type === 'message_received';
 
+  const chatReplyContent = activity.activity_type === 'chat_reply' ? activity.detail.trim() : '';
+  const chatReplyIsLong = chatReplyContent.split('\n').length > 5 || chatReplyContent.length > 350;
+
   return {
+    chatReplyContent,
+    chatReplyIsLong,
     durationText: formatDuration(activity.duration_ms),
     executeBashResult,
     expandedContent,
@@ -598,6 +610,20 @@ const activityView = computed(() => {
       ><span class="agent-activity-item__received-sender">{{ msg.sender }}:</span> {{ msg.content }}</p>
     </template>
     <p v-if="activityView.showErrorMessage" class="agent-activity-item__error">{{ activity.error_message }}</p>
+    <template v-if="activityView.chatReplyContent">
+      <div
+        class="agent-activity-item__chat-reply"
+        :class="{ 'agent-activity-item__chat-reply--collapsed': chatReplyCollapsed && activityView.chatReplyIsLong }"
+      >
+        <MarkdownContent :content="activityView.chatReplyContent" />
+      </div>
+      <button
+        v-if="activityView.chatReplyIsLong"
+        type="button"
+        class="agent-activity-item__chat-reply-toggle"
+        @click="chatReplyCollapsed = !chatReplyCollapsed"
+      >{{ chatReplyCollapsed ? t('common.expand') : t('common.collapse') }}</button>
+    </template>
   </article>
 </template>
 
@@ -1041,6 +1067,44 @@ const activityView = computed(() => {
   font-weight: 600;
   color: var(--text-strong);
   margin-right: 4px;
+}
+
+.agent-activity-item__chat-reply {
+  padding-left: 22px;
+  padding-right: 4px;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.agent-activity-item__chat-reply--collapsed {
+  max-height: 7.5em;
+  overflow: hidden;
+  position: relative;
+}
+
+.agent-activity-item__chat-reply--collapsed::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.5em;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--panel-bg) 94%, var(--surface-soft) 6%));
+  pointer-events: none;
+}
+
+.agent-activity-item__chat-reply-toggle {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0 0 0 22px;
+  line-height: 1.4;
+}
+
+.agent-activity-item__chat-reply-toggle:hover {
+  text-decoration: underline;
 }
 
 </style>
