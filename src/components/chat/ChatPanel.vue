@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getAgentAvatarUrl } from '../../avatar';
 import { displayName, i18nText } from '../../utils';
 import type { MessageInfo, RoomMemberProfile, RoomState } from '../../types';
 import { useAgentStatus } from '../../realtime/selectors';
 import MessageStream from './MessageStream.vue';
+
+const COMPOSER_DRAG_ZONE_HEIGHT_PX = 8;
+const COMPOSER_RATIO_STORAGE_KEY = 'chat-composer-height-ratio';
 
 const props = defineProps<{
   currentRoom: RoomState | null;
@@ -30,9 +33,24 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const hasBanner = computed(() => Boolean(props.errorMessage || props.reloadingMessages));
+const hasComposer = computed(() => Boolean(props.currentRoom && !props.composerNotice));
 const membersOpen = ref(false);
 const isDraftComposing = ref(false);
 const currentMembers = computed(() => props.memberProfiles);
+const composerDividerDragging = ref(false);
+const composerHeightRatio = ref(0.28);
+
+const chatRef = useTemplateRef('chatRef');
+const chatHeadRef = useTemplateRef('chatHeadRef');
+const chatBannerRef = useTemplateRef('chatBannerRef');
+
+const chatHeight = ref(0);
+const chatHeadHeight = ref(0);
+const chatBannerHeight = ref(0);
+
+let layoutResizeObserver: ResizeObserver | null = null;
+let stopComposerResize: (() => void) | null = null;
+let pendingMessageViewportAdjustFrame: number | null = null;
 
 const isScheduling = computed(() => props.currentRoom?.state === 'scheduling');
 const currentTurnAgentId = computed(() => props.currentRoom?.current_turn_agent_id ?? null);
@@ -63,10 +81,207 @@ const workingAgent = computed<RoomMemberProfile | null>(() => {
 
 const isDeptRoom = computed(() => props.currentRoom?.tags?.includes('DEPT') ?? false);
 
+const composerMetrics = computed(() => {
+  if (!hasComposer.value) {
+    return null;
+  }
+
+  const reservedHeight = chatHeadHeight.value
+    + (hasBanner.value ? chatBannerHeight.value : 0);
+  const availableHeight = chatHeight.value - reservedHeight;
+  if (availableHeight <= 0) {
+    return null;
+  }
+
+  const minComposerHeight = Math.min(220, Math.max(88, Math.round(availableHeight * 0.18)));
+  const minMessageHeight = Math.min(260, Math.max(120, Math.round(availableHeight * 0.24)));
+  const maxComposerHeight = Math.max(minComposerHeight, availableHeight - minMessageHeight);
+  const composerHeight = Math.round(
+    Math.min(
+      maxComposerHeight,
+      Math.max(minComposerHeight, availableHeight * composerHeightRatio.value),
+    ),
+  );
+
+  return {
+    availableHeight,
+    minComposerHeight,
+    maxComposerHeight,
+    composerHeight,
+  };
+});
+
+const chatLayoutStyle = computed(() => {
+  if (hasComposer.value) {
+    const composerHeight = composerMetrics.value?.composerHeight ?? 200;
+    return {
+      gridTemplateRows: hasBanner.value
+        ? `auto auto minmax(0, 1fr) ${composerHeight}px`
+        : `auto minmax(0, 1fr) ${composerHeight}px`,
+    };
+  }
+
+  if (props.composerNotice) {
+    return {
+      gridTemplateRows: hasBanner.value
+        ? 'auto auto minmax(0, 1fr) auto'
+        : 'auto minmax(0, 1fr) auto',
+    };
+  }
+
+  return {
+    gridTemplateRows: hasBanner.value
+      ? 'auto auto minmax(0, 1fr)'
+      : 'auto minmax(0, 1fr)',
+  };
+});
+
+const composerStyle = computed(() => (
+  hasComposer.value
+    ? {
+      height: `${composerMetrics.value?.composerHeight ?? 200}px`,
+      '--composer-drag-zone-height': `${COMPOSER_DRAG_ZONE_HEIGHT_PX}px`,
+    }
+    : {}
+));
+
+function persistComposerHeightRatio(): void {
+  try {
+    localStorage.setItem(COMPOSER_RATIO_STORAGE_KEY, String(composerHeightRatio.value));
+  } catch {
+    // ignore localStorage failures
+  }
+}
+
+function restoreComposerHeightRatio(): void {
+  try {
+    const raw = localStorage.getItem(COMPOSER_RATIO_STORAGE_KEY);
+    if (!raw) {
+      return;
+    }
+
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed >= 0.12 && parsed <= 0.72) {
+      composerHeightRatio.value = parsed;
+    }
+  } catch {
+    // ignore localStorage failures
+  }
+}
+
+function refreshLayoutMetrics(): void {
+  chatHeight.value = chatRef.value?.clientHeight ?? 0;
+  chatHeadHeight.value = chatHeadRef.value?.clientHeight ?? 0;
+  chatBannerHeight.value = chatBannerRef.value?.clientHeight ?? 0;
+}
+
+function bindLayoutResizeObserver(): void {
+  layoutResizeObserver?.disconnect();
+
+  if (typeof ResizeObserver === 'undefined') {
+    return;
+  }
+
+  layoutResizeObserver = new ResizeObserver(() => {
+    refreshLayoutMetrics();
+  });
+
+  if (chatRef.value) {
+    layoutResizeObserver.observe(chatRef.value);
+  }
+  if (chatHeadRef.value) {
+    layoutResizeObserver.observe(chatHeadRef.value);
+  }
+  if (chatBannerRef.value) {
+    layoutResizeObserver.observe(chatBannerRef.value);
+  }
+}
+
+function resetComposerDragState(): void {
+  composerDividerDragging.value = false;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+}
+
+function getMessageStreamElement(): HTMLElement | null {
+  const stream = chatRef.value?.querySelector('.message-stream');
+  return stream instanceof HTMLElement ? stream : null;
+}
+
+function preserveMessageBottomAnchor(distanceToBottom: number): void {
+  const stream = getMessageStreamElement();
+  if (!stream) {
+    return;
+  }
+
+  const nextScrollTop = stream.scrollHeight - stream.clientHeight - distanceToBottom;
+  stream.scrollTop = Math.max(0, nextScrollTop);
+}
+
+function startComposerResize(event: PointerEvent): void {
+  const metrics = composerMetrics.value;
+  if (!metrics) {
+    return;
+  }
+
+  event.preventDefault();
+
+  const startHeight = metrics.composerHeight;
+  const startY = event.clientY;
+
+  composerDividerDragging.value = true;
+  document.body.style.cursor = 'row-resize';
+  document.body.style.userSelect = 'none';
+
+  const stopResize = (): void => {
+    resetComposerDragState();
+    window.removeEventListener('pointermove', handlePointerMove);
+    window.removeEventListener('pointerup', stopResize);
+    window.removeEventListener('pointercancel', stopResize);
+    stopComposerResize = null;
+  };
+
+  const handlePointerMove = (moveEvent: PointerEvent): void => {
+    const stream = getMessageStreamElement();
+    const distanceToBottom = stream
+      ? stream.scrollHeight - stream.scrollTop - stream.clientHeight
+      : 0;
+    const nextComposerHeight = Math.min(
+      metrics.maxComposerHeight,
+      Math.max(metrics.minComposerHeight, startHeight - (moveEvent.clientY - startY)),
+    );
+    composerHeightRatio.value = nextComposerHeight / metrics.availableHeight;
+    persistComposerHeightRatio();
+
+    if (pendingMessageViewportAdjustFrame !== null) {
+      cancelAnimationFrame(pendingMessageViewportAdjustFrame);
+    }
+
+    pendingMessageViewportAdjustFrame = window.requestAnimationFrame(() => {
+      preserveMessageBottomAnchor(distanceToBottom);
+      pendingMessageViewportAdjustFrame = null;
+    });
+  };
+
+  window.addEventListener('pointermove', handlePointerMove);
+  window.addEventListener('pointerup', stopResize, { once: true });
+  window.addEventListener('pointercancel', stopResize, { once: true });
+  stopComposerResize = stopResize;
+}
+
 watch(
   () => props.currentRoom?.room_id ?? null,
   () => {
     membersOpen.value = false;
+  },
+);
+
+watch(
+  () => [hasBanner.value, hasComposer.value, props.composerNotice] as const,
+  async () => {
+    await nextTick();
+    refreshLayoutMetrics();
+    bindLayoutResizeObserver();
   },
 );
 
@@ -102,11 +317,35 @@ function handleEnterKey(e: KeyboardEvent): void {
   e.preventDefault();
   emit('submit');
 }
+
+onMounted(async () => {
+  restoreComposerHeightRatio();
+  await nextTick();
+  refreshLayoutMetrics();
+  bindLayoutResizeObserver();
+});
+
+onBeforeUnmount(() => {
+  stopComposerResize?.();
+  stopComposerResize = null;
+  if (pendingMessageViewportAdjustFrame !== null) {
+    cancelAnimationFrame(pendingMessageViewportAdjustFrame);
+    pendingMessageViewportAdjustFrame = null;
+  }
+  layoutResizeObserver?.disconnect();
+  layoutResizeObserver = null;
+  resetComposerDragState();
+});
 </script>
 
 <template>
-  <section class="chat panel" :class="{ 'has-banner': hasBanner, 'no-banner': !hasBanner }">
-    <div class="chat-head">
+  <section
+    ref="chatRef"
+    class="chat panel"
+    :class="{ 'has-banner': hasBanner, 'no-banner': !hasBanner }"
+    :style="chatLayoutStyle"
+  >
+    <div ref="chatHeadRef" class="chat-head">
       <div class="chat-head-title">
         <h2>{{ currentRoom ? i18nText(currentRoom.i18n, 'display_name', currentRoom.room_name) : t('chat.noRoom') }}</h2>
       </div>
@@ -140,8 +379,8 @@ function handleEnterKey(e: KeyboardEvent): void {
       </div>
     </div>
 
-    <div v-if="errorMessage" class="banner error">{{ errorMessage }}</div>
-    <div v-else-if="reloadingMessages" class="banner">{{ t('chat.loadingMessages') }}</div>
+    <div v-if="errorMessage" ref="chatBannerRef" class="banner error">{{ errorMessage }}</div>
+    <div v-else-if="reloadingMessages" ref="chatBannerRef" class="banner">{{ t('chat.loadingMessages') }}</div>
 
     <div class="message-viewport">
       <MessageStream
@@ -155,7 +394,21 @@ function handleEnterKey(e: KeyboardEvent): void {
       />
     </div>
 
-    <form v-if="currentRoom && !composerNotice" class="composer active" @submit.prevent="handleComposerSubmit">
+    <form
+      v-if="currentRoom && !composerNotice"
+      class="composer active"
+      :style="composerStyle"
+      @submit.prevent="handleComposerSubmit"
+    >
+      <button
+        type="button"
+        class="composer-drag-zone"
+        :class="{ dragging: composerDividerDragging }"
+        aria-label="调整消息区和输入框高度"
+        @pointerdown="startComposerResize"
+      >
+        <span class="composer-drag-zone__grip"></span>
+      </button>
       <div class="composer-editor">
         <textarea
           :value="draft"
@@ -168,7 +421,7 @@ function handleEnterKey(e: KeyboardEvent): void {
         ></textarea>
         <div class="composer-foot">
           <span>{{ t('chat.sendHint') }}</span>
-          <button type="submit" :disabled="!draft.trim()">{{ t('chat.send') }}</button>
+          <button type="submit" class="composer-submit" :disabled="!draft.trim()">{{ t('chat.send') }}</button>
         </div>
       </div>
     </form>
@@ -222,16 +475,7 @@ function handleEnterKey(e: KeyboardEvent): void {
   border-color: var(--panel-border-soft);
 }
 
-.chat.has-banner {
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
-}
-
-.chat.no-banner {
-  grid-template-rows: auto minmax(0, 1fr) auto;
-}
-
 .chat-head {
-  grid-row: 1;
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -495,15 +739,11 @@ function handleEnterKey(e: KeyboardEvent): void {
 }
 
 .banner {
+  margin-top: 8px;
   border-radius: 6px;
   padding: 6px 8px;
   background: var(--surface-panel);
   font-size: 0.78rem;
-}
-
-.chat.has-banner .banner {
-  grid-row: 2;
-  margin-top: 8px;
 }
 
 .banner.error {
@@ -514,36 +754,57 @@ function handleEnterKey(e: KeyboardEvent): void {
 .message-viewport {
   min-height: 0;
   overflow: hidden;
-}
-
-.chat.has-banner .message-viewport {
-  grid-row: 3;
-}
-
-.chat.no-banner .message-viewport {
-  grid-row: 2;
   margin-top: 2px;
 }
 
-.composer {
+.composer-drag-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  height: var(--composer-drag-zone-height, 8px);
+  padding: 0;
+  border: none;
   background: transparent;
-  border-top: 1px solid var(--border-subtle);
-  padding: 8px 0 0;
+  cursor: row-resize;
+  touch-action: none;
+}
+
+.composer-drag-zone__grip {
+  width: 100%;
+  height: 1px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border-default) 72%, transparent);
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.composer-drag-zone:hover .composer-drag-zone__grip,
+.composer-drag-zone.dragging .composer-drag-zone__grip {
+  background: color-mix(in srgb, var(--interactive-focus-border) 48%, var(--border-default) 52%);
+}
+
+.composer-drag-zone.dragging .composer-drag-zone__grip {
+  transform: scaleY(1.4);
+}
+
+.composer {
+  box-sizing: border-box;
+  background: transparent;
+  padding: 0;
   overflow: hidden;
-}
-
-.chat.has-banner .composer {
-  grid-row: 4;
-}
-
-.chat.no-banner .composer {
-  grid-row: 3;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .composer-editor {
   background: var(--surface-input);
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
+  min-height: 0;
   border: 1px solid color-mix(in srgb, var(--border-subtle) 78%, var(--border-default) 22%);
   border-radius: 8px;
   overflow: hidden;
@@ -560,9 +821,8 @@ function handleEnterKey(e: KeyboardEvent): void {
 .composer textarea {
   width: 100%;
   resize: none;
-  min-height: 25vh;
-  height: 25vh;
-  max-height: 25vh;
+  flex: 1 1 auto;
+  min-height: 96px;
   border: none;
   border-radius: 0;
   padding: 12px;
@@ -630,15 +890,7 @@ function handleEnterKey(e: KeyboardEvent): void {
   font-size: 0.74rem;
 }
 
-.chat.has-banner .composer-hint {
-  grid-row: 4;
-}
-
-.chat.no-banner .composer-hint {
-  grid-row: 3;
-}
-
-.composer button {
+.composer-submit {
   position: absolute;
   right: 9px;
   bottom: 9px;
@@ -652,7 +904,7 @@ function handleEnterKey(e: KeyboardEvent): void {
   font-size: 0.74rem;
 }
 
-.composer button:disabled {
+.composer-submit:disabled {
   cursor: not-allowed;
   opacity: 0.4;
 }
@@ -700,13 +952,11 @@ function handleEnterKey(e: KeyboardEvent): void {
 }
 
 :global(html.bp-compact) .composer {
-  padding-top: 10px;
+  --composer-drag-zone-height: 10px;
 }
 
 :global(html.bp-compact) .composer textarea {
-  min-height: 108px;
-  height: 108px;
-  max-height: 180px;
+  min-height: 88px;
   padding: 12px 12px 10px;
   font-size: 0.86rem;
   line-height: 1.45;
@@ -721,7 +971,7 @@ function handleEnterKey(e: KeyboardEvent): void {
   line-height: 1.35;
 }
 
-:global(html.bp-compact) .composer button {
+:global(html.bp-compact) .composer-submit {
   right: 10px;
   bottom: 10px;
   min-width: 56px;
@@ -782,7 +1032,7 @@ function handleEnterKey(e: KeyboardEvent): void {
 }
 
 :global(html.bp-console-short) .composer {
-  padding-top: 4px;
+  --composer-drag-zone-height: 4px;
 }
 
 :global(html.bp-console-short) .composer-editor {
@@ -790,9 +1040,7 @@ function handleEnterKey(e: KeyboardEvent): void {
 }
 
 :global(html.bp-console-short) .composer textarea {
-  min-height: 56px;
-  height: 56px;
-  max-height: 72px;
+  min-height: 52px;
   padding: 8px 8px 6px;
   font-size: 0.76rem;
   line-height: 1.3;
@@ -808,7 +1056,7 @@ function handleEnterKey(e: KeyboardEvent): void {
   line-height: 1.2;
 }
 
-:global(html.bp-console-short) .composer button {
+:global(html.bp-console-short) .composer-submit {
   right: 6px;
   bottom: 5px;
   min-width: 44px;

@@ -59,6 +59,7 @@ describe('ConsoleChatPanel', () => {
     });
 
     expect(wrapper.find('textarea').exists()).toBe(true);
+    expect(wrapper.find('.composer-drag-zone').exists()).toBe(true);
     expect(wrapper.text()).not.toContain('当前为观察模式');
   });
 
@@ -80,6 +81,7 @@ describe('ConsoleChatPanel', () => {
     });
 
     expect(wrapper.find('textarea').exists()).toBe(false);
+    expect(wrapper.find('.composer-drag-zone').exists()).toBe(false);
     expect(wrapper.text()).toContain('当前为观察模式');
   });
 
