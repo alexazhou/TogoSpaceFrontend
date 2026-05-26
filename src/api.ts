@@ -804,7 +804,9 @@ export async function getAgentDetail(agentId: number): Promise<AgentDetail> {
 }
 
 export async function getAgentActivities(agentId: number): Promise<AgentActivity[]> {
-  const data = await requestJson<{ activities: RawAgentActivity[] }>(`/agents/${agentId}/activities.json`);
+  const data = await requestJson<{ activities: RawAgentActivity[] }>(
+    `/agents/${agentId}/activities.json?exclude=AGENT_STATE`,
+  );
   return (data.activities ?? []).map(normalizeAgentActivity);
 }
 

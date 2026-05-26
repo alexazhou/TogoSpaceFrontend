@@ -5,7 +5,7 @@ import {
   showTokenDialog,
 } from '../appUiState';
 import { clearToken, setToken } from '../authStore';
-import { getSystemStatus, getTeams } from '../api';
+import { getAgentActivities, getSystemStatus, getTeams } from '../api';
 
 describe('api request handling', () => {
   beforeEach(() => {
@@ -90,5 +90,54 @@ describe('api request handling', () => {
     expect(globalRequestErrors.value).toHaveLength(1);
     expect(globalRequestErrors.value[0]?.path).toContain('/teams/list.json');
     expect(globalRequestErrors.value[0]?.statusCode).toBeNull();
+  });
+});
+
+describe('getAgentActivities', () => {
+  beforeEach(() => {
+    clearGlobalRequestError();
+    clearToken();
+    vi.restoreAllMocks();
+  });
+
+  it('requests the correct URL with exclude=AGENT_STATE', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ activities: [] }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await getAgentActivities(42);
+
+    const [url] = fetchMock.mock.calls[0] as [string];
+    expect(url).toContain('/agents/42/activities.json');
+    expect(url).toContain('exclude=AGENT_STATE');
+  });
+
+  it('normalizes activity_type to lowercase', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      activities: [
+        {
+          id: 1, agent_id: 42, team_id: 1,
+          activity_type: 'LLM_INFER', status: 'SUCCEEDED',
+          title: '推理', detail: '', started_at: '2024-01-01T00:00:00',
+        },
+        {
+          id: 2, agent_id: 42, team_id: 1,
+          activity_type: 'TOOL_CALL', status: 'STARTED',
+          title: '工具', detail: '', started_at: '2024-01-01T00:00:00',
+        },
+      ],
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getAgentActivities(42);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]?.activity_type).toBe('llm_infer');
+    expect(result[1]?.activity_type).toBe('tool_call');
   });
 });

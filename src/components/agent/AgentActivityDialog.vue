@@ -1110,7 +1110,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 10px 10px;
+  padding: 4px 10px 10px;
   scroll-padding-bottom: 16px;
   box-sizing: border-box;
 }
