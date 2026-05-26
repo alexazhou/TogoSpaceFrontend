@@ -981,9 +981,8 @@ watch(
   border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
   border-bottom: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -994,6 +993,7 @@ watch(
   gap: 12px;
   padding: 6px 10px 6px;
   border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
 
 .agent-activity-panel__title-line {
@@ -1105,17 +1105,19 @@ watch(
 }
 
 .agent-activity-list {
+  flex: 1;
   min-height: 0;
   overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 4px 10px 10px;
+  padding: 4px 10px 4px;
   scroll-padding-bottom: 16px;
   box-sizing: border-box;
 }
 
 .agent-task-list {
+  flex: 1;
   min-height: 0;
   overflow: auto;
   display: flex;
@@ -1126,6 +1128,7 @@ watch(
 
 .agent-task-filter {
   display: flex;
+  flex-shrink: 0;
   gap: 6px;
   padding: 8px 12px 4px;
 }
@@ -1362,11 +1365,6 @@ watch(
   word-break: break-word;
 }
 
-.agent-activity-list::after {
-  content: '';
-  display: block;
-  height: 12px;
-}
 
 .agent-activity-empty {
   min-height: 120px;
@@ -1443,7 +1441,7 @@ watch(
 }
 
 .agent-supervise-section {
-  padding: 8px 10px 10px;
+  padding: 4px 10px 10px;
   flex-shrink: 0;
   background: color-mix(in srgb, var(--panel-bg) 97%, var(--surface-soft) 3%);
   border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);

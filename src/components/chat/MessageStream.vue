@@ -28,6 +28,8 @@ const { t } = useI18n();
 const streamRef = useTemplateRef('streamRef');
 const hasScrollbar = ref(false);
 const historyLoadRequested = ref(false);
+const stickToBottom = ref(true);
+let programmaticScroll = false;
 let resizeObserver: ResizeObserver | null = null;
 let pendingPrependAnchor: { scrollHeight: number; scrollTop: number } | null = null;
 
@@ -149,7 +151,12 @@ function isAtBottom(): boolean {
 
 function scrollToBottom(): void {
   const stream = streamRef.value;
-  if (stream) stream.scrollTop = stream.scrollHeight;
+  if (!stream) return;
+  programmaticScroll = true;
+  stream.scrollTop = stream.scrollHeight;
+  requestAnimationFrame(() => {
+    programmaticScroll = false;
+  });
 }
 
 function requestOlderMessages(): void {
@@ -200,6 +207,10 @@ function restorePrependedHistoryAnchor(): void {
 function handleStreamScroll(): void {
   updateScrollbarState();
 
+  if (!programmaticScroll) {
+    stickToBottom.value = isAtBottom();
+  }
+
   const stream = streamRef.value;
   if (!stream) {
     return;
@@ -213,7 +224,7 @@ function handleStreamScroll(): void {
 watch(
   () => props.messages,
   async () => {
-    const shouldScroll = isAtBottom();
+    const shouldScroll = stickToBottom.value;
     await nextTick();
     updateScrollbarState();
     if (pendingPrependAnchor) {
@@ -230,7 +241,7 @@ watch(
 watch(
   () => props.workingAgent,
   async () => {
-    const shouldScroll = isAtBottom();
+    const shouldScroll = stickToBottom.value;
     await nextTick();
     updateScrollbarState();
     if (shouldScroll) scrollToBottom();

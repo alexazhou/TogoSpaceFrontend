@@ -583,8 +583,20 @@ const activityView = computed(() => {
         >{{ activityView.taskRoomLabel }}</span>
       </span>
     </div>
-    <p v-if="activityView.sendChatMsgContent" class="agent-activity-item__send-chat-content">{{ activityView.sendChatMsgContent }}</p>
-    <p v-if="activityView.sendChatMsgTruncated && !activityView.sendChatMsgError" class="agent-activity-item__content-more">...</p>
+    <template v-if="activityView.sendChatMsgContent && !activityView.sendChatMsgError">
+      <div
+        class="agent-activity-item__chat-reply"
+        :class="{ 'agent-activity-item__chat-reply--collapsed': chatReplyCollapsed && activityView.sendChatMsgTruncated }"
+      >
+        <MarkdownContent :content="activityView.sendChatMsgContent" />
+      </div>
+      <button
+        v-if="activityView.sendChatMsgTruncated"
+        type="button"
+        class="agent-activity-item__chat-reply-toggle"
+        @click="chatReplyCollapsed = !chatReplyCollapsed"
+      >{{ chatReplyCollapsed ? t('common.expand') : t('common.collapse') }}</button>
+    </template>
     <p v-if="activityView.sendChatMsgError" class="agent-activity-item__error">调用失败：{{ activityView.sendChatMsgError }}</p>
     <template v-if="activityView.executeBashResult">
       <p
@@ -635,6 +647,8 @@ const activityView = computed(() => {
   border-radius: 10px;
   background: color-mix(in srgb, var(--panel-bg) 94%, var(--surface-soft) 6%);
   border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
+  flex-shrink: 0;
+  contain: layout;
 }
 
 .agent-activity-item[data-status='started'] {
@@ -909,30 +923,11 @@ const activityView = computed(() => {
   color: var(--muted);
 }
 
-.agent-activity-item__send-chat-content {
-  margin: 0;
-  padding-left: 22px;
-  color: var(--text);
-  font-size: 0.8rem;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
-}
-
 .agent-activity-item[data-status='failed'] .agent-activity-item__send-chat-content {
   color: color-mix(in srgb, var(--danger, #f85149) 68%, var(--text) 32%);
 }
 
-.agent-activity-item__content-more {
-  margin: 0;
-  padding-left: 22px;
-  color: var(--muted);
-  font-size: 0.8rem;
-  line-height: 1.2;
-}
+
 
 .agent-activity-item__error {
   margin: 0;
