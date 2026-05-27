@@ -792,6 +792,16 @@ export async function clearTeamData(teamId: number): Promise<{
   });
 }
 
+export async function clearAgentData(agentId: number): Promise<{
+  status: string;
+  agent_id: number;
+  deleted: { histories: number };
+}> {
+  return requestJson(`/agents/${agentId}/clear_data.json`, {
+    method: 'POST',
+  });
+}
+
 export async function createTeam(payload: CreateTeamPayload): Promise<{ status: string; id: number; name: string }> {
   return requestJson('/teams/create.json', {
     method: 'POST',

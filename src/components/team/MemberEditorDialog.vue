@@ -8,6 +8,7 @@ import type { MemberDriverOption, MemberModelOption, MemberTemplateOption } from
 const props = defineProps<{
   open: boolean;
   editable: boolean;
+  agentId: number | null;
   teamName: string;
   memberName: string;
   status: string;
@@ -27,6 +28,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: [];
   save: [];
+  clearAgentData: [];
   'update:memberName': [value: string];
   'update:memberModel': [value: string];
   'update:keyword': [value: string];
@@ -225,18 +227,28 @@ const selectedMemberAvatarSeed = computed(() => (
         </section>
 
         <div class="member-editor-actions">
-          <button type="button" class="ghost-button" @click="emit('close')">
-            {{ editable ? t('common.cancel') : t('common.close') }}
-          </button>
-          <button
-            v-if="editable"
-            type="button"
-            class="secondary-button"
-            :disabled="!canSaveMember"
-            @click="emit('save')"
-          >
-            {{ t('common.save') }}
-          </button>
+          <div class="member-editor-actions-main">
+            <button
+              v-if="agentId !== null"
+              type="button"
+              class="ghost-button member-editor-danger-button"
+              @click="emit('clearAgentData')"
+            >
+              {{ t('member.clearData') }}
+            </button>
+            <button type="button" class="ghost-button" @click="emit('close')">
+              {{ editable ? t('common.cancel') : t('common.close') }}
+            </button>
+            <button
+              v-if="editable"
+              type="button"
+              class="secondary-button"
+              :disabled="!canSaveMember"
+              @click="emit('save')"
+            >
+              {{ t('common.save') }}
+            </button>
+          </div>
         </div>
       </section>
     </div>
@@ -300,14 +312,26 @@ const selectedMemberAvatarSeed = computed(() => (
 
 .member-editor-actions {
   justify-content: flex-end;
+  align-items: center;
 }
 
-.member-editor-actions > button {
+.member-editor-actions-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.member-editor-actions-main > button {
   min-width: 88px;
   height: 32px;
   padding: 0 14px;
   justify-content: center;
   font-size: 0.84rem;
+}
+
+.member-editor-danger-button {
+  color: #c0392b;
+  border-color: #c0392b;
 }
 
 .member-editor-title-row {

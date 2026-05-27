@@ -138,6 +138,8 @@ export function useMemberEditorDialog(options: UseMemberEditorDialogOptions) {
     memberEditorTemplateId.value = templateId;
   }
 
+  const memberEditorAgentId = computed(() => options.resolveId(editingMemberName.value));
+
   return {
     editingMemberName,
     memberEditorName,
@@ -148,6 +150,7 @@ export function useMemberEditorDialog(options: UseMemberEditorDialogOptions) {
     memberEditorMode,
     memberEditorOpen,
     memberEditorEditable,
+    memberEditorAgentId,
     currentMemberTemplateOption,
     memberModelOptions,
     filteredMemberTemplateOptions,

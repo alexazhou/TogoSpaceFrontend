@@ -292,7 +292,11 @@
     "soul": "Soul",
     "noSoul": "暂无 Soul 预览",
     "noAvailableTemplates": "当前没有可用模板",
-    "newMember": "新成员"
+    "newMember": "新成员",
+    "clearData": "清除历史记录",
+    "clearDataTitle": "清除成员历史记录",
+    "clearDataConfirm": "确定清除成员「{name}」的历史记录？此操作不可撤销。",
+    "clearDataSuccess": "已清除成员「{name}」的历史记录：{histories} 条"
   },
   "dept": {
     "eyebrow": "部门",

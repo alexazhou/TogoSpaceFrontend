@@ -292,7 +292,11 @@
     "soul": "Soul",
     "noSoul": "No soul preview",
     "noAvailableTemplates": "No available templates",
-    "newMember": "New Member"
+    "newMember": "New Member",
+    "clearData": "Clear History",
+    "clearDataTitle": "Clear Member History",
+    "clearDataConfirm": "Are you sure you want to clear the history for \"{name}\"? This action cannot be undone.",
+    "clearDataSuccess": "Cleared history for \"{name}\": {histories} records"
   },
   "dept": {
     "eyebrow": "Department",

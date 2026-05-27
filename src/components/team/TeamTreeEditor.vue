@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { getAgentsByTeamId, getDeptTree, getFrontendConfig, getRoleTemplates, saveMembersByTeamId, setDeptTree } from '../../api';
+import { getAgentsByTeamId, getDeptTree, getFrontendConfig, getRoleTemplates, saveMembersByTeamId, setDeptTree, clearAgentData } from '../../api';
 import { showGlobalSuccessToast } from '../../appUiState';
 import {
   useMemberEditorDialog,
@@ -68,7 +68,7 @@ const confirmState = ref<{
   message: string;
   confirmLabel: string;
   danger: boolean;
-  action: null | { type: 'remove-member'; nodeId: string; memberName: string };
+  action: null | { type: 'remove-member'; nodeId: string; memberName: string } | { type: 'clear-agent-data'; agentId: number; memberName: string };
 }>({
   title: '',
   message: '',
@@ -603,6 +603,7 @@ const {
   memberEditorDriver,
   memberEditorOpen,
   memberEditorEditable,
+  memberEditorAgentId,
   currentMemberTemplateOption,
   memberModelOptions,
   filteredMemberTemplateOptions,
@@ -1117,6 +1118,24 @@ function requestRemoveMember(nodeId: string): void {
   };
 }
 
+function requestClearAgentData(): void {
+  const agentId = memberEditorAgentId.value;
+  if (agentId === null) {
+    return;
+  }
+
+  const node = findNodeById(draftOrgTree.value, editingNodeId.value);
+  const memberName = node?.memberName || editingNodeId.value;
+
+  confirmState.value = {
+    title: t('member.clearDataTitle'),
+    message: t('member.clearDataConfirm', { name: memberName }),
+    confirmLabel: t('member.clearData'),
+    danger: true,
+    action: { type: 'clear-agent-data', agentId, memberName },
+  };
+}
+
 function closeConfirmDialog(): void {
   confirmState.value = {
     title: '',
@@ -1127,9 +1146,22 @@ function closeConfirmDialog(): void {
   };
 }
 
-function confirmDangerAction(): void {
+async function confirmDangerAction(): Promise<void> {
   const action = confirmState.value.action;
   if (!action) {
+    return;
+  }
+
+  if (action.type === 'clear-agent-data') {
+    closeConfirmDialog();
+    try {
+      const result = await clearAgentData(action.agentId);
+      showGlobalSuccessToast(
+        t('member.clearDataSuccess', { name: action.memberName, histories: result.deleted.histories }),
+      );
+    } catch (error) {
+      console.error(error);
+    }
     return;
   }
 
@@ -1188,6 +1220,7 @@ function openMemberViewerByNode(_agentId: number | null, nodeId: string, _agentN
     <MemberEditorDialog
       :open="memberEditorOpen"
       :editable="memberEditorEditable"
+      :agent-id="memberEditorAgentId"
       :team-name="teamName"
       :member-name="memberEditorName"
       :status="memberEditorStatus"
@@ -1204,6 +1237,7 @@ function openMemberViewerByNode(_agentId: number | null, nodeId: string, _agentN
       :template-options="filteredMemberTemplateOptions"
       @close="closeMemberEditor"
       @save="saveMemberEditor"
+      @clear-agent-data="requestClearAgentData"
       @update:member-name="memberEditorName = $event"
       @update:member-model="memberEditorModel = $event"
       @update:keyword="memberEditorKeyword = $event"
