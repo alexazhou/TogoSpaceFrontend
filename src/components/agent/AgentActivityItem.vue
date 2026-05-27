@@ -648,7 +648,12 @@ const activityView = computed(() => {
   background: color-mix(in srgb, var(--panel-bg) 94%, var(--surface-soft) 6%);
   border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
   flex-shrink: 0;
-  contain: layout;
+  position: relative;
+}
+
+.agent-activity-item:hover,
+.agent-activity-item:focus-within {
+  z-index: 50;
 }
 
 .agent-activity-item[data-status='started'] {
@@ -710,9 +715,9 @@ const activityView = computed(() => {
 
 .agent-activity-item__state-popover {
   position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  z-index: 10;
+  top: 50%;
+  left: calc(100% + 12px);
+  z-index: 100;
   display: grid;
   gap: 8px;
   min-width: 236px;
@@ -721,10 +726,13 @@ const activityView = computed(() => {
   border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
   background: var(--surface-elevated);
-  box-shadow: none;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-4px);
+  transform: translateY(-50%) translateX(-4px);
   pointer-events: auto;
   transition:
     opacity 120ms ease,
@@ -759,7 +767,7 @@ const activityView = computed(() => {
 .agent-activity-item__state-anchor:focus-within .agent-activity-item__state-popover {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateY(-50%) translateX(0);
 }
 
 .agent-activity-item__state-meta {

@@ -983,7 +983,6 @@ watch(
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .agent-activity-panel__head {
@@ -1107,7 +1106,8 @@ watch(
 .agent-activity-list {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: visible;
   display: flex;
   flex-direction: column;
   gap: 4px;
