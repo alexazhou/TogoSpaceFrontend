@@ -221,8 +221,9 @@ export function normalizeWsEventPayload(payload: unknown): FrontendRealtimeEvent
     const roomType = String(gtRoom?.type ?? 'group').toLowerCase();
     const agentIds = Array.isArray(gtRoom?.agent_ids)
       ? (gtRoom.agent_ids as unknown[])
+        .filter((id) => id !== null && id !== undefined)
         .map((id) => Number(id))
-        .filter((id) => !Number.isNaN(id) && id !== 0 && id !== -2)
+        .filter((id): id is number => Number.isFinite(id) && id !== -2)
       : [];
     const room: RoomState = {
       room_id: roomId,

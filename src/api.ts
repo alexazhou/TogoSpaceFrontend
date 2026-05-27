@@ -365,8 +365,9 @@ function normalizeRoom(room: RawRoomInfo): RoomInfo {
     need_scheduling: Boolean(room.need_scheduling),
     agents: Array.isArray(room.agents)
       ? room.agents
+        .filter((agent) => agent !== null && agent !== undefined)
         .map((agent) => typeof agent === 'number' ? agent : Number(agent))
-        .filter((id) => !Number.isNaN(id) && id !== 0 && id !== -2)
+        .filter((id): id is number => Number.isFinite(id) && id !== -2)
       : [],
     tags: Array.isArray(gtRoom?.tags)
       ? gtRoom.tags.filter((tag): tag is string => typeof tag === 'string')
