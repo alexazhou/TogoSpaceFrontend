@@ -1,6 +1,5 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { getAgentDetail } from '../api';
 
 export type MemberEditorMode = 'view' | 'edit';
 
@@ -44,8 +43,6 @@ export function useMemberEditorDialog(options: UseMemberEditorDialogOptions) {
   const memberEditorModel = ref('');
   const memberEditorDriver = ref('');
   const memberEditorMode = ref<MemberEditorMode>('view');
-  const memberDriverCache = new Map<number, string>();
-  let memberEditorRequestId = 0;
 
   const memberEditorEditable = computed(() => memberEditorMode.value === 'edit');
   const currentMemberTemplateOption = computed(
@@ -89,7 +86,6 @@ export function useMemberEditorDialog(options: UseMemberEditorDialogOptions) {
   });
 
   function resetDialogState(): void {
-    memberEditorRequestId += 1;
     memberEditorOpen.value = false;
     editingMemberName.value = '';
     memberEditorName.value = '';
@@ -98,38 +94,6 @@ export function useMemberEditorDialog(options: UseMemberEditorDialogOptions) {
     memberEditorModel.value = '';
     memberEditorDriver.value = '';
     memberEditorMode.value = 'view';
-  }
-
-  async function loadMemberDriver(agentName: string): Promise<void> {
-    const requestId = ++memberEditorRequestId;
-    const agentId = options.resolveId(agentName);
-
-    if ((options.canLoadMemberDetail && !options.canLoadMemberDetail(agentName)) || agentId === null) {
-      return;
-    }
-
-    if (memberDriverCache.has(agentId)) {
-      memberEditorDriver.value = memberDriverCache.get(agentId) || '';
-      return;
-    }
-
-    try {
-      const detail = await getAgentDetail(agentId);
-      if (requestId !== memberEditorRequestId || editingMemberName.value !== agentName) {
-        return;
-      }
-
-      const nextDriver = detail.driver_type || '';
-      memberDriverCache.set(agentId, nextDriver);
-      memberEditorDriver.value = nextDriver;
-    } catch (error) {
-      console.error(error);
-      if (requestId !== memberEditorRequestId || editingMemberName.value !== agentName) {
-        return;
-      }
-
-      memberEditorDriver.value = '';
-    }
   }
 
   function openMemberEditor(agentName: string): void {
@@ -141,7 +105,6 @@ export function useMemberEditorDialog(options: UseMemberEditorDialogOptions) {
     memberEditorTemplateId.value = options.resolveTemplateId(agentName);
     memberEditorModel.value = options.resolveModel(agentName);
     memberEditorDriver.value = options.resolveDriver(agentName);
-    void loadMemberDriver(agentName);
   }
 
   function openMemberViewer(agentName: string): void {
@@ -153,7 +116,6 @@ export function useMemberEditorDialog(options: UseMemberEditorDialogOptions) {
     memberEditorTemplateId.value = options.resolveTemplateId(agentName);
     memberEditorModel.value = options.resolveModel(agentName);
     memberEditorDriver.value = options.resolveDriver(agentName);
-    void loadMemberDriver(agentName);
   }
 
   function openPendingMemberEditor(displayName?: string): void {
