@@ -1,5 +1,5 @@
 import { ref, type ComputedRef, type Ref } from 'vue';
-import { clearTeamData, deleteTeam, setTeamEnabled } from '../api';
+import { clearAgentData, clearTeamData, deleteTeam, setTeamEnabled } from '../api';
 import { showGlobalSuccessToast } from '../appUiState';
 import type { TeamDetail, TeamSummary } from '../types';
 
@@ -196,10 +196,27 @@ export function useSettingsTeamMutations(options: UseSettingsTeamMutationsOption
     }
   }
 
+  async function confirmClearAgentData(agentId: number, agentName: string): Promise<void> {
+    closeTeamClearDataConfirm();
+
+    try {
+      const result = await clearAgentData(agentId);
+      showGlobalSuccessToast(
+        options.t('member.clearDataSuccess', {
+          name: agentName,
+          histories: result.deleted.histories,
+        }),
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return {
     closeTeamClearDataConfirm,
     closeTeamDeleteConfirm,
     closeTeamToggleConfirm,
+    confirmClearAgentData,
     confirmClearTeamData,
     confirmDeleteTeam,
     confirmTeamToggle,

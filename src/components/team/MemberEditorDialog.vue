@@ -28,7 +28,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: [];
   save: [];
-  clearAgentData: [];
   'update:memberName': [value: string];
   'update:memberModel': [value: string];
   'update:keyword': [value: string];
@@ -228,14 +227,6 @@ const selectedMemberAvatarSeed = computed(() => (
 
         <div class="member-editor-actions">
           <div class="member-editor-actions-main">
-            <button
-              v-if="agentId !== null"
-              type="button"
-              class="ghost-button member-editor-danger-button"
-              @click="emit('clearAgentData')"
-            >
-              {{ t('member.clearData') }}
-            </button>
             <button type="button" class="ghost-button" @click="emit('close')">
               {{ editable ? t('common.cancel') : t('common.close') }}
             </button>

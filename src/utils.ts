@@ -1,4 +1,4 @@
-import type { EntityI18n } from './types';
+import type { EntityI18n, DeptTreeNode } from './types';
 import i18n, { t } from './i18n';
 
 export type ConnectionState =
@@ -19,6 +19,35 @@ export function i18nText(i18nData: EntityI18n, field: string, fallback: string):
 
 export function displayName(entity: { name: string; i18n: EntityI18n }): string {
   return i18nText(entity.i18n, 'display_name', entity.name);
+}
+
+export function findDepartmentPath(tree: DeptTreeNode | null, agentId: number): string[] | null {
+  if (!tree) {
+    return null;
+  }
+
+  const name = i18nText(tree.i18n ?? {}, 'dept_name', tree.name);
+
+  for (const child of tree.children) {
+    const childPath = findDepartmentPath(child, agentId);
+    if (childPath) {
+      return [name, ...childPath];
+    }
+  }
+
+  const isManager = tree.manager_id === agentId;
+  const isMember = tree.agent_ids?.includes(agentId);
+  return isManager || isMember ? [name] : null;
+}
+
+export function isDepartmentLeader(tree: DeptTreeNode | null, agentId: number): boolean {
+  if (!tree) {
+    return false;
+  }
+  if (tree.manager_id === agentId) {
+    return true;
+  }
+  return tree.children?.some((child) => isDepartmentLeader(child, agentId)) ?? false;
 }
 
 export function formatPreview(senderDisplayName: string, content: string): string {

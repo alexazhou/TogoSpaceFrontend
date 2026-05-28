@@ -235,6 +235,7 @@ export interface TeamMember {
   id: number;
   name: string;
   i18n: EntityI18n;
+  employee_number: number;
   role_template_id: number;
 }
 

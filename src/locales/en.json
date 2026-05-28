@@ -554,6 +554,12 @@
       "deleteTitle": "Delete Team",
       "deleteMsg": "Confirm deleting team? This cannot be undone.",
       "deleteBtn": "Delete",
+      "clearDataChoiceTitle": "Clear Runtime Data",
+      "clearDataChoiceMsg": "Please select the data range to clear:",
+      "clearPersonalData": "Clear Personal Data",
+      "clearTeamData": "Clear Team Data",
+      "personalDataNote": "Clears only the dialogue history and memory of this member, without affecting tasks or other members.",
+      "teamDataNote": "Clears all team data (including all member histories, task records, and chat room messages).",
       "clearTitle": "Clear Team Data",
       "clearMsg": "Confirm clearing team runtime data? This will delete all task records, histories, and messages and cannot be undone.",
       "clearBtn": "Clear"

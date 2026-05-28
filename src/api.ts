@@ -132,6 +132,7 @@ type RawTeamMember = {
   id?: unknown;
   name?: unknown;
   i18n?: unknown;
+  employee_number?: unknown;
   role_template_id?: unknown;
 };
 
@@ -536,6 +537,7 @@ function normalizeTeamMember(member: RawTeamMember): TeamMember {
     id: Number(member.id ?? 0),
     name: String(member.name ?? ''),
     i18n: normalizeEntityI18n(member.i18n),
+    employee_number: Number(member.employee_number ?? 0),
     role_template_id: Number(member.role_template_id ?? 0),
   };
 }

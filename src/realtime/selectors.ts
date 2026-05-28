@@ -1,6 +1,6 @@
 import { computed, type MaybeRefOrGetter, toValue } from 'vue';
 import { t } from '../i18n';
-import { i18nText } from '../utils';
+import { i18nText, findDepartmentPath, isDepartmentLeader } from '../utils';
 import type {
   AgentActivity,
   AgentInfo,
@@ -26,25 +26,6 @@ type AgentInfoWithDepartmentPath = AgentInfo & {
   isDepartmentLeader: boolean;
 };
 
-function findDepartmentPath(tree: DeptTreeNode | null, agentId: number): string[] | null {
-  if (!tree) {
-    return null;
-  }
-
-  const displayName = i18nText(tree.i18n ?? {}, 'dept_name', tree.name);
-
-  for (const child of tree.children) {
-    const childPath = findDepartmentPath(child, agentId);
-    if (childPath) {
-      return [displayName, ...childPath];
-    }
-  }
-
-  const isManager = tree.manager_id === agentId;
-  const isMember = tree.agent_ids.includes(agentId);
-  return isManager || isMember ? [displayName] : null;
-}
-
 export function useTeamAgents(teamId: MaybeRefOrGetter<number | null>) {
   return computed<AgentInfo[]>(() => getTeamAgents(toValue(teamId)));
 }
@@ -65,16 +46,6 @@ export function useTeamAgentsWithDepartmentPath(teamId: MaybeRefOrGetter<number 
       };
     });
   });
-}
-
-function isDepartmentLeader(tree: DeptTreeNode | null, agentId: number): boolean {
-  if (!tree) {
-    return false;
-  }
-  if (tree.manager_id === agentId) {
-    return true;
-  }
-  return tree.children.some((child) => isDepartmentLeader(child, agentId));
 }
 
 export function useTeamRooms(teamId: MaybeRefOrGetter<number | null>) {

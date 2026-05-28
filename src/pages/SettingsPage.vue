@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import '../theme/legacy-aliases.css';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import { getAgents } from '../api';
+import { getAgents, getDeptTree } from '../api';
 import { showQuickInit, totalMessageCount } from '../appUiState';
 import ModelsSettingsSection from '../components/settings/ModelsSettingsSection.vue';
 import RolesSettingsSection from '../components/settings/RolesSettingsSection.vue';
 import SettingsNavSidebar from '../components/settings/SettingsNavSidebar.vue';
 import TeamsSettingsSection from '../components/settings/TeamsSettingsSection.vue';
+import ClearDataChoiceDialog from '../components/settings/ClearDataChoiceDialog.vue';
 import ConfirmDialog from '../components/ui/ConfirmDialog.vue';
 import { useSettingsNavItems } from '../components/settings/settingsNavItems';
 import { useSettingsRouting } from '../composables/useSettingsRouting';
@@ -26,6 +27,7 @@ totalMessageCount.value = 0;
 
 const teamId = computed(() => Number(route.params.teamId));
 const agents = ref<AgentInfo[]>([]);
+const deptTree = ref<any>(null);
 const selectedTeamDetail = ref<TeamDetail | null>(null);
 const settingsMainRef = ref<HTMLElement | null>(null);
 const settingsScrollbarHovered = ref(false);
@@ -73,10 +75,26 @@ const {
   loadTeamSummaries,
   t,
 });
+
+async function loadFullTeamDetail(targetTeamId: number | null): Promise<void> {
+  await loadSelectedTeamDetail(targetTeamId);
+  if (targetTeamId !== null) {
+    try {
+      deptTree.value = await getDeptTree(targetTeamId);
+    } catch (error) {
+      console.error(error);
+      deptTree.value = null;
+    }
+  } else {
+    deptTree.value = null;
+  }
+}
+
 const {
   closeTeamClearDataConfirm,
   closeTeamDeleteConfirm,
   closeTeamToggleConfirm,
+  confirmClearAgentData,
   confirmClearTeamData,
   confirmDeleteTeam,
   confirmTeamToggle,
@@ -93,7 +111,7 @@ const {
   selectedTeamDetail,
   loadTeams,
   loadTeamSummaries,
-  loadSelectedTeamDetail,
+  loadSelectedTeamDetail: loadFullTeamDetail,
   clearSelectedTeamDetail,
   router,
   t,
@@ -152,6 +170,25 @@ onMounted(() => {
       console.error(error);
     });
 });
+
+watch(
+  [currentSectionId, detailTeamId],
+  ([sectionId, targetTeamId]) => {
+    if (sectionId === 'teams' && targetTeamId !== null) {
+      getDeptTree(targetTeamId)
+        .then((tree) => {
+          deptTree.value = tree;
+        })
+        .catch((error) => {
+          console.error(error);
+          deptTree.value = null;
+        });
+    } else {
+      deptTree.value = null;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -244,14 +281,14 @@ onMounted(() => {
       @confirm="confirmDeleteTeam"
     />
 
-    <ConfirmDialog
+    <ClearDataChoiceDialog
       :open="teamClearDataConfirm.open"
-      :title="t('settings.page.clearTitle')"
-      :message="t('settings.page.clearMsg')"
-      :confirm-label="t('settings.page.clearBtn')"
-      danger
+      :team-name="teamClearDataConfirm.teamName"
+      :members="selectedTeamDetail?.members || []"
+      :dept-tree="deptTree"
       @close="closeTeamClearDataConfirm"
-      @confirm="confirmClearTeamData"
+      @clear-team-data="confirmClearTeamData"
+      @clear-agent-data="confirmClearAgentData"
     />
   </section>
 </template>
