@@ -415,35 +415,33 @@ watch(
 
 watch(
   () => [props.open, activitiesLoading.value, visibleActivities.value.length],
-  ([open, loadingActivities, count]) => {
+  async ([open, loadingActivities, count]) => {
     if (!open || loadingActivities || count === 0) {
       return;
     }
+    const shouldScroll = !hasAutoScrolledForCurrentAgent.value || shouldFollowActivities.value;
     if (!hasAutoScrolledForCurrentAgent.value) {
       hasAutoScrolledForCurrentAgent.value = true;
+    }
+    await nextTick();
+    if (shouldScroll) {
       scrollActivitiesToBottom().catch(console.error);
-      return;
     }
-    if (!shouldFollowActivities.value) {
-      return;
-    }
-    scrollActivitiesToBottom().catch(console.error);
   },
-  { flush: 'post' },
 );
 
 watch(
   () => [props.open, activityListRef.value, visibleActivities.value.length],
-  ([open, listEl, count]) => {
+  async ([open, listEl, count]) => {
     if (!open || !listEl || count === 0) {
       return;
     }
     if (!hasAutoScrolledForCurrentAgent.value) {
       hasAutoScrolledForCurrentAgent.value = true;
+      await nextTick();
       scrollActivitiesToBottom().catch(console.error);
     }
   },
-  { flush: 'post' },
 );
 </script>
 
