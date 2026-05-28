@@ -3,12 +3,13 @@ import '../theme/legacy-aliases.css';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import { backupDatabase, getAgents, getDeptTree } from '../api';
+import { backupDatabase, getAgents, getDeptTree, getTeamPresetExport } from '../api';
 import { showGlobalSuccessToast, showQuickInit, totalMessageCount } from '../appUiState';
 import ModelsSettingsSection from '../components/settings/ModelsSettingsSection.vue';
 import RolesSettingsSection from '../components/settings/RolesSettingsSection.vue';
 import SettingsNavSidebar from '../components/settings/SettingsNavSidebar.vue';
 import SystemMaintenanceSection from '../components/settings/SystemMaintenanceSection.vue';
+import TeamPresetExportDialog from '../components/settings/TeamPresetExportDialog.vue';
 import TeamsSettingsSection from '../components/settings/TeamsSettingsSection.vue';
 import ClearDataChoiceDialog from '../components/settings/ClearDataChoiceDialog.vue';
 import ConfirmDialog from '../components/ui/ConfirmDialog.vue';
@@ -33,7 +34,10 @@ const selectedTeamDetail = ref<TeamDetail | null>(null);
 const settingsMainRef = ref<HTMLElement | null>(null);
 const settingsScrollbarHovered = ref(false);
 const isBackingUpDatabase = ref(false);
+const isExportingTeamPreset = ref(false);
 const backupConfirmOpen = ref(false);
+const selectedExportTeamId = ref<number | null>(null);
+const teamPresetExportDialogOpen = ref(false);
 
 const navItems = useSettingsNavItems();
 const { loadTeamSummaries, teamSummaries } = useTeamSummaries(teams);
@@ -189,6 +193,61 @@ async function handleBackupDatabase(): Promise<void> {
   }
 }
 
+function requestExportTeamPreset(): void {
+  if (!teams.value.length) {
+    return;
+  }
+  teamPresetExportDialogOpen.value = true;
+}
+
+function closeTeamPresetExportDialog(): void {
+  teamPresetExportDialogOpen.value = false;
+}
+
+function buildTeamPresetFileName(teamName: string): string {
+  const baseName = teamName.trim().replace(/[\\/:*?"<>|]/g, '_') || 'team_preset';
+  return `${baseName}.json`;
+}
+
+function downloadJsonFile(fileName: string, payload: unknown): void {
+  const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], {
+    type: 'application/json;charset=utf-8',
+  });
+  const objectUrl = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.URL.revokeObjectURL(objectUrl);
+}
+
+async function handleExportTeamPreset(): Promise<void> {
+  const targetTeamId = selectedExportTeamId.value;
+  if (isExportingTeamPreset.value || targetTeamId === null) {
+    return;
+  }
+
+  const targetTeam = teams.value.find((team) => team.id === targetTeamId);
+  if (!targetTeam) {
+    return;
+  }
+
+  isExportingTeamPreset.value = true;
+  try {
+    teamPresetExportDialogOpen.value = false;
+    const teamPreset = await getTeamPresetExport(targetTeamId);
+    const fileName = buildTeamPresetFileName(teamPreset.name || targetTeam.name);
+    downloadJsonFile(fileName, teamPreset);
+    showGlobalSuccessToast(t('settings.maintenance.exportSuccess', { file: fileName }));
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isExportingTeamPreset.value = false;
+  }
+}
+
 onMounted(() => {
   getAgents()
     .then((result) => {
@@ -213,6 +272,20 @@ watch(
         });
     } else {
       deptTree.value = null;
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => teams.value.map((team) => team.id),
+  (teamIds) => {
+    if (!teamIds.length) {
+      selectedExportTeamId.value = null;
+      return;
+    }
+    if (selectedExportTeamId.value === null || !teamIds.includes(selectedExportTeamId.value)) {
+      selectedExportTeamId.value = teamIds[0] ?? null;
     }
   },
   { immediate: true },
@@ -289,9 +362,11 @@ watch(
         <SystemMaintenanceSection
           v-else-if="currentSectionId === 'maintenance'"
           :breadcrumb-items="breadcrumbItems"
+          :teams="teams"
           :is-backing-up="isBackingUpDatabase"
           @navigate-breadcrumb="handleBreadcrumbNavigate"
           @backup-database="requestBackupDatabase"
+          @export-team-preset="requestExportTeamPreset"
         />
       </main>
     </div>
@@ -324,6 +399,16 @@ watch(
       :confirm-label="t('settings.maintenance.backupConfirmBtn')"
       @close="closeBackupConfirm"
       @confirm="handleBackupDatabase"
+    />
+
+    <TeamPresetExportDialog
+      :open="teamPresetExportDialogOpen"
+      :teams="teams"
+      :selected-team-id="selectedExportTeamId"
+      :is-exporting="isExportingTeamPreset"
+      @close="closeTeamPresetExportDialog"
+      @confirm="handleExportTeamPreset"
+      @update-selected-team-id="selectedExportTeamId = $event"
     />
 
     <ClearDataChoiceDialog

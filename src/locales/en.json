@@ -48,6 +48,7 @@
     "statusLabel": "Status",
     "pathLabel": "Request URL",
     "detailLabel": "Error Detail",
+    "invalidJsonDetail": "Backend returned an invalid response type: non-JSON.",
     "noDetail": "The backend did not return additional error details.",
     "autoDismissLabel": "Auto Close",
     "autoDismissIn": "{seconds}s",
@@ -576,7 +577,17 @@
       "backupSuccess": "Database backup created: {file}",
       "backupConfirmTitle": "Confirm Database Backup",
       "backupConfirmMsg": "Create a backup of the current runtime database now? A new timestamped backup file will be created under data/backups/.",
-      "backupConfirmBtn": "Start Backup"
+      "backupConfirmBtn": "Start Backup",
+      "exportTitle": "Export Team Structure",
+      "exportDescription": "Export the selected team as a team preset JSON for later import or backup of the team structure.",
+      "exportTeamLabel": "Select Team",
+      "exportTeamPlaceholder": "Select a team to export",
+      "exportButton": "Export JSON",
+      "exporting": "Exporting...",
+      "exportNote": "The exported JSON follows the existing team preset structure and skips rooms generated automatically from departments.",
+      "exportSuccess": "Team structure exported: {file}",
+      "exportDialogTitle": "Export Team Structure JSON",
+      "exportDialogMsg": "Select a team and the system will export it as a JSON file using the existing team preset structure."
     }
   },
   "teamCreate": {

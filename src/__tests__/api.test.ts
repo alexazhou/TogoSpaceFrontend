@@ -5,7 +5,7 @@ import {
   showTokenDialog,
 } from '../appUiState';
 import { clearToken, setToken } from '../authStore';
-import { getAgentActivities, getSystemStatus, getTeams } from '../api';
+import { getAgentActivities, getSystemStatus, getTeamPresetExport, getTeams } from '../api';
 
 describe('api request handling', () => {
   beforeEach(() => {
@@ -139,5 +139,46 @@ describe('getAgentActivities', () => {
     expect(result).toHaveLength(2);
     expect(result[0]?.activity_type).toBe('llm_infer');
     expect(result[1]?.activity_type).toBe('tool_call');
+  });
+});
+
+describe('getTeamPresetExport', () => {
+  beforeEach(() => {
+    clearGlobalRequestError();
+    clearToken();
+    vi.restoreAllMocks();
+  });
+
+  it('requests the correct export preset URL', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      name: 'team-a',
+      config: {},
+      agents: [],
+      preset_rooms: [],
+      auto_start: true,
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await getTeamPresetExport(42);
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/teams/42/export_preset.json');
+    expect(init?.method ?? 'GET').toBe('GET');
+  });
+
+  it('surfaces non-json success responses as request errors', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('<!doctype html><html></html>', {
+      status: 200,
+      headers: { 'content-type': 'text/html' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(getTeamPresetExport(42)).rejects.toThrow('Invalid JSON response: 200');
+
+    expect(globalRequestErrors.value).toHaveLength(1);
+    expect(globalRequestErrors.value[0]?.path).toContain('/teams/42/export_preset.json');
   });
 });

@@ -48,6 +48,7 @@
     "statusLabel": "状态码",
     "pathLabel": "请求 URL",
     "detailLabel": "错误信息",
+    "invalidJsonDetail": "后端返回类型异常：非 JSON 响应。",
     "noDetail": "后端没有返回更详细的错误说明。",
     "autoDismissLabel": "自动关闭",
     "autoDismissIn": "{seconds}s",
@@ -576,7 +577,17 @@
       "backupSuccess": "数据库备份已创建：{file}",
       "backupConfirmTitle": "确认备份数据库",
       "backupConfirmMsg": "确认立即备份当前运行中的数据库文件？系统会在 data/backups/ 中创建一个带时间戳的新备份文件。",
-      "backupConfirmBtn": "开始备份"
+      "backupConfirmBtn": "开始备份",
+      "exportTitle": "导出团队结构",
+      "exportDescription": "将指定团队导出为一个 team preset JSON，可用于后续导入或备份团队结构配置。",
+      "exportTeamLabel": "选择团队",
+      "exportTeamPlaceholder": "请选择要导出的团队",
+      "exportButton": "导出 JSON",
+      "exporting": "导出中...",
+      "exportNote": "导出的 JSON 结构与现有 team preset 保持一致，默认会跳过部门自动生成的房间。",
+      "exportSuccess": "团队结构已导出：{file}",
+      "exportDialogTitle": "导出团队结构 JSON",
+      "exportDialogMsg": "请选择一个团队，系统会按现有 team preset 结构导出为 JSON 文件。"
     }
   },
   "teamCreate": {

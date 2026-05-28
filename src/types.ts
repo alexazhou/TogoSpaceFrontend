@@ -231,6 +231,55 @@ export interface TeamDetail extends TeamSummary {
   rooms: TeamRoomDetail[];
 }
 
+export interface TeamPresetAgent {
+  name: string;
+  i18n?: EntityI18n;
+  role_template: string;
+  model?: string | null;
+  driver?: string;
+  allow_tools?: string[] | null;
+}
+
+export interface TeamPresetRoom {
+  name: string;
+  i18n?: EntityI18n;
+  agents: string[];
+  initial_topic?: string;
+  max_rounds?: number | null;
+  biz_id?: string | null;
+  tags?: string[];
+}
+
+export interface TeamPresetDeptNode {
+  dept_name: string;
+  i18n?: EntityI18n;
+  responsibility: string;
+  manager: string;
+  agents: string[];
+  children: TeamPresetDeptNode[];
+}
+
+export interface TeamPresetRule {
+  name: string;
+  i18n?: EntityI18n;
+  soul: string;
+  prompt_file?: string;
+  model?: string | null;
+}
+
+export interface TeamPresetExport {
+  uuid?: string | null;
+  name: string;
+  i18n?: EntityI18n;
+  config: Record<string, unknown>;
+  rule_templates: TeamPresetRule[];
+  agents: TeamPresetAgent[];
+  dept_tree?: TeamPresetDeptNode | null;
+  preset_rooms: TeamPresetRoom[];
+  auto_start: boolean;
+  is_default?: boolean;
+}
+
 export interface TeamMember {
   id: number;
   name: string;

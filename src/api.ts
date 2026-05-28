@@ -23,6 +23,7 @@ import type {
   RoleTemplateSummary,
   RoomInfo,
   TeamMember,
+  TeamPresetExport,
   TeamRoomDetail,
   TeamDetail,
   TeamSummary,
@@ -235,15 +236,14 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
       headers,
       ...init,
     });
+    const responseContentType = response.headers.get('content-type') || '';
 
     if (!response.ok) {
       let errorDetail = '';
-      let contentType = '';
       let errorCode = '';
 
       try {
-        contentType = response.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
+        if (responseContentType.includes('application/json')) {
           const errorBody = await response.json() as {
             error_desc?: unknown;
             error_code?: unknown;
@@ -301,6 +301,17 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
       );
     }
 
+    if (!responseContentType.includes('application/json')) {
+      const errorDetail = t('error.invalidJsonDetail');
+      showGlobalRequestError({
+        title: t('error.requestFailedTitle'),
+        path: displayUrl,
+        statusCode: response.status,
+        detail: errorDetail,
+      });
+      throw new Error(`Invalid JSON response: ${response.status}`);
+    }
+
     return response.json() as Promise<T>;
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('Request failed:')) {
@@ -310,6 +321,9 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
       throw error;
     }
     if (error instanceof Error && error.message === 'Backend unavailable') {
+      throw error;
+    }
+    if (error instanceof Error && error.message.startsWith('Invalid JSON response:')) {
       throw error;
     }
 
@@ -733,6 +747,10 @@ export async function getDirectories(): Promise<DirectoriesConfig> {
 export async function getTeamDetail(teamId: number): Promise<TeamDetail> {
   const data = await requestJson<RawTeamDetail>(`/teams/${teamId}.json`);
   return normalizeTeamDetail(data);
+}
+
+export async function getTeamPresetExport(teamId: number): Promise<TeamPresetExport> {
+  return requestJson<TeamPresetExport>(`/teams/${teamId}/export_preset.json`);
 }
 
 export async function getDeptTree(teamId: number): Promise<DeptTreeNode | null> {
