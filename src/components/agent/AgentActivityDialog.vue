@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getAgentDetail, getAgentTasks, getAgentsByTeamId, resumeAgent, stopAgent, superviseAgent } from '../../api';
 import { connectionState, showGlobalSuccessToast } from '../../appUiState';
@@ -211,6 +211,25 @@ async function scrollActivitiesToBottom(): Promise<void> {
   activityListRef.value.scrollTop = activityListRef.value.scrollHeight;
 }
 
+let _activityListResizeObserver: ResizeObserver | null = null;
+
+function attachActivityListResizeObserver(el: HTMLElement): void {
+  detachActivityListResizeObserver();
+  _activityListResizeObserver = new ResizeObserver(() => {
+    if (shouldFollowActivities.value) {
+      el.scrollTop = el.scrollHeight;
+    }
+  });
+  _activityListResizeObserver.observe(el);
+}
+
+function detachActivityListResizeObserver(): void {
+  _activityListResizeObserver?.disconnect();
+  _activityListResizeObserver = null;
+}
+
+onUnmounted(detachActivityListResizeObserver);
+
 function isActivityListNearBottom(): boolean {
   const listEl = activityListRef.value;
   if (!listEl) {
@@ -413,34 +432,21 @@ watch(
   },
 );
 
+// Watch activityListRef: attach ResizeObserver when the list element mounts,
+// so any height change (new items or streaming content) auto-scrolls to bottom.
 watch(
-  () => [props.open, activitiesLoading.value, visibleActivities.value.length],
-  async ([open, loadingActivities, count]) => {
-    if (!open || loadingActivities || count === 0) {
+  () => activityListRef.value,
+  async (el, prevEl) => {
+    if (prevEl) {
+      detachActivityListResizeObserver();
+    }
+    if (!el) {
       return;
     }
-    const shouldScroll = !hasAutoScrolledForCurrentAgent.value || shouldFollowActivities.value;
-    if (!hasAutoScrolledForCurrentAgent.value) {
-      hasAutoScrolledForCurrentAgent.value = true;
-    }
-    await nextTick();
-    if (shouldScroll) {
-      scrollActivitiesToBottom().catch(console.error);
-    }
-  },
-);
-
-watch(
-  () => [props.open, activityListRef.value, visibleActivities.value.length],
-  async ([open, listEl, count]) => {
-    if (!open || !listEl || count === 0) {
-      return;
-    }
-    if (!hasAutoScrolledForCurrentAgent.value) {
-      hasAutoScrolledForCurrentAgent.value = true;
-      await nextTick();
-      scrollActivitiesToBottom().catch(console.error);
-    }
+    shouldFollowActivities.value = true;
+    hasAutoScrolledForCurrentAgent.value = true;
+    await scrollActivitiesToBottom();
+    attachActivityListResizeObserver(el);
   },
 );
 </script>
