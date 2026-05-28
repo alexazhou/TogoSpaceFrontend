@@ -51,6 +51,10 @@ export type FrontendRealtimeEvent =
     type: 'room_added';
     teamId: number;
     room: RoomState;
+  }
+  | {
+    type: 'team_reloaded';
+    teamId: number;
   };
 
 type RawRecord = Record<string, unknown>;
@@ -244,6 +248,14 @@ export function normalizeWsEventPayload(payload: unknown): FrontendRealtimeEvent
       unread: 0,
     };
     return { type: 'room_added', teamId, room };
+  }
+
+  if (eventType === 'team_reloaded') {
+    const teamId = Number(raw.team_id ?? 0);
+    if (!Number.isFinite(teamId) || teamId <= 0) {
+      return null;
+    }
+    return { type: 'team_reloaded', teamId };
   }
 
   return null;

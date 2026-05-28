@@ -77,7 +77,8 @@
     "scheduleStoppedReason": "Scheduling stopped",
     "logout": "Logout",
     "logoutConfirmTitle": "Confirm Logout",
-    "logoutConfirmMsg": "After logout, your access token will be cleared. You will need to re-enter the token to continue."
+    "logoutConfirmMsg": "After logout, your access token will be cleared. You will need to re-enter the token to continue.",
+    "teamReloaded": "Team data reloaded"
   },
   "agent": {
     "status": {

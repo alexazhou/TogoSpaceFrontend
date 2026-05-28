@@ -1,5 +1,6 @@
 import { ref } from 'vue';
-import { totalMessageCount, updateScheduleState } from '../appUiState';
+import { showGlobalSuccessToast, totalMessageCount, updateScheduleState } from '../appUiState';
+import { t } from '../i18n';
 import type { RawMessageInfo } from '../api';
 import {
   getAgentActivities as fetchAgentActivities,
@@ -541,10 +542,20 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
     return;
   }
 
+  if (event.type === 'team_reloaded') {
+    loadTeamRooms(event.teamId);
+    loadTeamAgents(event.teamId, { includeSpecial: true });
+    showGlobalSuccessToast(t('topbar.teamReloaded'));
+    return;
+  }
+
   if (event.type === 'room_added') {
     updateTeamRooms(event.teamId, (rooms) => {
-      if (rooms.some((r) => r.room_id === event.room.room_id)) {
-        return rooms;
+      const idx = rooms.findIndex((r) => r.room_id === event.room.room_id);
+      if (idx >= 0) {
+        const updated = [...rooms];
+        updated[idx] = event.room;
+        return updated;
       }
       return [...rooms, event.room];
     });
