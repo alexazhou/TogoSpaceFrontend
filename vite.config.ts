@@ -44,6 +44,7 @@ export default defineConfig({
       '/config/quick_init.json': createApiProxy(backendTarget),
       '/system/status.json': createApiProxy(backendTarget),
       '/system/schedule/resume.json': createApiProxy(backendTarget),
+      '/system/database/backup.json': createApiProxy(backendTarget),
       '/role_templates/list.json': createApiProxy(backendTarget),
       '/role_templates/': createApiProxy(backendTarget),
       '/agents/list.json': createApiProxy(backendTarget),

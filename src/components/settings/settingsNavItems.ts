@@ -15,6 +15,7 @@ export function useSettingsNavItems() {
     { id: 'teams', label: t('settings.nav.teams'), note: t('settings.nav.teamsNote') },
     { id: 'roles', label: t('settings.nav.roles'), note: t('settings.nav.rolesNote') },
     { id: 'models', label: t('settings.nav.models'), note: t('settings.nav.modelsNote') },
+    { id: 'maintenance', label: t('settings.nav.maintenance'), note: t('settings.nav.maintenanceNote') },
     { id: 'quickInit', label: t('settings.nav.quickInit'), note: t('settings.nav.quickInitNote') },
   ]);
 }

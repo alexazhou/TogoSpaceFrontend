@@ -502,6 +502,8 @@
       "rolesNote": "Role templates and responsibilities",
       "models": "LLM Service Management",
       "modelsNote": "Model services and call policies",
+      "maintenance": "System Maintenance",
+      "maintenanceNote": "Database backup and maintenance actions",
       "runtime": "Runtime & Storage",
       "runtimeNote": "Config paths and runtime data locations",
       "quickInit": "Quick Init",
@@ -563,6 +565,18 @@
       "clearTitle": "Clear Team Data",
       "clearMsg": "Confirm clearing team runtime data? This will delete all task records, histories, and messages and cannot be undone.",
       "clearBtn": "Clear"
+    },
+    "maintenance": {
+      "eyebrow": "System Maintenance",
+      "title": "Database Backup",
+      "description": "Create a full backup of the current runtime database file and save it as a new timestamped backup.",
+      "backupLocation": "Backup files are saved under the runtime data directory at data/backups/.",
+      "backupButton": "Backup Database",
+      "backingUp": "Backing up...",
+      "backupSuccess": "Database backup created: {file}",
+      "backupConfirmTitle": "Confirm Database Backup",
+      "backupConfirmMsg": "Create a backup of the current runtime database now? A new timestamped backup file will be created under data/backups/.",
+      "backupConfirmBtn": "Start Backup"
     }
   },
   "teamCreate": {

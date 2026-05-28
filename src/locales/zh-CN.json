@@ -502,6 +502,8 @@
       "rolesNote": "角色模板与职责分配",
       "models": "大模型服务管理",
       "modelsNote": "模型服务与调用策略",
+      "maintenance": "系统维护",
+      "maintenanceNote": "数据库备份与维护操作",
       "runtime": "运行与存储",
       "runtimeNote": "配置目录与运行数据位置",
       "quickInit": "快速初始化",
@@ -563,6 +565,18 @@
       "clearTitle": "清空团队数据",
       "clearMsg": "确认清空团队运行数据？此操作将删除所有任务记录、对话历史和房间消息，不可恢复。",
       "clearBtn": "清空"
+    },
+    "maintenance": {
+      "eyebrow": "系统维护",
+      "title": "数据库备份",
+      "description": "点击后会备份当前运行中的整个数据库文件，生成一个带时间戳的新备份文件。",
+      "backupLocation": "备份文件会保存到运行数据目录下的 data/backups/ 中。",
+      "backupButton": "备份数据库",
+      "backingUp": "备份中...",
+      "backupSuccess": "数据库备份已创建：{file}",
+      "backupConfirmTitle": "确认备份数据库",
+      "backupConfirmMsg": "确认立即备份当前运行中的数据库文件？系统会在 data/backups/ 中创建一个带时间戳的新备份文件。",
+      "backupConfirmBtn": "开始备份"
     }
   },
   "teamCreate": {

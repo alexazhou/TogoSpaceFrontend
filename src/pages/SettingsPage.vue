@@ -3,11 +3,12 @@ import '../theme/legacy-aliases.css';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import { getAgents, getDeptTree } from '../api';
-import { showQuickInit, totalMessageCount } from '../appUiState';
+import { backupDatabase, getAgents, getDeptTree } from '../api';
+import { showGlobalSuccessToast, showQuickInit, totalMessageCount } from '../appUiState';
 import ModelsSettingsSection from '../components/settings/ModelsSettingsSection.vue';
 import RolesSettingsSection from '../components/settings/RolesSettingsSection.vue';
 import SettingsNavSidebar from '../components/settings/SettingsNavSidebar.vue';
+import SystemMaintenanceSection from '../components/settings/SystemMaintenanceSection.vue';
 import TeamsSettingsSection from '../components/settings/TeamsSettingsSection.vue';
 import ClearDataChoiceDialog from '../components/settings/ClearDataChoiceDialog.vue';
 import ConfirmDialog from '../components/ui/ConfirmDialog.vue';
@@ -31,6 +32,8 @@ const deptTree = ref<any>(null);
 const selectedTeamDetail = ref<TeamDetail | null>(null);
 const settingsMainRef = ref<HTMLElement | null>(null);
 const settingsScrollbarHovered = ref(false);
+const isBackingUpDatabase = ref(false);
+const backupConfirmOpen = ref(false);
 
 const navItems = useSettingsNavItems();
 const { loadTeamSummaries, teamSummaries } = useTeamSummaries(teams);
@@ -161,6 +164,31 @@ function formatDateTime(value: string): string {
   }).format(date);
 }
 
+function requestBackupDatabase(): void {
+  backupConfirmOpen.value = true;
+}
+
+function closeBackupConfirm(): void {
+  backupConfirmOpen.value = false;
+}
+
+async function handleBackupDatabase(): Promise<void> {
+  if (isBackingUpDatabase.value) {
+    return;
+  }
+
+  backupConfirmOpen.value = false;
+  isBackingUpDatabase.value = true;
+  try {
+    const result = await backupDatabase();
+    showGlobalSuccessToast(t('settings.maintenance.backupSuccess', { file: result.backup_file_name }));
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isBackingUpDatabase.value = false;
+  }
+}
+
 onMounted(() => {
   getAgents()
     .then((result) => {
@@ -257,6 +285,14 @@ watch(
           :breadcrumb-items="breadcrumbItems"
           @navigate-breadcrumb="handleBreadcrumbNavigate"
         />
+
+        <SystemMaintenanceSection
+          v-else-if="currentSectionId === 'maintenance'"
+          :breadcrumb-items="breadcrumbItems"
+          :is-backing-up="isBackingUpDatabase"
+          @navigate-breadcrumb="handleBreadcrumbNavigate"
+          @backup-database="requestBackupDatabase"
+        />
       </main>
     </div>
 
@@ -279,6 +315,15 @@ watch(
       danger
       @close="closeTeamDeleteConfirm"
       @confirm="confirmDeleteTeam"
+    />
+
+    <ConfirmDialog
+      :open="backupConfirmOpen"
+      :title="t('settings.maintenance.backupConfirmTitle')"
+      :message="t('settings.maintenance.backupConfirmMsg')"
+      :confirm-label="t('settings.maintenance.backupConfirmBtn')"
+      @close="closeBackupConfirm"
+      @confirm="handleBackupDatabase"
     />
 
     <ClearDataChoiceDialog

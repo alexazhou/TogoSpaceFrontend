@@ -925,6 +925,16 @@ export async function resumeSchedule(): Promise<{
   });
 }
 
+export async function backupDatabase(): Promise<{
+  status: string;
+  backup_path: string;
+  backup_file_name: string;
+}> {
+  return requestJson('/system/database/backup.json', {
+    method: 'POST',
+  });
+}
+
 export async function quickInit(payload: {
   base_url: string;
   api_key: string;

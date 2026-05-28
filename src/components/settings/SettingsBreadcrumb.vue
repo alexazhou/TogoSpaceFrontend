@@ -12,16 +12,17 @@ const emit = defineEmits<{
 
 <template>
   <nav class="settings-breadcrumb" aria-label="当前位置">
-    <button
-      v-for="item in items"
-      :key="item.key"
-      type="button"
-      class="breadcrumb-link"
-      :class="{ current: item.current }"
-      @click="!item.current && emit('navigate', item.key)"
-    >
-      {{ item.label }}
-    </button>
+    <template v-for="(item, index) in items" :key="item.key">
+      <button
+        type="button"
+        class="breadcrumb-link"
+        :class="{ current: item.current }"
+        @click="!item.current && emit('navigate', item.key)"
+      >
+        {{ item.label }}
+      </button>
+      <span v-if="index < items.length - 1" class="breadcrumb-separator" aria-hidden="true">/</span>
+    </template>
   </nav>
 </template>
 
@@ -30,30 +31,32 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 0;
   margin-bottom: 8px;
 }
 
 .breadcrumb-link {
-  position: relative;
   border: none;
   background: transparent;
-  color: var(--hint-text);
+  color: var(--text-secondary);
   padding: 0;
   cursor: pointer;
-  font-size: 0.92rem;
-  line-height: 1.3;
+  font-size: 0.98rem;
+  line-height: 1.35;
+  font-weight: 500;
 }
 
-.breadcrumb-link:not(:last-child)::after {
-  content: '/';
-  margin-left: 6px;
-  color: var(--panel-border);
+.breadcrumb-separator {
+  margin: 0 10px;
+  color: var(--accent);
+  font-size: 0.98rem;
+  line-height: 1.35;
 }
 
 .breadcrumb-link.current {
   color: var(--text-strong);
   cursor: default;
+  font-weight: 600;
 }
 
 .breadcrumb-link:hover:not(.current) {
