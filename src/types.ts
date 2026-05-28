@@ -195,6 +195,7 @@ export interface TeamRoomDetail {
 export interface DeptTreeNode {
   id?: number | null;
   name: string;
+  i18n?: EntityI18n;
   responsibility: string;
   manager_id: number | null;
   agent_ids: number[];

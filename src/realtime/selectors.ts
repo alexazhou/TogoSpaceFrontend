@@ -1,5 +1,6 @@
 import { computed, type MaybeRefOrGetter, toValue } from 'vue';
 import { t } from '../i18n';
+import { i18nText } from '../utils';
 import type {
   AgentActivity,
   AgentInfo,
@@ -30,16 +31,18 @@ function findDepartmentPath(tree: DeptTreeNode | null, agentId: number): string[
     return null;
   }
 
+  const displayName = i18nText(tree.i18n ?? {}, 'dept_name', tree.name);
+
   for (const child of tree.children) {
     const childPath = findDepartmentPath(child, agentId);
     if (childPath) {
-      return [tree.name, ...childPath];
+      return [displayName, ...childPath];
     }
   }
 
   const isManager = tree.manager_id === agentId;
   const isMember = tree.agent_ids.includes(agentId);
-  return isManager || isMember ? [tree.name] : null;
+  return isManager || isMember ? [displayName] : null;
 }
 
 export function useTeamAgents(teamId: MaybeRefOrGetter<number | null>) {
