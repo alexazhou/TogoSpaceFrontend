@@ -190,6 +190,7 @@ export function useSettingsTeamMutations(options: UseSettingsTeamMutationsOption
           tasks: result.deleted.tasks,
           histories: result.deleted.histories,
           messages: result.deleted.messages,
+          activities: result.deleted.activities,
         }),
       );
     } catch (error) {
