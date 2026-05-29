@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AgentTask } from '../../types';
-import { buildTaskForest } from '../taskTree';
+import { buildTaskForest, filterTaskForest } from '../taskTree';
 
 function buildTask(overrides: Partial<AgentTask> & Pick<AgentTask, 'id' | 'title'>): AgentTask {
   return {
@@ -47,5 +47,34 @@ describe('buildTaskForest', () => {
     expect(forest).toHaveLength(1);
     expect(forest[0]?.task.id).toBe(7);
     expect(forest[0]?.children).toEqual([]);
+  });
+
+  it('keeps the full subtree when a parent matches the filter', () => {
+    const forest = buildTaskForest([
+      buildTask({ id: 14, title: 'Parent', status: 'IN_PROGRESS' }),
+      buildTask({ id: 15, title: 'Child A', parent_id: 14, status: 'DONE' }),
+      buildTask({ id: 16, title: 'Child B', parent_id: 14, status: 'CANCELLED' }),
+    ]);
+
+    const filtered = filterTaskForest(forest, (task) => task.status === 'IN_PROGRESS');
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.task.id).toBe(14);
+    expect(filtered[0]?.children.map((node) => node.task.id)).toEqual([15, 16]);
+  });
+
+  it('keeps ancestor context when only descendants match the filter', () => {
+    const forest = buildTaskForest([
+      buildTask({ id: 14, title: 'Parent', status: 'DONE' }),
+      buildTask({ id: 15, title: 'Child A', parent_id: 14, status: 'DONE' }),
+      buildTask({ id: 16, title: 'Child B', parent_id: 14, status: 'IN_PROGRESS' }),
+    ]);
+
+    const filtered = filterTaskForest(forest, (task) => task.status === 'IN_PROGRESS');
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.task.id).toBe(14);
+    expect(filtered[0]?.children).toHaveLength(1);
+    expect(filtered[0]?.children[0]?.task.id).toBe(16);
   });
 });

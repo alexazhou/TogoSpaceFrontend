@@ -6,6 +6,14 @@ export interface TaskTreeNode {
   depth: number;
 }
 
+function cloneTaskNode(node: TaskTreeNode): TaskTreeNode {
+  return {
+    task: node.task,
+    depth: node.depth,
+    children: node.children.map(cloneTaskNode),
+  };
+}
+
 function sortTasksById(tasks: AgentTask[]): AgentTask[] {
   return [...tasks].sort((left, right) => left.id - right.id);
 }
@@ -69,4 +77,33 @@ export function buildTaskForest(tasks: AgentTask[]): TaskTreeNode[] {
   }
 
   return roots;
+}
+
+export function filterTaskForest(
+  forest: TaskTreeNode[],
+  predicate: (task: AgentTask) => boolean,
+): TaskTreeNode[] {
+  function filterNode(node: TaskTreeNode): TaskTreeNode | null {
+    if (predicate(node.task)) {
+      return cloneTaskNode(node);
+    }
+
+    const filteredChildren = node.children
+      .map(filterNode)
+      .filter((child): child is TaskTreeNode => child !== null);
+
+    if (!filteredChildren.length) {
+      return null;
+    }
+
+    return {
+      task: node.task,
+      depth: node.depth,
+      children: filteredChildren,
+    };
+  }
+
+  return forest
+    .map(filterNode)
+    .filter((node): node is TaskTreeNode => node !== null);
 }

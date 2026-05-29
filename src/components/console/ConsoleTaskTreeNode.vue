@@ -70,7 +70,6 @@ function handleSelect(): void {
 .task-branch {
   --task-tree-link-gap: 20px;
   --task-tree-link-indent: 20px;
-  --task-tree-card-center: 24px;
   position: relative;
   display: flex;
   align-items: center;
@@ -78,21 +77,12 @@ function handleSelect(): void {
   min-width: max-content;
 }
 
-.task-branch--has-children > .task-card {
+.task-card {
   position: relative;
 }
 
-.task-branch--has-children > .task-card::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: calc(var(--task-tree-link-gap) * -1);
-  width: var(--task-tree-link-gap);
-  border-top: 1px solid color-mix(in srgb, var(--panel-border-strong) 74%, transparent);
-  transform: translateY(-0.5px);
-}
-
-.task-branch--child::before {
+/* Horizontal connector: vertical bar → child card */
+.task-branch--child > .task-card::before {
   content: '';
   position: absolute;
   left: calc(var(--task-tree-link-indent) * -1);
@@ -110,12 +100,40 @@ function handleSelect(): void {
   padding-left: var(--task-tree-link-indent);
 }
 
+/* Horizontal connector: parent card → vertical bar (at children midpoint) */
 .task-branch__children::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: var(--task-tree-card-center);
-  bottom: var(--task-tree-card-center);
+  left: calc(var(--task-tree-link-gap) * -1);
+  top: 50%;
+  width: var(--task-tree-link-gap);
+  border-top: 1px solid color-mix(in srgb, var(--panel-border-strong) 74%, transparent);
+  transform: translateY(-0.5px);
+}
+
+/*
+ * Vertical bar: drawn as two half-segments on each child branch rather than
+ * one bar on the container. Using top/bottom: 50% anchors to the branch's own
+ * vertical center, which equals the card center because .task-branch uses
+ * align-items: center. This is correct even when a branch is tall due to
+ * having grandchildren.
+ * 3px = half of the 6px sibling gap, so adjacent segments meet seamlessly.
+ */
+.task-branch--child:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--task-tree-link-indent) * -1);
+  top: 50%;
+  bottom: -3px;
+  border-left: 1px solid color-mix(in srgb, var(--panel-border-strong) 74%, transparent);
+}
+
+.task-branch--child:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--task-tree-link-indent) * -1);
+  top: -3px;
+  bottom: 50%;
   border-left: 1px solid color-mix(in srgb, var(--panel-border-strong) 74%, transparent);
 }
 
