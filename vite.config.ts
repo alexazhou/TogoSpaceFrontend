@@ -54,7 +54,7 @@ export default defineConfig({
       '/rooms/': createApiProxy(backendTarget),
       '/teams/list.json': createApiProxy(backendTarget),
       '/teams/create.json': createApiProxy(backendTarget),
-      '^/teams/.+\\.json$': createApiProxy(backendTarget),
+      '^/teams/.+\\.json(?:\\?.*)?$': createApiProxy(backendTarget),
       '/ws': {
         target: 'ws://127.0.0.1:8080',
         ws: true,

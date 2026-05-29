@@ -15,6 +15,7 @@ import { displayName } from '../../utils';
 import type { AppLocale } from '../../i18n';
 
 const { t } = useI18n();
+type ConsoleMainView = 'chat' | 'tasks';
 
 const props = defineProps<{
   connectionState: ConnectionState;
@@ -33,6 +34,8 @@ const props = defineProps<{
   scheduleResumePending?: boolean;
   authEnabled?: boolean;
   showBackToConsole?: boolean;
+  showConsoleViewTabs?: boolean;
+  consoleView?: ConsoleMainView;
 }>();
 
 const emit = defineEmits<{
@@ -42,6 +45,7 @@ const emit = defineEmits<{
   openSettings: [];
   backToConsole: [];
   resumeSchedule: [];
+  switchConsoleView: [view: ConsoleMainView];
 }>();
 
 const teamMenuOpen = ref(false);
@@ -308,6 +312,33 @@ function closeLogoutConfirm(): void {
       />
     </div>
 
+    <div v-if="showConsoleViewTabs" class="topbar-center">
+      <div
+        class="console-view-switcher"
+        role="tablist"
+        :aria-label="t('console.viewTabs')"
+      >
+        <button
+          type="button"
+          class="console-view-switcher__tab"
+          :class="{ active: consoleView === 'chat' }"
+          :aria-selected="consoleView === 'chat'"
+          @click="emit('switchConsoleView', 'chat')"
+        >
+          {{ t('console.viewChat') }}
+        </button>
+        <button
+          type="button"
+          class="console-view-switcher__tab"
+          :class="{ active: consoleView === 'tasks' }"
+          :aria-selected="consoleView === 'tasks'"
+          @click="emit('switchConsoleView', 'tasks')"
+        >
+          {{ t('console.viewTasks') }}
+        </button>
+      </div>
+    </div>
+
     <div class="status-group">
       <div v-if="showTeamDisabledPill && !activeTeamEnabled" class="team-disabled-pill">{{ t('topbar.teamDisabled') }}</div>
       <div
@@ -497,6 +528,55 @@ function closeLogoutConfirm(): void {
   display: flex;
   align-items: center;
   position: relative;
+}
+
+.topbar-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.console-view-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9px;
+  background: var(--surface-pill);
+  pointer-events: auto;
+}
+
+.console-view-switcher__tab {
+  min-width: 68px;
+  height: 22px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.console-view-switcher__tab:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--interactive-selected) 34%, transparent);
+}
+
+.console-view-switcher__tab.active {
+  border-color: color-mix(in srgb, var(--interactive-focus-border) 44%, transparent);
+  background: color-mix(in srgb, var(--interactive-selected) 72%, var(--surface-panel) 28%);
+  color: var(--text-primary);
 }
 
 .team-switcher-button {
@@ -1147,6 +1227,14 @@ function closeLogoutConfirm(): void {
   width: 100%;
 }
 
+:global(html.bp-layout-narrow) .topbar-center {
+  position: static;
+  transform: none;
+  width: 100%;
+  justify-content: flex-start;
+  pointer-events: auto;
+}
+
 :global(html.bp-layout-narrow) .status-group {
   width: 100%;
   justify-content: flex-start;
@@ -1191,6 +1279,18 @@ function closeLogoutConfirm(): void {
 }
 
 :global(html.bp-console-mobile) .topbar.topbar-console .topbar-team-enabled-switch {
+  flex: 0 0 auto;
+}
+
+:global(html.bp-console-mobile) .topbar.topbar-console .topbar-center {
+  position: static;
+  transform: none;
+  width: 100%;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+:global(html.bp-console-mobile) .topbar.topbar-console .console-view-switcher {
   flex: 0 0 auto;
 }
 
@@ -1264,6 +1364,18 @@ function closeLogoutConfirm(): void {
 
 :global(html.bp-console-short) .topbar.topbar-console .team-switcher-button {
   padding: 0 8px;
+}
+
+:global(html.bp-console-short) .topbar.topbar-console .console-view-switcher {
+  padding: 1px;
+  border-radius: 8px;
+}
+
+:global(html.bp-console-short) .topbar.topbar-console .console-view-switcher__tab {
+  min-width: 56px;
+  height: 20px;
+  padding: 0 9px;
+  font-size: 0.72rem;
 }
 
 :global(html.bp-console-short) .topbar.topbar-console .team-disabled-pill,

@@ -5,7 +5,7 @@ import {
   showTokenDialog,
 } from '../appUiState';
 import { clearToken, setToken } from '../authStore';
-import { getAgentActivities, getSystemStatus, getTeamPresetExport, getTeams } from '../api';
+import { getAgentActivities, getSystemStatus, getTeamPresetExport, getTeamTasks, getTeams } from '../api';
 
 describe('api request handling', () => {
   beforeEach(() => {
@@ -180,5 +180,65 @@ describe('getTeamPresetExport', () => {
 
     expect(globalRequestErrors.value).toHaveLength(1);
     expect(globalRequestErrors.value[0]?.path).toContain('/teams/42/export_preset.json');
+  });
+});
+
+describe('getTeamTasks', () => {
+  beforeEach(() => {
+    clearGlobalRequestError();
+    clearToken();
+    vi.restoreAllMocks();
+  });
+
+  it('requests the correct team tasks URL with include_closed and limit', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ tasks: [] }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await getTeamTasks(42, true, 500);
+
+    const [url] = fetchMock.mock.calls[0] as [string];
+    expect(url).toContain('/teams/42/tasks.json');
+    expect(url).toContain('include_closed=1');
+    expect(url).toContain('limit=500');
+  });
+
+  it('normalizes parent and dependency fields for team tasks', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      tasks: [
+        {
+          id: 8,
+          team_id: 2,
+          title: 'Ship task view',
+          description: 'Build the tree view',
+          assignee_id: 3,
+          creator_id: 1,
+          manager_id: 2,
+          status: 'IN_PROGRESS',
+          priority: 'HIGH',
+          parent_id: 5,
+          depends_on: [4, 'x', null],
+          room_id: 12,
+          result: '',
+          block_reason: '',
+          created_at: '2026-05-29T12:00:00',
+          updated_at: '2026-05-29T12:30:00',
+        },
+      ],
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getTeamTasks(2);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.parent_id).toBe(5);
+    expect(result[0]?.depends_on).toEqual([4]);
+    expect(result[0]?.status).toBe('IN_PROGRESS');
+    expect(result[0]?.priority).toBe('HIGH');
   });
 });

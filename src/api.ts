@@ -848,6 +848,13 @@ export async function getAgentTasks(agentId: number, includeClosed = false): Pro
   return (data.tasks ?? []).map(normalizeAgentTask);
 }
 
+export async function getTeamTasks(teamId: number, includeClosed = true, limit = 500): Promise<AgentTask[]> {
+  const data = await requestJson<{ tasks: RawAgentTask[] }>(
+    withSearch(`/teams/${teamId}/tasks.json`, { include_closed: includeClosed ? 1 : 0, limit }),
+  );
+  return (data.tasks ?? []).map(normalizeAgentTask);
+}
+
 export async function resumeAgent(agentId: number): Promise<{ status: string; agent_id: number; room_id: number }> {
   return requestJson(`/agents/${agentId}/resume.json`, {
     method: 'POST',

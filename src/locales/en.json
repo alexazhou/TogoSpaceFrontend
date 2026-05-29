@@ -145,7 +145,7 @@
     "taskCreatedAt": "Created {time}",
     "taskCreator": "Creator {id}",
     "taskAssignee": "Assignee {id}",
-    "taskManager": "Manager {id}",
+    "taskManager": "Review: {id}",
     "taskDependsOn": "{count} dependencies",
     "taskRoom": "Room {id}",
     "taskId": "Task ID",
@@ -232,7 +232,20 @@
   "console": {
     "loadFailed": "Failed to load messages. Check network or backend status.",
     "connectFailed": "Cannot connect to backend. Please ensure the service is started.",
-    "adjustHeight": "Adjust chat room and member card height"
+    "adjustHeight": "Adjust chat room and member card height",
+    "viewTabs": "Console view switcher",
+    "viewChat": "Chat",
+    "viewTasks": "Tasks",
+    "taskTreeEyebrow": "Task map",
+    "taskListTitle": "Task List",
+    "loadingTasks": "Loading team tasks…",
+    "tasksLoadFailed": "Failed to load team tasks.",
+    "noTasks": "No tasks in this team.",
+    "noCancelledTasks": "No cancelled tasks.",
+    "taskSummary": "{count} tasks",
+    "taskRoots": "{count} root tasks",
+    "taskOpenCount": "{count} in progress",
+    "mobileSelectRoom": "Select a chat room"
   },
   "team": {
     "info": "Team Info",

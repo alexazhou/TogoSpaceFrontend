@@ -145,7 +145,7 @@
     "taskCreatedAt": "创建于 {time}",
     "taskCreator": "创建人：{id}",
     "taskAssignee": "处理人：{id}",
-    "taskManager": "验收人 {id}",
+    "taskManager": "验收: {id}",
     "taskDependsOn": "依赖 {count} 项",
     "taskRoom": "房间 {id}",
     "taskId": "任务 ID",
@@ -232,7 +232,20 @@
   "console": {
     "loadFailed": "加载消息失败，请检查网络或后端状态。",
     "connectFailed": "无法连接到后端服务，请确认服务已启动。",
-    "adjustHeight": "调整聊天室和成员卡片高度"
+    "adjustHeight": "调整聊天室和成员卡片高度",
+    "viewTabs": "控制台视图切换",
+    "viewChat": "对话",
+    "viewTasks": "任务视图",
+    "taskTreeEyebrow": "任务树",
+    "taskListTitle": "任务列表",
+    "loadingTasks": "正在加载团队任务…",
+    "tasksLoadFailed": "团队任务加载失败。",
+    "noTasks": "当前团队暂无任务。",
+    "noCancelledTasks": "当前没有已取消任务。",
+    "taskSummary": "{count}个任务",
+    "taskRoots": "根任务{count}个",
+    "taskOpenCount": "进行中{count}个",
+    "mobileSelectRoom": "选择一个聊天室"
   },
   "team": {
     "info": "团队信息",

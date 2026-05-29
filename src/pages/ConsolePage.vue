@@ -8,6 +8,7 @@ import AgentActivityDialog from '../components/agent/AgentActivityDialog.vue';
 import ConsoleAgentListPanel from '../components/console/ConsoleAgentListPanel.vue';
 import ConsoleChatPanel from '../components/console/ConsoleChatPanel.vue';
 import ConsoleRoomListPanel from '../components/console/ConsoleRoomListPanel.vue';
+import ConsoleTaskTreePanel from '../components/console/ConsoleTaskTreePanel.vue';
 import CreateRoomDialog from '../components/console/CreateRoomDialog.vue';
 import { useAgentActivityDialogState } from '../composables/useAgentActivityDialogState';
 import { useConsoleRuntimeState } from '../composables/useConsoleRuntimeState';
@@ -19,6 +20,7 @@ import { findTeamById } from '../teamStore';
 import { displayName, i18nText } from '../utils';
 
 type MobileSheetTab = 'rooms' | 'agents';
+type ConsoleMainView = 'chat' | 'tasks';
 
 const MOBILE_LAYOUT_MEDIA_QUERY = VIEWPORT_QUERIES.consoleMobile;
 
@@ -33,6 +35,7 @@ const createRoomDialogOpen = ref(false);
 const isMobileLayout = ref(false);
 const mobileSheetOpen = ref(false);
 const mobileSheetTab = ref<MobileSheetTab>('rooms');
+const runtimeRefreshToken = ref(0);
 const leftStack = useTemplateRef('leftStack');
 
 let mobileLayoutMediaQuery: MediaQueryList | null = null;
@@ -50,6 +53,7 @@ const currentTeam = computed(() => findTeamById(teamId.value));
 const currentTeamLabel = computed(() => (
   currentTeam.value ? displayName(currentTeam.value) : t('topbar.selectTeam')
 ));
+const currentConsoleView = computed<ConsoleMainView>(() => (route.query.view === 'tasks' ? 'tasks' : 'chat'));
 
 async function navigateToRoom(roomId: number, replace = false): Promise<void> {
   const method = replace ? router.replace : router.push;
@@ -95,12 +99,16 @@ const {
 } = useAgentActivityDialogState(agents, roleTemplates);
 
 const mobileRoomLabel = computed(() => (
-  currentRoom.value
+  currentConsoleView.value === 'tasks'
+    ? t('console.viewTasks')
+    : currentRoom.value
     ? i18nText(currentRoom.value.i18n, 'display_name', currentRoom.value.room_name)
     : t('chat.noRoom')
 ));
 const mobileRoomStatusLabel = computed(() => (
-  currentRoom.value?.state === 'scheduling' ? t('chat.active') : t('chat.idle')
+  currentConsoleView.value === 'tasks'
+    ? t('console.taskTreeEyebrow')
+    : currentRoom.value?.state === 'scheduling' ? t('chat.active') : t('chat.idle')
 ));
 const mobileSheetTitle = computed(() => (
   mobileSheetTab.value === 'rooms' ? t('room.chatRooms') : t('agent.teamMembersLabel')
@@ -144,7 +152,7 @@ async function loadRoomMessages(
   try {
     await loadRuntimeRoomMessages(roomId, options);
   } catch (error) {
-    errorMessage.value = '加载消息失败，请检查网络或后端状态。';
+    errorMessage.value = t('console.loadFailed');
     console.error(error);
   } finally {
     reloadingMessages.value = false;
@@ -181,8 +189,10 @@ async function refreshAll(): Promise<void> {
     } else {
       clearSelectedRoom();
     }
+
+    runtimeRefreshToken.value += 1;
   } catch (error) {
-    errorMessage.value = '无法连接到后端服务，请确认服务已启动。';
+    errorMessage.value = t('console.connectFailed');
     console.error(error);
   } finally {
     loading.value = false;
@@ -304,9 +314,15 @@ onBeforeUnmount(() => {
             <strong>{{ mobileRoomLabel }}</strong>
             <span class="mobile-room-chip__meta">
               <span>
-                {{ currentRoom ? t('room.membersCount', { count: currentRoom.agents.length }) : t('console.mobileSelectRoom') }}
+                {{
+                  currentConsoleView === 'tasks'
+                    ? t('console.taskTreeEyebrow')
+                    : currentRoom
+                      ? t('room.membersCount', { count: currentRoom.agents.length })
+                      : t('console.mobileSelectRoom')
+                }}
               </span>
-              <span v-if="currentRoom">{{ mobileRoomStatusLabel }}</span>
+              <span v-if="currentConsoleView === 'tasks' || currentRoom">{{ mobileRoomStatusLabel }}</span>
             </span>
           </button>
 
@@ -333,6 +349,7 @@ onBeforeUnmount(() => {
         </section>
 
         <ConsoleChatPanel
+          v-if="currentConsoleView === 'chat'"
           :current-room="currentRoom"
           :agents="agents"
           :dept-tree="deptTree"
@@ -348,6 +365,14 @@ onBeforeUnmount(() => {
           @click-working-agent="openAgent"
           @load-older-messages="loadOlderMessages().catch(console.error)"
           @room-updated="refreshAll().catch(console.error)"
+        />
+
+        <ConsoleTaskTreePanel
+          v-else
+          :team-id="teamId"
+          :active="currentConsoleView === 'tasks'"
+          :agents="agents"
+          :refresh-token="runtimeRefreshToken"
         />
       </div>
     </div>

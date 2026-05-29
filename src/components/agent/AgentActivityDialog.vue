@@ -8,6 +8,8 @@ import { loadAgentActivities } from '../../realtime/runtimeStore';
 import { useAgentActivities, useAgentStatus } from '../../realtime/selectors';
 import AgentCardBase from './AgentCardBase.vue';
 import AgentActivityItem from './AgentActivityItem.vue';
+import AgentTaskCard from './AgentTaskCard.vue';
+import AgentTaskDetailModal from './AgentTaskDetailModal.vue';
 import type {
   AgentDetail,
   AgentInfo,
@@ -591,33 +593,15 @@ watch(
                     {{ taskFilter === 'undone' ? t('agent.noTasks') : taskFilter === 'done' ? t('agent.taskFilterNoTasksDone') : t('agent.taskFilterNoTasksAll') }}
                   </div>
                   <div v-else class="agent-task-list sidebar-scroll">
-                    <article
+                    <AgentTaskCard
                       v-for="task in visibleTasks"
                       :key="task.id"
-                      class="agent-task-card"
-                      role="button"
-                      tabindex="0"
-                      @click="openTaskDetail(task)"
-                      @keydown.enter.prevent="openTaskDetail(task)"
-                      @keydown.space.prevent="openTaskDetail(task)"
-                    >
-                      <div class="agent-task-card__row">
-                        <h5>{{ task.title || t('common.unknown') }}</h5>
-                        <div class="agent-task-card__badges">
-                          <span class="agent-task-card__badge" :data-priority="task.priority">
-                            {{ taskPriorityLabel(task.priority) }}
-                          </span>
-                          <span class="agent-task-card__badge" :data-status="task.status">
-                            {{ taskStatusLabel(task.status) }}
-                          </span>
-                        </div>
-                      </div>
-                      <div class="agent-task-card__meta">
-                        <span>#{{ task.id }}</span>
-                        <span>{{ t('agent.taskCreator', { id: taskActorLabel(task.creator_id) }) }}</span>
-                        <span>{{ t('agent.taskAssignee', { id: taskActorLabel(task.assignee_id) }) }}</span>
-                      </div>
-                    </article>
+                      :task="task"
+                      :assignee-label="taskActorLabel(task.assignee_id)"
+                      :manager-label="task.manager_id !== null ? taskActorDetailLabel(task.manager_id) : null"
+                      clickable
+                      @select="openTaskDetail"
+                    />
                   </div>
                 </template>
               </section>
@@ -653,93 +637,17 @@ watch(
             </div>
           </section>
 
-          <div
-            v-if="selectedTask"
-            class="agent-task-detail-overlay"
-            @click.self="closeTaskDetail"
-          >
-            <section class="agent-task-detail-modal">
-              <div class="agent-task-detail-modal__head">
-                <div class="agent-task-detail-modal__title-wrap">
-                  <p class="agent-task-detail-modal__eyebrow">{{ t('agent.taskDetail') }}</p>
-                  <h4>{{ selectedTask.title || t('common.unknown') }}</h4>
-                </div>
-                <button
-                  type="button"
-                  class="agent-task-detail-modal__close"
-                  :aria-label="t('common.close')"
-                  @click="closeTaskDetail"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div class="agent-task-detail-modal__badges">
-                <span class="agent-task-card__badge" :data-priority="selectedTask.priority">
-                  {{ taskPriorityLabel(selectedTask.priority) }}
-                </span>
-                <span class="agent-task-card__badge" :data-status="selectedTask.status">
-                  {{ taskStatusLabel(selectedTask.status) }}
-                </span>
-              </div>
-
-              <dl class="agent-task-detail-modal__grid">
-                <div>
-                  <dt>{{ t('agent.taskId') }}</dt>
-                  <dd>#{{ selectedTask.id }}</dd>
-                </div>
-                <div>
-                  <dt>{{ t('agent.taskCreatedAtLabel') }}</dt>
-                  <dd>{{ formatTaskDateTime(selectedTask.created_at) || t('common.notSet') }}</dd>
-                </div>
-                <div>
-                  <dt>{{ t('agent.taskCreatorLabel') }}</dt>
-                  <dd>{{ taskActorLabel(selectedTask.creator_id) }}</dd>
-                </div>
-                <div>
-                  <dt>{{ t('agent.taskAssigneeLabel') }}</dt>
-                  <dd>{{ taskActorLabel(selectedTask.assignee_id) }}</dd>
-                </div>
-                <div>
-                  <dt>{{ t('agent.taskManagerLabel') }}</dt>
-                  <dd>{{ taskActorDetailLabel(selectedTask.manager_id) }}</dd>
-                </div>
-                <div>
-                  <dt>{{ t('agent.taskRoomLabel') }}</dt>
-                  <dd>{{ taskRoomDetailLabel(selectedTask.room_id) }}</dd>
-                </div>
-              </dl>
-
-              <div class="agent-task-detail-modal__section">
-                <p class="agent-task-detail-modal__section-title">{{ t('agent.taskDescriptionLabel') }}</p>
-                <p class="agent-task-detail-modal__section-body">
-                  {{ selectedTask.description || t('agent.noTaskDescription') }}
-                </p>
-              </div>
-
-              <div class="agent-task-detail-modal__section">
-                <p class="agent-task-detail-modal__section-title">{{ t('agent.taskDependsOnLabel') }}</p>
-                <p class="agent-task-detail-modal__section-body">
-                  <template v-if="selectedTask.depends_on.length">
-                    {{ selectedTask.depends_on.map((id) => `#${id}`).join(', ') }}
-                  </template>
-                  <template v-else>
-                    {{ t('common.none') }}
-                  </template>
-                </p>
-              </div>
-
-              <div v-if="selectedTask.result" class="agent-task-detail-modal__section">
-                <p class="agent-task-detail-modal__section-title">{{ t('agent.taskResultLabel') }}</p>
-                <p class="agent-task-detail-modal__section-body">{{ selectedTask.result }}</p>
-              </div>
-
-              <div v-if="selectedTask.block_reason" class="agent-task-detail-modal__section">
-                <p class="agent-task-detail-modal__section-title">{{ t('agent.taskBlockReasonLabel') }}</p>
-                <p class="agent-task-detail-modal__section-body">{{ selectedTask.block_reason }}</p>
-              </div>
-            </section>
-          </div>
+          <AgentTaskDetailModal
+            :task="selectedTask"
+            :created-at-label="selectedTask ? (formatTaskDateTime(selectedTask.created_at) || t('common.notSet')) : ''"
+            :creator-label="selectedTask ? taskActorLabel(selectedTask.creator_id) : ''"
+            :assignee-label="selectedTask ? taskActorLabel(selectedTask.assignee_id) : ''"
+            :manager-label="selectedTask ? taskActorDetailLabel(selectedTask.manager_id) : ''"
+            :room-label="selectedTask ? taskRoomDetailLabel(selectedTask.room_id) : ''"
+            :priority-label="selectedTask ? taskPriorityLabel(selectedTask.priority) : ''"
+            :status-label="selectedTask ? taskStatusLabel(selectedTask.status) : ''"
+            @close="closeTaskDetail"
+          />
         </template>
       </section>
     </div>
@@ -1157,216 +1065,6 @@ watch(
   background: color-mix(in srgb, var(--interactive-selected) 22%, var(--surface-pill) 78%);
   border-color: color-mix(in srgb, var(--interactive-selected) 34%, var(--panel-border) 66%);
   color: var(--text-strong);
-}
-
-.agent-task-card {
-  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--surface-panel) 86%, var(--surface-soft) 14%);
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    transform 160ms ease;
-}
-
-.agent-task-card:hover,
-.agent-task-card:focus-visible {
-  border-color: color-mix(in srgb, var(--interactive-selected) 34%, var(--panel-border) 66%);
-  background: color-mix(in srgb, var(--surface-panel) 74%, var(--surface-soft) 26%);
-  transform: translateY(-1px);
-  outline: none;
-}
-
-.agent-task-card__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.agent-task-card__row h5 {
-  margin: 0;
-  min-width: 0;
-  flex: 1;
-  color: var(--text-strong);
-  font-size: 0.88rem;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.agent-task-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  color: var(--muted);
-  font-size: 0.7rem;
-  line-height: 1.3;
-}
-
-.agent-task-card__badges {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 4px;
-}
-
-.agent-task-card__badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 20px;
-  padding: 0 7px;
-  border-radius: 999px;
-  background: var(--surface-pill);
-  color: var(--text-secondary);
-  font-size: 0.66rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.agent-task-card__badge[data-priority='HIGH'] {
-  background: color-mix(in srgb, var(--danger) 12%, var(--surface-pill) 88%);
-  color: var(--danger);
-}
-
-.agent-task-card__badge[data-priority='LOW'] {
-  background: color-mix(in srgb, var(--good) 12%, var(--surface-pill) 88%);
-  color: var(--good);
-}
-
-.agent-task-card__badge[data-status='IN_PROGRESS'],
-.agent-task-card__badge[data-status='REVIEWING'] {
-  background: color-mix(in srgb, var(--interactive-selected) 22%, var(--surface-pill) 78%);
-  color: var(--accent);
-}
-
-.agent-task-card__badge[data-status='PENDING'],
-.agent-task-card__badge[data-status='ON_HOLD'] {
-  background: color-mix(in srgb, var(--warn) 14%, var(--surface-pill) 86%);
-  color: var(--warn);
-}
-
-.agent-task-detail-overlay {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 28px;
-  background: rgba(112, 133, 160, 0.16);
-  backdrop-filter: blur(4px);
-}
-
-.agent-task-detail-modal {
-  width: min(640px, 100%);
-  max-height: min(72vh, 100%);
-  overflow: auto;
-  border-radius: 20px;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
-  background: color-mix(in srgb, var(--panel-bg) 96%, var(--surface-soft) 4%);
-  box-shadow:
-    0 18px 36px rgba(40, 67, 102, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  padding: 16px 18px 18px;
-}
-
-.agent-task-detail-modal__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.agent-task-detail-modal__title-wrap h4 {
-  margin: 0;
-  color: var(--text-strong);
-  font-size: 1rem;
-  line-height: 1.35;
-}
-
-.agent-task-detail-modal__eyebrow {
-  margin: 0 0 4px;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.66rem;
-}
-
-.agent-task-detail-modal__close {
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 1.1rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.agent-task-detail-modal__close:hover {
-  background: color-mix(in srgb, var(--surface-soft) 90%, transparent);
-  color: var(--text-strong);
-}
-
-.agent-task-detail-modal__badges {
-  margin-top: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.agent-task-detail-modal__grid {
-  margin: 14px 0 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 14px;
-}
-
-.agent-task-detail-modal__grid div {
-  min-width: 0;
-}
-
-.agent-task-detail-modal__grid dt {
-  margin: 0 0 3px;
-  color: var(--muted);
-  font-size: 0.7rem;
-}
-
-.agent-task-detail-modal__grid dd {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  line-height: 1.4;
-  word-break: break-word;
-}
-
-.agent-task-detail-modal__section {
-  margin-top: 14px;
-}
-
-.agent-task-detail-modal__section-title {
-  margin: 0 0 6px;
-  color: var(--text-strong);
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.agent-task-detail-modal__section-body {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--surface-soft) 84%, transparent);
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
 

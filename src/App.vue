@@ -32,6 +32,7 @@ import { findTeamById, firstTeamId, loadTeams, preferredTeamId, setPreferredTeam
 import { formatConnectionState } from './utils';
 
 type ThemeMode = 'dark' | 'light';
+type ConsoleMainView = 'chat' | 'tasks';
 
 const route = useRoute();
 const router = useRouter();
@@ -76,6 +77,7 @@ const statusLabel = computed(() => formatConnectionState(connectionState.value))
 const isLightMode = computed(() => themeMode.value === 'light');
 const scheduleResumePending = ref(false);
 const isConsoleRoute = computed(() => route.name === 'console');
+const consoleView = computed<ConsoleMainView>(() => (route.query.view === 'tasks' ? 'tasks' : 'chat'));
 let removeViewportRootClasses: (() => void) | null = null;
 
 // ── V13: Quick Init Modal ──
@@ -161,6 +163,19 @@ function backToConsole(): void {
 function selectTeam(teamId: number): void {
   setPreferredTeamId(teamId);
   router.push({ name: 'console', params: { teamId } }).catch(console.error);
+}
+
+function switchConsoleView(view: ConsoleMainView): void {
+  if (!isConsoleRoute.value) {
+    return;
+  }
+
+  router.replace({
+    query: {
+      ...route.query,
+      view: view === 'chat' ? undefined : view,
+    },
+  }).catch(console.error);
 }
 
 function requestActiveTeamEnabledToggle(enabled: boolean): void {
@@ -315,12 +330,15 @@ onBeforeUnmount(() => {
       :schedule-not-running-reason="scheduleNotRunningReason"
       :schedule-resume-pending="scheduleResumePending"
       :auth-enabled="authEnabled"
+      :show-console-view-tabs="isConsoleRoute"
+      :console-view="consoleView"
       @toggle-theme="toggleTheme"
       @select-team="selectTeam"
       @toggle-active-team-enabled="requestActiveTeamEnabledToggle"
       @back-to-console="backToConsole"
       @open-settings="openSettings"
       @resume-schedule="handleResumeSchedule"
+      @switch-console-view="switchConsoleView"
     />
 
     <Teleport to="body">
