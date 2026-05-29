@@ -575,9 +575,9 @@
       "clearPersonalData": "Clear Personal Data",
       "clearTeamData": "Clear Team Data",
       "personalDataNote": "Clears only the dialogue history and memory of this member, without affecting tasks or other members.",
-      "teamDataNote": "Clears all team data (including all member histories, task records, and chat room messages).",
+      "teamDataNote": "Clears all team data (including all conversation histories and tasks).",
       "clearTitle": "Clear Team Data",
-      "clearMsg": "Confirm clearing team runtime data? This will delete all task records, histories, and messages and cannot be undone.",
+      "clearMsg": "Confirm clearing team runtime data? This will delete all conversation histories, tasks, and messages and cannot be undone.",
       "clearBtn": "Clear"
     },
     "maintenance": {

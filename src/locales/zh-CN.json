@@ -575,9 +575,9 @@
       "clearPersonalData": "清空个人数据",
       "clearTeamData": "清空团队数据",
       "personalDataNote": "仅清除该成员的对话历史与记忆，不影响任务和其他成员。",
-      "teamDataNote": "清空全队所有数据（包括所有成员历史、任务记录、聊天室消息）。",
+      "teamDataNote": "清空全队所有数据（包括所有对话历史、任务）。",
       "clearTitle": "清空团队数据",
-      "clearMsg": "确认清空团队运行数据？此操作将删除所有任务记录、对话历史和房间消息，不可恢复。",
+      "clearMsg": "确认清空团队运行数据？此操作将删除所有对话历史、任务、房间消息，不可恢复。",
       "clearBtn": "清空"
     },
     "maintenance": {
