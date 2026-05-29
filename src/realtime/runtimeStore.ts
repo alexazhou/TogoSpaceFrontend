@@ -559,6 +559,7 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
       }
       return [...rooms, event.room];
     });
+    showGlobalSuccessToast(t('topbar.roomAdded'));
     return;
   }
 

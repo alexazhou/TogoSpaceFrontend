@@ -79,7 +79,8 @@
     "logout": "退出登录",
     "logoutConfirmTitle": "确认退出",
     "logoutConfirmMsg": "退出后将清除访问凭证，需要重新输入 Token 才能继续使用。",
-    "teamReloaded": "团队数据已重新加载"
+    "teamReloaded": "团队数据已重新加载",
+    "roomAdded": "房间已创建"
   },
   "agent": {
     "status": {
