@@ -554,7 +554,7 @@
       "noTeamsMsg": "先创建一个团队，再继续配置成员、角色和模型服务。"
     },
     "page": {
-      "clearDataSuccess": "已清空团队“{name}”：{tasks}个任务，{histories}条历史，{messages}条消息",
+      “clearDataSuccess”: “已清空团队”{name}”：{rooms}个房间，{tasks}个任务，{histories}条历史，{messages}条消息”,
       "teamSaved": "团队信息已保存",
       "teamSaveFailed": "保存失败",
       "teamSavedStatus": "已保存",

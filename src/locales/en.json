@@ -554,7 +554,7 @@
       "noTeamsMsg": "Create a team first, then configure members, roles, and model services."
     },
     "page": {
-      "clearDataSuccess": "Cleared team \"{name}\": {tasks} tasks, {histories} histories, {messages} messages",
+      "clearDataSuccess": "Cleared team \"{name}\": {rooms} rooms, {tasks} tasks, {histories} histories, {messages} messages",
       "teamSaved": "Team info saved",
       "teamSaveFailed": "Save failed",
       "teamSavedStatus": "Saved",

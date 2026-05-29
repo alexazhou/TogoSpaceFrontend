@@ -186,6 +186,7 @@ export function useSettingsTeamMutations(options: UseSettingsTeamMutationsOption
       showGlobalSuccessToast(
         options.t('settings.page.clearDataSuccess', {
           name: teamName,
+          rooms: result.deleted.rooms,
           tasks: result.deleted.tasks,
           histories: result.deleted.histories,
           messages: result.deleted.messages,
