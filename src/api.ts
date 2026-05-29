@@ -805,7 +805,7 @@ export async function deleteTeam(teamId: number): Promise<{ status: string; name
 export async function clearTeamData(teamId: number): Promise<{
   status: string;
   team_id: number;
-  deleted: { tasks: number; histories: number; messages: number };
+  deleted: { tasks: number; histories: number; messages: number; rooms: number };
 }> {
   return requestJson(`/teams/${teamId}/clear_data.json`, {
     method: 'POST',
