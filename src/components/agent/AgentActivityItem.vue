@@ -553,12 +553,14 @@ const activityView = computed(() => {
     currentToolArguments,
     currentToolCommand,
   );
-  const labelText = showToolName ? currentDisplayToolName : currentTitle;
-  const showLabelChip = activity.activity_type !== 'message_received';
+  const inlineTitle = !(
+    Boolean(currentSummary)
+    || showToolName
+    || (activity.activity_type === 'llm_infer' && Boolean(currentModel))
+    || (activity.activity_type !== 'tool_call' && Boolean(currentMetadataToolName))
+  ) || activity.activity_type === 'message_received';
 
   return {
-    labelText,
-    showLabelChip,
     chatReplyContent,
     chatReplyIsLong,
     durationText: formatDuration(activity.duration_ms),
@@ -572,6 +574,7 @@ const activityView = computed(() => {
     taskRoomLabel: currentTaskRoomLabel,
     receivedMessages,
     exitCode: currentExitCode,
+    inlineTitle,
     metadataToolName: currentMetadataToolName,
     model: currentModel,
     taskTitle: currentTaskTitle,
@@ -632,15 +635,13 @@ const activityView = computed(() => {
           </span>
         </span>
       </span>
+      <strong v-if="activityView.inlineTitle" class="agent-activity-item__title">{{ activityView.title }}</strong>
       <span
-        v-if="activityView.showLabelChip"
-        class="agent-activity-item__chip"
-        :class="{
-          'agent-activity-item__chip--mono': activityView.showToolName,
-          'agent-activity-item__chip--danger': activity.status === 'failed'
-        }"
-        :title="activityView.labelText"
-      >{{ activityView.labelText }}</span>
+        v-if="activityView.showToolName"
+        class="agent-activity-item__chip agent-activity-item__chip--mono"
+        :class="{ 'agent-activity-item__chip--danger': activity.status === 'failed' }"
+        :title="activityView.displayToolName"
+      >{{ activityView.displayToolName }}</span>
       <span
         v-if="activityView.showToolArguments"
         class="agent-activity-item__summary agent-activity-item__summary--code agent-activity-item__tool-args"
