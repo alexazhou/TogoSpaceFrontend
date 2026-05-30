@@ -96,7 +96,7 @@ const composerMetrics = computed(() => {
     return null;
   }
 
-  const minComposerHeight = Math.min(220, Math.max(88, Math.round(availableHeight * 0.18)));
+  const minComposerHeight = Math.min(220, Math.max(100, Math.round(availableHeight * 0.18)));
   const minMessageHeight = Math.min(260, Math.max(120, Math.round(availableHeight * 0.24)));
   const maxComposerHeight = Math.max(minComposerHeight, availableHeight - minMessageHeight);
   const composerHeight = Math.round(
@@ -828,7 +828,7 @@ onBeforeUnmount(() => {
   width: 100%;
   resize: none;
   flex: 1 1 auto;
-  min-height: 96px;
+  min-height: 40px;
   border: none;
   border-radius: 0;
   padding: 12px;
@@ -856,6 +856,7 @@ onBeforeUnmount(() => {
 .composer-foot {
   position: relative;
   display: block;
+  flex-shrink: 0;
   margin-top: 0;
   padding: 12px 64px 9px 12px;
   font-size: 0.74rem;
@@ -962,7 +963,7 @@ onBeforeUnmount(() => {
 }
 
 :global(html.bp-compact) .composer textarea {
-  min-height: 88px;
+  min-height: 40px;
   padding: 12px 12px 10px;
   font-size: 0.86rem;
   line-height: 1.45;
@@ -1046,7 +1047,7 @@ onBeforeUnmount(() => {
 }
 
 :global(html.bp-console-short) .composer textarea {
-  min-height: 52px;
+  min-height: 32px;
   padding: 8px 8px 6px;
   font-size: 0.76rem;
   line-height: 1.3;
