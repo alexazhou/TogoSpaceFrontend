@@ -45,9 +45,7 @@ function handleSelect(): void {
   emit('select', props.task);
 }
 
-const isDone = computed(() => props.task.status === 'DONE');
 const isCancelled = computed(() => props.task.status === 'CANCELLED');
-const isPaused = computed(() => props.task.status === 'ON_HOLD');
 </script>
 
 <template>
@@ -61,9 +59,6 @@ const isPaused = computed(() => props.task.status === 'ON_HOLD');
   >
     <div class="agent-task-card__row">
       <div class="agent-task-card__title-wrap">
-        <span class="agent-task-card__checkbox" :class="{ 'is-done': isDone }" aria-hidden="true">
-          <span v-if="isDone" class="agent-task-card__checkmark">✓</span>
-        </span>
         <h5 :class="{ 'is-cancelled': isCancelled }">{{ task.title || t('common.unknown') }}</h5>
       </div>
       <div class="agent-task-card__badges">
@@ -78,9 +73,11 @@ const isPaused = computed(() => props.task.status === 'ON_HOLD');
         <span>{{ t('agent.taskAssignee', { id: assigneeLabel }) }}</span>
         <span v-if="managerLabel" class="agent-task-card__manager">{{ t('agent.taskManager', { id: managerLabel }) }}</span>
       </div>
-      <span v-if="isPaused" class="agent-task-card__badge is-paused">
-        {{ t('agent.taskStatus.ON_HOLD') }}
-      </span>
+      <div class="agent-task-card__status-badges">
+        <span class="agent-task-card__badge" :data-status="task.status">
+          {{ t('agent.taskStatus.' + task.status) }}
+        </span>
+      </div>
     </div>
   </article>
 </template>
@@ -90,7 +87,7 @@ const isPaused = computed(() => props.task.status === 'ON_HOLD');
   border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
   border-radius: 14px;
   background: var(--surface-panel-muted);
-  padding: 3px 12px 6px;
+  padding: 8px 12px 6px;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -129,32 +126,6 @@ const isPaused = computed(() => props.task.status === 'ON_HOLD');
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.agent-task-card__checkbox {
-  width: 16px;
-  height: 16px;
-  flex: 0 0 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--panel-border-strong) 72%, transparent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--surface-panel) 88%, var(--surface-soft) 12%);
-  color: transparent;
-}
-
-.agent-task-card__checkbox.is-done {
-  border-color: color-mix(in srgb, var(--good) 34%, var(--panel-border) 66%);
-  background: color-mix(in srgb, var(--good) 14%, var(--surface-pill) 86%);
-  color: var(--good);
-}
-
-.agent-task-card__checkmark {
-  font-size: 11px;
-  line-height: 1;
-  font-weight: 800;
 }
 
 .agent-task-card__row h5 {
@@ -208,6 +179,7 @@ const isPaused = computed(() => props.task.status === 'ON_HOLD');
   align-items: flex-end;
   justify-content: space-between;
   gap: 8px;
+  margin-top: 1px;
 }
 
 .agent-task-card__meta {
@@ -229,6 +201,12 @@ const isPaused = computed(() => props.task.status === 'ON_HOLD');
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 4px;
+}
+
+.agent-task-card__status-badges {
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
 
 .agent-task-card__badge {
@@ -263,22 +241,30 @@ const isPaused = computed(() => props.task.status === 'ON_HOLD');
   color: var(--good);
 }
 
-.agent-task-card__status-badges {
-  display: flex;
-  gap: 4px;
-  align-items: center;
+.agent-task-card__badge[data-status='DONE'] {
+  border-color: color-mix(in srgb, var(--good) 26%, var(--panel-border) 74%);
+  background: color-mix(in srgb, var(--good) 10%, var(--surface-pill) 90%);
+  color: var(--good);
 }
 
-.agent-task-card__badge.is-paused {
-  border-color: color-mix(in srgb, var(--warn) 24%, var(--panel-border) 76%);
-  background: color-mix(in srgb, var(--warn) 10%, var(--surface-pill) 90%);
-  color: var(--warn);
+.agent-task-card__badge[data-status='CANCELLED'] {
+  border-color: color-mix(in srgb, var(--text-secondary) 18%, var(--panel-border) 82%);
+  background: color-mix(in srgb, var(--text-secondary) 7%, var(--surface-pill) 93%);
+  color: var(--text-secondary);
 }
 
-.agent-task-card__badge.is-reviewing {
+.agent-task-card__badge[data-status='IN_PROGRESS'],
+.agent-task-card__badge[data-status='REVIEWING'] {
   border-color: color-mix(in srgb, var(--interactive-selected) 30%, var(--panel-border) 70%);
   background: color-mix(in srgb, var(--interactive-selected) 14%, var(--surface-pill) 86%);
   color: var(--accent);
+}
+
+.agent-task-card__badge[data-status='PENDING'],
+.agent-task-card__badge[data-status='ON_HOLD'] {
+  border-color: color-mix(in srgb, var(--warn) 24%, var(--panel-border) 76%);
+  background: color-mix(in srgb, var(--warn) 10%, var(--surface-pill) 90%);
+  color: var(--warn);
 }
 
 @media (max-width: 960px) {
