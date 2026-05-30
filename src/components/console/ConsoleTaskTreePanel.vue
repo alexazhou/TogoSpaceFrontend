@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getTeamTasks } from '../../api';
+import { getTeamTasks as getGlobalTeamTasks, setTeamTasks as setGlobalTeamTasks } from '../../realtime/runtimeStore';
 import type { AgentInfo, AgentTask, AgentTaskPriority, AgentTaskStatus } from '../../types';
 import { displayName, formatTime } from '../../utils';
 import AgentTaskDetailModal from '../agent/AgentTaskDetailModal.vue';
@@ -17,7 +18,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
-const tasks = ref<AgentTask[]>([]);
+const tasks = computed(() => getGlobalTeamTasks(props.teamId));
 const loading = ref(false);
 const errorMessage = ref('');
 const hasLoaded = ref(false);
@@ -103,7 +104,8 @@ async function loadTasks(force = false): Promise<void> {
   errorMessage.value = '';
 
   try {
-    tasks.value = await getTeamTasks(props.teamId, true, 500);
+    const data = await getTeamTasks(props.teamId, true, 500);
+    setGlobalTeamTasks(props.teamId, data);
     hasLoaded.value = true;
   } catch (error) {
     errorMessage.value = t('console.tasksLoadFailed');

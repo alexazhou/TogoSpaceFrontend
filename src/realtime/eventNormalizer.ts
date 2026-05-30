@@ -3,6 +3,7 @@ import type {
   AgentActivityStatus,
   AgentActivityType,
   AgentStatus,
+  AgentTask,
   MessageInfo,
   RoomState,
 } from '../types';
@@ -55,6 +56,17 @@ export type FrontendRealtimeEvent =
   | {
     type: 'team_reloaded';
     teamId: number;
+  }
+  | {
+    type: 'task_created';
+    teamId: number;
+    task: AgentTask;
+  }
+  | {
+    type: 'task_changed';
+    teamId: number;
+    task: AgentTask;
+    oldStatus?: string;
   };
 
 type RawRecord = Record<string, unknown>;
@@ -105,6 +117,36 @@ function normalizeAgentActivity(value: unknown): AgentActivity | null {
     metadata: typeof raw.metadata === 'object' && raw.metadata !== null
       ? raw.metadata as Record<string, unknown>
       : {},
+    created_at: typeof raw.created_at === 'string' ? raw.created_at : null,
+    updated_at: typeof raw.updated_at === 'string' ? raw.updated_at : null,
+  };
+}
+
+function normalizeAgentTask(value: unknown): AgentTask | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const raw = value as RawRecord;
+  return {
+    id: Number(raw.id ?? 0),
+    team_id: Number(raw.team_id ?? 0),
+    title: String(raw.title ?? ''),
+    description: typeof raw.description === 'string' ? raw.description : '',
+    assignee_id: Number(raw.assignee_id ?? 0),
+    creator_id: Number(raw.creator_id ?? 0),
+    manager_id: typeof raw.manager_id === 'number' ? raw.manager_id : null,
+    status: (String(raw.status ?? '').trim().toUpperCase() || 'TODO') as any,
+    priority: (String(raw.priority ?? '').trim().toUpperCase() || 'NORMAL') as any,
+    parent_id: typeof raw.parent_id === 'number' ? raw.parent_id : null,
+    depends_on: Array.isArray(raw.depends_on)
+      ? raw.depends_on
+        .map((item) => Number(item))
+        .filter((item) => Number.isFinite(item) && item > 0)
+      : [],
+    room_id: typeof raw.room_id === 'number' ? raw.room_id : null,
+    result: typeof raw.result === 'string' ? raw.result : '',
+    block_reason: typeof raw.block_reason === 'string' ? raw.block_reason : '',
     created_at: typeof raw.created_at === 'string' ? raw.created_at : null,
     updated_at: typeof raw.updated_at === 'string' ? raw.updated_at : null,
   };
@@ -256,6 +298,20 @@ export function normalizeWsEventPayload(payload: unknown): FrontendRealtimeEvent
       return null;
     }
     return { type: 'team_reloaded', teamId };
+  }
+
+  if (eventType === 'task_created' || eventType === 'task_changed') {
+    const task = normalizeAgentTask(raw.task);
+    if (!task) {
+      return null;
+    }
+
+    return {
+      type: eventType,
+      teamId: task.team_id,
+      task,
+      oldStatus: typeof raw.old_status === 'string' ? raw.old_status : undefined,
+    };
   }
 
   return null;

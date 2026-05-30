@@ -12,8 +12,10 @@ import {
 } from '../api';
 import type {
   AgentActivity,
+  AgentActivityType,
   AgentInfo,
   AgentStatus,
+  AgentTask,
   DeptTreeNode,
   MessageInfo,
   RoleTemplateSummary,
@@ -36,6 +38,7 @@ const roomMessagesState = ref<Record<number, RoomMessagesEntry>>({});
 const agentActivitiesState = ref<Record<number, AgentActivity[]>>({});
 const agentStatusState = ref<Record<number, AgentStatus>>({});
 const teamDeptTreeState = ref<Record<number, DeptTreeNode | null>>({});
+const teamTasksState = ref<Record<number, AgentTask[]>>({});
 const roleTemplatesState = ref<RoleTemplateSummary[]>([]);
 const MAX_AGENT_ACTIVITY_ITEMS = 100;
 const ROOM_MESSAGES_PAGE_SIZE = 20;
@@ -436,6 +439,39 @@ export function getRoleTemplatesState(): RoleTemplateSummary[] {
   return roleTemplatesState.value;
 }
 
+function updateTeamTasks(teamId: number, updater: (tasks: AgentTask[]) => AgentTask[]): void {
+  teamTasksState.value = {
+    ...teamTasksState.value,
+    [teamId]: updater(teamTasksState.value[teamId] ?? []),
+  };
+}
+
+function upsertAgentTask(teamId: number, task: AgentTask): void {
+  updateTeamTasks(teamId, (currentTasks) => {
+    const idx = currentTasks.findIndex((t) => t.id === task.id);
+    if (idx >= 0) {
+      const updated = [...currentTasks];
+      updated[idx] = task;
+      return updated;
+    }
+    return [...currentTasks, task];
+  });
+}
+
+export function getTeamTasks(teamId: number | null): AgentTask[] {
+  if (teamId === null) {
+    return [];
+  }
+  return teamTasksState.value[teamId] ?? [];
+}
+
+export function setTeamTasks(teamId: number, tasks: AgentTask[]): void {
+  teamTasksState.value = {
+    ...teamTasksState.value,
+    [teamId]: tasks,
+  };
+}
+
 export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
   if (event.type === 'message') {
     const nextMessage: MessageInfo = event.message;
@@ -549,6 +585,11 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
     return;
   }
 
+  if (event.type === 'task_created' || event.type === 'task_changed') {
+    upsertAgentTask(event.teamId, event.task);
+    return;
+  }
+
   if (event.type === 'room_added') {
     updateTeamRooms(event.teamId, (rooms) => {
       const idx = rooms.findIndex((r) => r.room_id === event.room.room_id);
@@ -577,6 +618,7 @@ export function clearRuntimeStore(): void {
   agentActivitiesState.value = {};
   agentStatusState.value = {};
   teamDeptTreeState.value = {};
+  teamTasksState.value = {};
   roleTemplatesState.value = [];
   activeTeamId.value = null;
   activeRoomId.value = null;

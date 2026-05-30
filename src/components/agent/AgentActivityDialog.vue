@@ -35,6 +35,7 @@ const emit = defineEmits<{
 
 const agent = ref<AgentDetail | null>(null);
 const activityListRef = ref<HTMLElement | null>(null);
+const activityContentRef = ref<HTMLElement | null>(null);
 const loading = ref(false);
 const activitiesLoading = ref(false);
 const resuming = ref(false);
@@ -215,14 +216,14 @@ async function scrollActivitiesToBottom(): Promise<void> {
 
 let _activityListResizeObserver: ResizeObserver | null = null;
 
-function attachActivityListResizeObserver(el: HTMLElement): void {
+function attachActivityListResizeObserver(contentEl: HTMLElement): void {
   detachActivityListResizeObserver();
   _activityListResizeObserver = new ResizeObserver(() => {
-    if (shouldFollowActivities.value) {
-      el.scrollTop = el.scrollHeight;
+    if (shouldFollowActivities.value && activityListRef.value) {
+      activityListRef.value.scrollTop = activityListRef.value.scrollHeight;
     }
   });
-  _activityListResizeObserver.observe(el);
+  _activityListResizeObserver.observe(contentEl);
 }
 
 function detachActivityListResizeObserver(): void {
@@ -239,7 +240,7 @@ function isActivityListNearBottom(): boolean {
   }
 
   const distanceToBottom = listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight;
-  return distanceToBottom <= 12;
+  return distanceToBottom <= 20;
 }
 
 function syncActivityFollowState(): void {
@@ -434,10 +435,10 @@ watch(
   },
 );
 
-// Watch activityListRef: attach ResizeObserver when the list element mounts,
+// Watch activityContentRef: attach ResizeObserver when the content element mounts,
 // so any height change (new items or streaming content) auto-scrolls to bottom.
 watch(
-  () => activityListRef.value,
+  () => activityContentRef.value,
   async (el, prevEl) => {
     if (prevEl) {
       detachActivityListResizeObserver();
@@ -559,11 +560,13 @@ watch(
                     class="agent-activity-list sidebar-scroll"
                     @scroll="syncActivityFollowState"
                   >
-                    <AgentActivityItem
-                      v-for="activity in visibleActivities"
-                      :key="activity.id"
-                      :activity="activity"
-                    />
+                    <div ref="activityContentRef" class="agent-activity-list__content">
+                      <AgentActivityItem
+                        v-for="activity in visibleActivities"
+                        :key="activity.id"
+                        :activity="activity"
+                      />
+                    </div>
                   </div>
                 </template>
                 <template v-else>
@@ -1020,12 +1023,16 @@ watch(
   min-height: 0;
   overflow-y: auto;
   overflow-x: visible;
+  padding: 0;
+  scroll-padding-bottom: 16px;
+  box-sizing: border-box;
+}
+
+.agent-activity-list__content {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 4px 10px 4px;
-  scroll-padding-bottom: 16px;
-  box-sizing: border-box;
 }
 
 .agent-task-list {
