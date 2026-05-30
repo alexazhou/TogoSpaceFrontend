@@ -45,6 +45,7 @@ function handleSelect(): void {
   emit('select', props.task);
 }
 
+const isDone = computed(() => props.task.status === 'DONE');
 const isCancelled = computed(() => props.task.status === 'CANCELLED');
 </script>
 
@@ -59,6 +60,9 @@ const isCancelled = computed(() => props.task.status === 'CANCELLED');
   >
     <div class="agent-task-card__row">
       <div class="agent-task-card__title-wrap">
+        <span class="agent-task-card__checkbox" :class="{ 'is-done': isDone }" aria-hidden="true">
+          <span v-if="isDone" class="agent-task-card__checkmark">✓</span>
+        </span>
         <h5 :class="{ 'is-cancelled': isCancelled }">{{ task.title || t('common.unknown') }}</h5>
       </div>
       <div class="agent-task-card__badges">
@@ -126,6 +130,32 @@ const isCancelled = computed(() => props.task.status === 'CANCELLED');
   flex: 1;
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.agent-task-card__checkbox {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--panel-border-strong) 72%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--surface-panel) 88%, var(--surface-soft) 12%);
+  color: transparent;
+}
+
+.agent-task-card__checkbox.is-done {
+  border-color: color-mix(in srgb, var(--good) 34%, var(--panel-border) 66%);
+  background: color-mix(in srgb, var(--good) 14%, var(--surface-pill) 86%);
+  color: var(--good);
+}
+
+.agent-task-card__checkmark {
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 800;
 }
 
 .agent-task-card__row h5 {
