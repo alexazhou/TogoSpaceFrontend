@@ -180,6 +180,17 @@ function getActivityToolCommand(activity: AgentActivity): string {
   return typeof command === 'string' ? command : '';
 }
 
+function getExecuteBashDescription(activity: AgentActivity): string {
+  if (activity.activity_type !== 'tool_call' || toolName.value !== 'execute_bash') {
+    return '';
+  }
+  const toolArguments = activity.metadata?.tool_arguments;
+  if (!toolArguments || typeof toolArguments !== 'object') {
+    return '';
+  }
+  return readTrimmedString((toolArguments as { description?: unknown }).description);
+}
+
 function getActivityToolArguments(activity: AgentActivity): string {
   const toolArguments = activity.metadata?.tool_arguments;
   if (toolArguments == null) {
@@ -447,6 +458,9 @@ function activitySummary(
     if (summaryToolName === 'finish_action') {
       return '';
     }
+    if (summaryToolName === 'execute_bash') {
+      return getExecuteBashDescription(activity);
+    }
     if (showToolName && toolArguments) {
       return '';
     }
@@ -496,6 +510,8 @@ const activityView = computed(() => {
   const currentStartChatTarget = currentToolName === 'start_chat' ? getStartChatTarget() : '';
   const currentTaskRoomLabel = getTaskRoomLabel(activity);
   const executeBashResult = activity.activity_type === 'tool_call' && currentToolName === 'execute_bash';
+  const currentExecuteBashDescription = executeBashResult ? getExecuteBashDescription(activity) : '';
+  const hasExecuteBashDetails = executeBashResult && (Boolean(currentExecuteBashDescription) || Boolean(currentToolCommand));
   const currentStdout = executeBashResult ? getExecuteBashStdout(activity) : '';
   const currentStderr = executeBashResult ? getExecuteBashStderr(activity) : '';
   const currentExitCode = executeBashResult ? getExecuteBashExitCode(activity) : '';
@@ -519,6 +535,7 @@ const activityView = computed(() => {
     : '';
   const receivedMessages = getReceivedMessages(activity);
   const expandedContent = activity.activity_type === 'chat_reply' || expandedMessage || expandedToolResult
+    || hasExecuteBashDetails
     || (activity.activity_type === 'message_received' && receivedMessages.length > 0);
   const currentTaskTitle = getActivityTaskTitle(activity);
   const currentSummary = activitySummary(
@@ -542,6 +559,8 @@ const activityView = computed(() => {
     chatReplyContent,
     chatReplyIsLong,
     durationText: formatDuration(activity.duration_ms),
+    executeBashDescription: currentExecuteBashDescription,
+    executeBashCommand: executeBashResult && currentToolCommand ? `$ ${currentToolCommand}` : '',
     executeBashResult,
     expandedContent,
     expandedMessage,
@@ -564,14 +583,14 @@ const activityView = computed(() => {
     startChatTarget: currentStartChatTarget,
     showErrorMessage: Boolean(currentErrorMessage) && currentErrorMessage !== currentToolResult && !expandedMessage,
     showSummary: Boolean(currentSummary),
-    showToolArguments: showToolName && Boolean(currentToolArguments),
+    showToolArguments: showToolName && Boolean(currentToolArguments) && !executeBashResult,
     showToolName,
     startedAtText: formatActivityTime(activity.started_at),
     stateSymbol: activityStatusSymbol(activity.status),
     stderr: currentStderr,
     stdout: currentStdout,
     summary: currentSummary,
-    summaryIsCode: Boolean(currentToolCommand),
+    summaryIsCode: (executeBashResult && Boolean(currentExecuteBashDescription)) || (Boolean(currentToolCommand) && !executeBashResult),
     summaryTitle: expandedContent ? '' : currentSummary,
     title: currentTitle,
     tokenText: activityMetaTokens(activity),
@@ -654,7 +673,10 @@ const activityView = computed(() => {
       <span
         v-if="activityView.showSummary"
         class="agent-activity-item__summary"
-        :class="{ 'agent-activity-item__summary--code': activityView.summaryIsCode }"
+        :class="{
+          'agent-activity-item__summary--code': activityView.summaryIsCode,
+          'agent-activity-item__summary--bash-description': activityView.executeBashResult && Boolean(activityView.executeBashDescription),
+        }"
         :title="activityView.summaryTitle"
       >{{ activityView.summary }}</span>
       <span
@@ -694,6 +716,10 @@ const activityView = computed(() => {
     <p v-if="activityView.sendChatMsgError" class="agent-activity-item__error">调用失败：{{ activityView.sendChatMsgError }}</p>
     <p v-if="activityView.showRetryErrorMessage" class="agent-activity-item__error">{{ activityView.retryErrorText }}</p>
     <template v-if="activityView.executeBashResult">
+      <p
+        v-if="activityView.executeBashCommand"
+        class="agent-activity-item__tool-result agent-activity-item__tool-result--code"
+      >{{ activityView.executeBashCommand }}</p>
       <p
         v-if="activityView.stdout"
         class="agent-activity-item__tool-result agent-activity-item__tool-result--stdout"
@@ -1075,6 +1101,18 @@ const activityView = computed(() => {
   color: color-mix(in srgb, var(--danger, #f85149) 76%, var(--text) 24%);
 }
 
+.agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__summary--code {
+  color: var(--muted);
+}
+
+.agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__summary--bash-description {
+  color: color-mix(in srgb, var(--danger, #f85149) 68%, var(--text) 32%);
+}
+
+.agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__tool-result--code {
+  color: var(--muted);
+}
+
 .agent-activity-item[data-status='failed'] .agent-activity-item__received-sender {
   color: color-mix(in srgb, var(--danger, #f85149) 88%, var(--text-strong) 12%);
 }
@@ -1146,6 +1184,19 @@ const activityView = computed(() => {
   -webkit-line-clamp: 5;
   overflow: hidden;
   white-space: pre-wrap;
+}
+
+.agent-activity-item__tool-result--description {
+  display: block;
+  -webkit-line-clamp: unset;
+}
+
+.agent-activity-item__tool-result--code {
+  display: block;
+  -webkit-line-clamp: unset;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
 }
 
 .agent-activity-item__tool-result--stdout {
