@@ -869,11 +869,16 @@ export async function stopAgent(agentId: number): Promise<{ status: string; agen
 
 export type RawMessageInfo = {
   id: number;
+  room_id?: number;
   sender_id: number;
   content: string;
   send_time: string;
   seq: number | null;
   insert_immediately: boolean;
+};
+
+export type RawRoomLastMessageInfo = RawMessageInfo & {
+  room_id: number;
 };
 
 export type GetRoomMessagesOptions = {
@@ -905,6 +910,16 @@ export async function getRoomMessages(
     messages: data.messages ?? [],
     hasMore: Boolean(data.pagination?.has_more),
   };
+}
+
+export async function getRoomLastMessages(roomIds: number[]): Promise<RawRoomLastMessageInfo[]> {
+  const data = await requestJson<{
+    messages: RawRoomLastMessageInfo[];
+  }>('/rooms/last_messages.json', {
+    method: 'POST',
+    body: JSON.stringify({ room_ids: roomIds }),
+  });
+  return data.messages ?? [];
 }
 
 export async function postRoomMessage(roomId: number, content: string, insertImmediately = false): Promise<void> {

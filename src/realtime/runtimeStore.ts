@@ -6,6 +6,7 @@ import {
   getAgentActivities as fetchAgentActivities,
   getAgentsByTeamId as fetchAgentsByTeamId,
   getDeptTree as fetchDeptTree,
+  getRoomLastMessages as fetchRoomLastMessages,
   getRoleTemplates as fetchRoleTemplates,
   getRoomMessages as fetchRoomMessages,
   getRooms as fetchRooms,
@@ -264,11 +265,27 @@ export function seedTeamRooms(teamId: number, rooms: RoomState[]): void {
 
 export async function loadTeamRooms(teamId: number): Promise<RoomState[]> {
   const baseRooms = await fetchRooms(teamId);
+  const roomIds = baseRooms.map((room) => room.room_id).filter((roomId) => roomId > 0);
+  const previewMap = new Map<number, string>();
+
+  if (roomIds.length > 0) {
+    try {
+      const lastMessageItems = await fetchRoomLastMessages(roomIds);
+      for (const item of lastMessageItems) {
+        const senderDisplayName = resolveMessageSenderDisplayName(teamId, item.sender_id);
+        previewMap.set(item.room_id, formatPreview(senderDisplayName, item.content));
+      }
+    } catch {
+      // 房间列表本身可用时，不让 preview 补充失败阻塞整个加载流程。
+    }
+  }
+
   const rooms: RoomState[] = baseRooms.map((room) => ({
     ...room,
     preview: resolveRoomPreview({
       messages: getRoomEntry(room.room_id).messages,
       previousRoom: (teamRoomsState.value[teamId] ?? []).find((item) => item.room_id === room.room_id) ?? null,
+      preview: previewMap.get(room.room_id),
       resolveSenderDisplayName: (senderId) => resolveMessageSenderDisplayName(teamId, senderId),
     }),
     unread: 0,
