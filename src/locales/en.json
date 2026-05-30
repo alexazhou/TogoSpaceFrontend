@@ -164,7 +164,7 @@
       "PENDING": "Pending deps",
       "IN_PROGRESS": "In Progress",
       "REVIEWING": "Reviewing",
-      "ON_HOLD": "On Hold",
+      "ON_HOLD": "Paused",
       "DONE": "Done",
       "CANCELLED": "Cancelled"
     },

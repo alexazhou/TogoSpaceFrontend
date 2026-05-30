@@ -164,7 +164,7 @@
       "PENDING": "等待依赖",
       "IN_PROGRESS": "进行中",
       "REVIEWING": "待验收",
-      "ON_HOLD": "挂起",
+      "ON_HOLD": "暂停",
       "DONE": "已完成",
       "CANCELLED": "已取消"
     },

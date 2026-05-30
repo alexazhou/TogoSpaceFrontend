@@ -47,6 +47,7 @@ function handleSelect(): void {
 
 const isDone = computed(() => props.task.status === 'DONE');
 const isCancelled = computed(() => props.task.status === 'CANCELLED');
+const isPaused = computed(() => props.task.status === 'ON_HOLD');
 </script>
 
 <template>
@@ -71,10 +72,15 @@ const isCancelled = computed(() => props.task.status === 'CANCELLED');
         </span>
       </div>
     </div>
-    <div class="agent-task-card__meta">
-      <span>#{{ task.id }}</span>
-      <span>{{ t('agent.taskAssignee', { id: assigneeLabel }) }}</span>
-      <span v-if="managerLabel" class="agent-task-card__manager">{{ t('agent.taskManager', { id: managerLabel }) }}</span>
+    <div class="agent-task-card__footer">
+      <div class="agent-task-card__meta">
+        <span>#{{ task.id }}</span>
+        <span>{{ t('agent.taskAssignee', { id: assigneeLabel }) }}</span>
+        <span v-if="managerLabel" class="agent-task-card__manager">{{ t('agent.taskManager', { id: managerLabel }) }}</span>
+      </div>
+      <span v-if="isPaused" class="agent-task-card__badge is-paused">
+        {{ t('agent.taskStatus.ON_HOLD') }}
+      </span>
     </div>
   </article>
 </template>
@@ -197,9 +203,17 @@ const isCancelled = computed(() => props.task.status === 'CANCELLED');
   text-overflow: ellipsis;
 }
 
+.agent-task-card__footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .agent-task-card__meta {
   display: flex;
   flex-wrap: wrap;
+  flex: 1;
   gap: 6px;
   color: var(--muted);
   font-size: 0.7rem;
@@ -247,6 +261,12 @@ const isCancelled = computed(() => props.task.status === 'CANCELLED');
   border-color: color-mix(in srgb, var(--good) 24%, var(--panel-border) 76%);
   background: color-mix(in srgb, var(--good) 10%, var(--surface-pill) 90%);
   color: var(--good);
+}
+
+.agent-task-card__badge.is-paused {
+  border-color: color-mix(in srgb, var(--warn) 24%, var(--panel-border) 76%);
+  background: color-mix(in srgb, var(--warn) 10%, var(--surface-pill) 90%);
+  color: var(--warn);
 }
 
 @media (max-width: 960px) {
