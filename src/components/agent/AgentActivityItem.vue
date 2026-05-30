@@ -76,6 +76,13 @@ function shouldShowToolName(activity: AgentActivity): boolean {
     && toolName.value.length > 0;
 }
 
+function displayToolName(toolNameValue: string): string {
+  if (toolNameValue === 'execute_bash') {
+    return '执行命令';
+  }
+  return toolNameValue;
+}
+
 function activityTitle(activity: AgentActivity): string {
   if (activity.activity_type === 'agent_state') {
     const detail = activity.detail.trim().toUpperCase();
@@ -505,6 +512,7 @@ const activityView = computed(() => {
   const currentToolArguments = getActivityToolArguments(activity);
   const currentModel = getActivityModel(activity);
   const currentMetadataToolName = getActivityToolName(activity);
+  const currentDisplayToolName = displayToolName(currentToolName);
   const showToolName = shouldShowToolName(activity);
   const currentSendMessagePrefix = currentToolName === 'send_chat_msg' ? getSendMessagePrefix() : '';
   const currentStartChatTarget = currentToolName === 'start_chat' ? getStartChatTarget() : '';
@@ -560,6 +568,7 @@ const activityView = computed(() => {
     chatReplyIsLong,
     durationText: formatDuration(activity.duration_ms),
     executeBashDescription: currentExecuteBashDescription,
+    displayToolName: currentDisplayToolName,
     executeBashCommand: executeBashResult && currentToolCommand ? `$ ${currentToolCommand}` : '',
     executeBashResult,
     expandedContent,
@@ -633,8 +642,8 @@ const activityView = computed(() => {
       <span
         v-if="activityView.showToolName"
         class="agent-activity-item__chip agent-activity-item__chip--mono agent-activity-item__tool-name"
-        :title="activityView.toolName"
-      >{{ activityView.toolName }}</span>
+        :title="activityView.displayToolName"
+      >{{ activityView.displayToolName }}</span>
       <span
         v-if="activityView.showToolArguments"
         class="agent-activity-item__summary agent-activity-item__summary--code agent-activity-item__tool-args"
@@ -778,19 +787,13 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item[data-status='started'] {
-  background: color-mix(in srgb, var(--accent) 6%, var(--panel-bg) 94%);
-  border-color: color-mix(in srgb, var(--accent) 20%, var(--panel-border) 80%);
+  background: var(--surface-panel-muted);
+  border-color: var(--border-subtle);
 }
 
 .agent-activity-item[data-status='failed'] {
-  border-color: color-mix(in srgb, var(--danger, #f85149) 52%, var(--panel-border) 48%);
-  background:
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--danger, #f85149) 14%, var(--panel-bg) 86%) 0%,
-      color-mix(in srgb, var(--danger, #f85149) 10%, var(--panel-bg) 90%) 100%);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--danger, #f85149) 10%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--danger, #f85149) 6%, transparent);
+  border-color: var(--border-danger-item);
+  background: var(--surface-danger-item);
 }
 
 .agent-activity-item__row {
@@ -921,7 +924,7 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item__row span {
-  color: var(--muted);
+  color: var(--text-strong);
   font-size: 0.7rem;
   line-height: 1.2;
 }
@@ -935,8 +938,8 @@ const activityView = computed(() => {
   height: 18px;
   padding: 0 6px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-soft) 74%, transparent);
-  color: var(--muted);
+  background: var(--surface-chip);
+  color: var(--text-strong);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -1010,7 +1013,7 @@ const activityView = computed(() => {
 .agent-activity-item__summary {
   min-width: 0;
   flex: 1 1 auto;
-  color: var(--text);
+  color: var(--text-description);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1080,41 +1083,49 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__title {
-  color: color-mix(in srgb, var(--danger, #f85149) 56%, var(--text-strong) 44%);
+  color: var(--text-danger-strong);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__row span {
-  color: color-mix(in srgb, var(--danger, #f85149) 52%, var(--text) 48%);
+  color: var(--text-danger-muted);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__summary {
-  color: color-mix(in srgb, var(--danger, #f85149) 68%, var(--text) 32%);
+  color: var(--text-danger-muted);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__chip {
-  background: color-mix(in srgb, var(--danger, #f85149) 16%, transparent);
-  color: color-mix(in srgb, var(--danger, #f85149) 72%, var(--text) 28%);
+  background: var(--surface-chip-danger);
+  color: var(--text-danger-strong);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__tool-result,
 .agent-activity-item[data-status='failed'] .agent-activity-item__received-message {
-  color: color-mix(in srgb, var(--danger, #f85149) 76%, var(--text) 24%);
+  color: var(--text-danger-strong);
+}
+
+.agent-activity-item[data-status='failed'] .agent-activity-item__tool-result--code {
+  color: var(--text-danger-muted);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__summary--code {
-  color: var(--muted);
+  color: var(--text-danger-muted);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__summary--bash-description {
-  color: color-mix(in srgb, var(--danger, #f85149) 68%, var(--text) 32%);
+  color: var(--text-danger-strong);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__tool-result--code {
-  color: var(--muted);
+  color: var(--text-danger-muted);
+}
+
+.agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__tool-result--stdout {
+  color: var(--text-danger-strong);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__received-sender {
-  color: color-mix(in srgb, var(--danger, #f85149) 88%, var(--text-strong) 12%);
+  color: var(--text-danger-strong);
 }
 
 .agent-activity-item--expanded .agent-activity-item__row {
@@ -1135,7 +1146,7 @@ const activityView = computed(() => {
   text-overflow: clip;
   font-size: 0.8rem;
   line-height: 1.55;
-  color: var(--text);
+  color: var(--text-description);
 }
 
 .agent-activity-item--expanded .agent-activity-item__tail {
@@ -1168,9 +1179,8 @@ const activityView = computed(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 0.68rem;
   line-height: 1.2;
-  color: var(--muted);
+  color: var(--text-description);
 }
 
 .agent-activity-item__tool-result {

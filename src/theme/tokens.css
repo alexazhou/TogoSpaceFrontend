@@ -121,6 +121,13 @@
   --room-card-border-active: color-mix(in srgb, var(--interactive-focus-border) 76%, var(--border-default) 24%);
   --unread-bg: rgba(239, 107, 103, 0.14);
   --unread-text: #ef8a84;
+  --surface-chip: var(--border-strong);
+  --surface-chip-danger: #3d2433;
+  --surface-danger-item: #1c111b;
+  --border-danger-item: #3d2433;
+  --text-danger-muted: #a38995;
+  --text-danger-strong: #f0a3c2;
+  --text-description: #abbecd;
   color-scheme: dark;
 }
 
@@ -236,6 +243,13 @@
   --room-card-border-active: rgba(109, 156, 211, 0.22);
   --unread-bg: rgba(217, 77, 70, 0.12);
   --unread-text: #d94d46;
+  --surface-chip: var(--border-default);
+  --surface-chip-danger: #f8d7da;
+  --surface-danger-item: #fdf2f2;
+  --border-danger-item: #f5c2c7;
+  --text-danger-muted: #842029;
+  --text-danger-strong: #b02a37;
+  --text-description: #4a5a6a;
   color-scheme: light;
 }
 
