@@ -77,10 +77,10 @@ function shouldShowToolName(activity: AgentActivity): boolean {
 }
 
 function displayToolName(toolNameValue: string): string {
-  if (toolNameValue === 'execute_bash') {
-    return '执行命令';
-  }
-  return toolNameValue;
+  const i18nKey = `agent.toolNames.${toolNameValue}`;
+  const translated = t(i18nKey);
+  // 如果翻译后的内容包含 key 路径，说明没有定义翻译，回退到原始名称
+  return translated !== i18nKey ? translated : toolNameValue;
 }
 
 function activityTitle(activity: AgentActivity): string {
@@ -215,7 +215,7 @@ function getActivityToolArguments(activity: AgentActivity): string {
     }
   }
 
-  if (toolName.value === 'write_file' || toolName.value === 'read_file') {
+  if (toolName.value === 'write_file' || toolName.value === 'read_file' || toolName.value === 'edit') {
     const filePath = readTrimmedString((toolArguments as { file_path?: unknown }).file_path);
     if (filePath) {
       return filePath;
@@ -553,17 +553,12 @@ const activityView = computed(() => {
     currentToolArguments,
     currentToolCommand,
   );
-  const inlineTitle = !(
-    Boolean(currentSummary)
-    || showToolName
-    || (activity.activity_type === 'llm_infer' && Boolean(currentModel))
-    || (activity.activity_type !== 'tool_call' && Boolean(currentMetadataToolName))
-  ) || activity.activity_type === 'message_received';
-
-  const chatReplyContent = activity.activity_type === 'chat_reply' ? activity.detail.trim() : '';
-  const chatReplyIsLong = chatReplyContent.split('\n').length > 5 || chatReplyContent.length > 350;
+  const labelText = showToolName ? currentDisplayToolName : currentTitle;
+  const showLabelChip = activity.activity_type !== 'message_received';
 
   return {
+    labelText,
+    showLabelChip,
     chatReplyContent,
     chatReplyIsLong,
     durationText: formatDuration(activity.duration_ms),
@@ -577,7 +572,6 @@ const activityView = computed(() => {
     taskRoomLabel: currentTaskRoomLabel,
     receivedMessages,
     exitCode: currentExitCode,
-    inlineTitle,
     metadataToolName: currentMetadataToolName,
     model: currentModel,
     taskTitle: currentTaskTitle,
@@ -638,12 +632,15 @@ const activityView = computed(() => {
           </span>
         </span>
       </span>
-      <strong v-if="activityView.inlineTitle" class="agent-activity-item__title">{{ activityView.title }}</strong>
       <span
-        v-if="activityView.showToolName"
-        class="agent-activity-item__chip agent-activity-item__chip--mono agent-activity-item__tool-name"
-        :title="activityView.displayToolName"
-      >{{ activityView.displayToolName }}</span>
+        v-if="activityView.showLabelChip"
+        class="agent-activity-item__chip"
+        :class="{
+          'agent-activity-item__chip--mono': activityView.showToolName,
+          'agent-activity-item__chip--danger': activity.status === 'failed'
+        }"
+        :title="activityView.labelText"
+      >{{ activityView.labelText }}</span>
       <span
         v-if="activityView.showToolArguments"
         class="agent-activity-item__summary agent-activity-item__summary--code agent-activity-item__tool-args"

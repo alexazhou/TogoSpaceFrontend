@@ -132,6 +132,17 @@
     "taskReceived": "Task Reminder",
     "unknown": "Unknown Type"
   },
+  "toolNames": {
+    "execute_bash": "Run Command",
+    "edit": "Edit File",
+    "read_file": "Read File",
+    "write_file": "Write File",
+    "send_chat_msg": "Message",
+    "create_task": "Create Task",
+    "update_task": "Update Task",
+    "finish_action": "Finish Action",
+    "start_chat": "Start Chat"
+  },
   "tokenEstimate": "Est. {count}",
   "retryScheduled": "Retry in {seconds}s ({attempt}/{max})",
   "retryingProgress": "Retrying ({attempt}/{max})",
