@@ -460,6 +460,10 @@ function activitySummary(
     return '';
   }
 
+  if (activity.activity_type === 'llm_infer' && activity.status === 'failed') {
+    return '';
+  }
+
   if (toolCommand) {
     return toolCommand;
   }
@@ -556,7 +560,7 @@ const activityView = computed(() => {
     retryHistoryText: currentRetryHistoryText,
     retryErrorText: currentRetryErrorText,
     retryText: currentRetryText,
-    showRetryErrorMessage: Boolean(currentRetryErrorText) && currentLastRetryError !== currentErrorMessage,
+    showRetryErrorMessage: activity.status !== 'failed' && Boolean(currentRetryErrorText) && currentLastRetryError !== currentErrorMessage,
     startChatTarget: currentStartChatTarget,
     showErrorMessage: Boolean(currentErrorMessage) && currentErrorMessage !== currentToolResult && !expandedMessage,
     showSummary: Boolean(currentSummary),
