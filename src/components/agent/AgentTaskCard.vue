@@ -91,10 +91,10 @@ const isCancelled = computed(() => props.task.status === 'CANCELLED');
   border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
   border-radius: 14px;
   background: var(--surface-panel-muted);
-  padding: 8px 12px 6px;
+  padding: 10px 14px 8px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 5px;
   transition:
     border-color 160ms ease,
     background 160ms ease,
@@ -113,8 +113,8 @@ const isCancelled = computed(() => props.task.status === 'CANCELLED');
 }
 
 .agent-task-card--tree {
-  width: 280px;
-  min-height: 49px;
+  width: 320px;
+  min-height: 64px;
   justify-content: center;
 }
 
@@ -299,8 +299,8 @@ const isCancelled = computed(() => props.task.status === 'CANCELLED');
 
 @media (max-width: 960px) {
   .agent-task-card--tree {
-    width: 250px;
-    min-height: 47px;
+    width: 280px;
+    min-height: 56px;
   }
 }
 </style>
