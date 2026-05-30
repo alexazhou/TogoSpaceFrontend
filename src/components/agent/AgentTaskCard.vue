@@ -263,10 +263,22 @@ const isPaused = computed(() => props.task.status === 'ON_HOLD');
   color: var(--good);
 }
 
+.agent-task-card__status-badges {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
 .agent-task-card__badge.is-paused {
   border-color: color-mix(in srgb, var(--warn) 24%, var(--panel-border) 76%);
   background: color-mix(in srgb, var(--warn) 10%, var(--surface-pill) 90%);
   color: var(--warn);
+}
+
+.agent-task-card__badge.is-reviewing {
+  border-color: color-mix(in srgb, var(--interactive-selected) 30%, var(--panel-border) 70%);
+  background: color-mix(in srgb, var(--interactive-selected) 14%, var(--surface-pill) 86%);
+  color: var(--accent);
 }
 
 @media (max-width: 960px) {
