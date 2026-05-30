@@ -358,6 +358,76 @@ function getActivityModel(activity: AgentActivity): string {
   return typeof model === 'string' ? model : '';
 }
 
+function getActivityRetryState(activity: AgentActivity): string {
+  const retryState = activity.metadata?.request_state;
+  return typeof retryState === 'string' ? retryState.trim().toUpperCase() : '';
+}
+
+function getActivityRetryAttempt(activity: AgentActivity): number | null {
+  const retryAttempt = activity.metadata?.retry_attempt;
+  return typeof retryAttempt === 'number' ? retryAttempt : null;
+}
+
+function getActivityRetryMaxAttempts(activity: AgentActivity): number | null {
+  const retryMaxAttempts = activity.metadata?.retry_max_attempts;
+  return typeof retryMaxAttempts === 'number' ? retryMaxAttempts : null;
+}
+
+function getActivityRetryDelaySeconds(activity: AgentActivity): number | null {
+  const retryDelaySeconds = activity.metadata?.retry_delay_seconds;
+  return typeof retryDelaySeconds === 'number' && retryDelaySeconds > 0 ? retryDelaySeconds : null;
+}
+
+function getActivityLastRetryError(activity: AgentActivity): string {
+  if (activity.activity_type !== 'llm_infer') {
+    return '';
+  }
+  return readTrimmedString(activity.metadata?.last_retry_error);
+}
+
+function getActivityRetryText(activity: AgentActivity): string {
+  if (activity.activity_type !== 'llm_infer') {
+    return '';
+  }
+  const retryState = getActivityRetryState(activity);
+  const attempt = getActivityRetryAttempt(activity);
+  const maxAttempts = getActivityRetryMaxAttempts(activity);
+  const delaySeconds = getActivityRetryDelaySeconds(activity);
+
+  if (retryState === 'RETRY_SCHEDULED' && attempt !== null && maxAttempts !== null && delaySeconds !== null) {
+    return t('agent.retryScheduled', { seconds: delaySeconds, attempt, max: maxAttempts });
+  }
+  if (retryState === 'RETRYING' && attempt !== null && maxAttempts !== null) {
+    return t('agent.retryingProgress', { attempt, max: maxAttempts });
+  }
+  return '';
+}
+
+function getActivityRetryHistoryText(activity: AgentActivity): string {
+  if (activity.activity_type !== 'llm_infer') {
+    return '';
+  }
+  const retryState = getActivityRetryState(activity);
+  if (retryState) {
+    return '';
+  }
+  const attempt = getActivityRetryAttempt(activity);
+  if (attempt === null) {
+    return '';
+  }
+  const retryCount = attempt - 1;
+  if (retryCount <= 0) {
+    return '';
+  }
+  if (activity.status === 'succeeded') {
+    return t('agent.retrySucceededAfter', { count: retryCount });
+  }
+  if (activity.status === 'failed') {
+    return t('agent.retryFailedAfter', { count: retryCount });
+  }
+  return t('agent.retryUsed', { count: retryCount });
+}
+
 function getActivityToolName(activity: AgentActivity): string {
   const metadataToolName = activity.metadata?.tool_name;
   return typeof metadataToolName === 'string' ? metadataToolName : '';
@@ -427,6 +497,12 @@ const activityView = computed(() => {
   const currentExitCode = executeBashResult ? getExecuteBashExitCode(activity) : '';
   const currentToolResult = getActivityToolResult(activity);
   const currentErrorMessage = readTrimmedString(activity.error_message);
+  const currentRetryText = getActivityRetryText(activity);
+  const currentRetryHistoryText = getActivityRetryHistoryText(activity);
+  const currentLastRetryError = getActivityLastRetryError(activity);
+  const currentRetryErrorText = currentLastRetryError
+    ? t('agent.retryError', { message: currentLastRetryError })
+    : '';
   const expandedToolResult = activity.activity_type === 'tool_call'
     && currentToolName !== 'send_chat_msg'
     && (!isFinishTurnActivity || activity.status === 'failed')
@@ -477,6 +553,10 @@ const activityView = computed(() => {
     sendChatMsgError,
     sendChatMsgTruncated,
     sendMessagePrefix: currentSendMessagePrefix,
+    retryHistoryText: currentRetryHistoryText,
+    retryErrorText: currentRetryErrorText,
+    retryText: currentRetryText,
+    showRetryErrorMessage: Boolean(currentRetryErrorText) && currentLastRetryError !== currentErrorMessage,
     startChatTarget: currentStartChatTarget,
     showErrorMessage: Boolean(currentErrorMessage) && currentErrorMessage !== currentToolResult && !expandedMessage,
     showSummary: Boolean(currentSummary),
@@ -543,6 +623,11 @@ const activityView = computed(() => {
         :title="activityView.model"
       >{{ activityView.model }}</span>
       <span
+        v-if="activityView.retryHistoryText"
+        class="agent-activity-item__chip agent-activity-item__chip--danger"
+        :title="activityView.retryHistoryText"
+      >{{ activityView.retryHistoryText }}</span>
+      <span
         v-if="activityView.sendMessagePrefix"
         class="agent-activity-item__chip"
         :title="activityView.sendMessagePrefix"
@@ -557,6 +642,11 @@ const activityView = computed(() => {
         class="agent-activity-item__chip"
         :title="activityView.taskTitle"
       >{{ activityView.taskTitle }}</span>
+      <span
+        v-if="activityView.retryText"
+        class="agent-activity-item__summary agent-activity-item__summary--danger"
+        :title="activityView.retryText"
+      >{{ activityView.retryText }}</span>
       <span
         v-if="activityView.showSummary"
         class="agent-activity-item__summary"
@@ -598,6 +688,7 @@ const activityView = computed(() => {
       >{{ chatReplyCollapsed ? t('common.expand') : t('common.collapse') }}</button>
     </template>
     <p v-if="activityView.sendChatMsgError" class="agent-activity-item__error">调用失败：{{ activityView.sendChatMsgError }}</p>
+    <p v-if="activityView.showRetryErrorMessage" class="agent-activity-item__error">{{ activityView.retryErrorText }}</p>
     <template v-if="activityView.executeBashResult">
       <p
         v-if="activityView.stdout"
@@ -827,6 +918,11 @@ const activityView = computed(() => {
   font-size: 0.68rem;
 }
 
+.agent-activity-item__chip--danger {
+  background: color-mix(in srgb, var(--danger, #f85149) 16%, transparent);
+  color: color-mix(in srgb, var(--danger, #f85149) 78%, var(--text) 22%);
+}
+
 .agent-activity-item__status {
   flex: none;
   display: inline-flex;
@@ -929,6 +1025,10 @@ const activityView = computed(() => {
   font-size: 0.69rem;
   font-weight: 600;
   color: var(--muted);
+}
+
+.agent-activity-item__summary--danger {
+  color: color-mix(in srgb, var(--danger, #f85149) 76%, var(--text) 24%);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__send-chat-content {
