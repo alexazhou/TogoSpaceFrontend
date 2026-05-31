@@ -834,11 +834,41 @@ export async function getAgentDetail(agentId: number): Promise<AgentDetail> {
   return normalizeAgentDetail(data);
 }
 
-export async function getAgentActivities(agentId: number): Promise<AgentActivity[]> {
-  const data = await requestJson<{ activities: RawAgentActivity[] }>(
-    `/agents/${agentId}/activities.json?exclude=AGENT_STATE`,
+export type GetAgentActivitiesOptions = {
+  limit?: number;
+  beforeId?: number | null;
+};
+
+export type AgentActivitiesPage = {
+  activities: AgentActivity[];
+  hasMore: boolean;
+};
+
+export async function getAgentActivitiesPage(
+  agentId: number,
+  options?: GetAgentActivitiesOptions,
+): Promise<AgentActivitiesPage> {
+  const data = await requestJson<{
+    activities: RawAgentActivity[];
+    pagination?: {
+      has_more?: boolean;
+    };
+  }>(
+    withSearch(`/agents/${agentId}/activities.json`, {
+      exclude: 'AGENT_STATE',
+      limit: options?.limit,
+      before_id: options?.beforeId,
+    }),
   );
-  return (data.activities ?? []).map(normalizeAgentActivity);
+  return {
+    activities: (data.activities ?? []).map(normalizeAgentActivity),
+    hasMore: Boolean(data.pagination?.has_more),
+  };
+}
+
+export async function getAgentActivities(agentId: number): Promise<AgentActivity[]> {
+  const page = await getAgentActivitiesPage(agentId);
+  return page.activities;
 }
 
 export async function getAgentTasks(agentId: number, includeClosed = false): Promise<AgentTask[]> {

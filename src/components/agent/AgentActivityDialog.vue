@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { getAgentDetail, getAgentTasks, getAgentsByTeamId, resumeAgent, stopAgent, superviseAgent } from '../../api';
+import { getAgentActivitiesPage, getAgentDetail, getAgentTasks, getAgentsByTeamId, resumeAgent, stopAgent, superviseAgent } from '../../api';
 import { connectionState, showGlobalSuccessToast } from '../../appUiState';
 import { displayName, formatConnectionState, formatTime } from '../../utils';
-import { loadAgentActivities } from '../../realtime/runtimeStore';
 import { useAgentActivities, useAgentStatus } from '../../realtime/selectors';
 import AgentCardBase from './AgentCardBase.vue';
 import AgentActivityItem from './AgentActivityItem.vue';
 import AgentTaskCard from './AgentTaskCard.vue';
 import AgentTaskDetailModal from './AgentTaskDetailModal.vue';
 import type {
+  AgentActivity,
   AgentDetail,
   AgentInfo,
   AgentTask,
@@ -50,12 +50,18 @@ const activitiesErrorMessage = ref('');
 const tasksErrorMessage = ref('');
 const tasksLoading = ref(false);
 const tasks = ref<AgentTask[]>([]);
+const loadedActivities = ref<AgentActivity[]>([]);
+const activitiesHasMore = ref(false);
+const activitiesLoadingOlder = ref(false);
 const teamAgents = ref<AgentInfo[]>([]);
 const activeTab = ref<'activities' | 'tasks'>('activities');
 const taskFilter = ref<'all' | 'done' | 'undone'>('undone');
 const selectedTask = ref<AgentTask | null>(null);
 const shouldFollowActivities = ref(true);
 const hasAutoScrolledForCurrentAgent = ref(false);
+const lastActivityScrollTop = ref(0);
+const ACTIVITY_PAGE_SIZE = 50;
+let activityRequestToken = 0;
 
 const runtimeStatus = useAgentStatus(() => props.agentId);
 const activities = useAgentActivities(() => props.agentId);
@@ -133,10 +139,23 @@ const activityBadgeLabel = computed(() =>
   activityRealtimeState.value === 'connected' ? t('agent.realtimeConnected') : formatConnectionState(activityRealtimeState.value),
 );
 
+function sortActivitiesAscending(items: AgentActivity[]): AgentActivity[] {
+  return [...items].sort((left, right) => left.id - right.id);
+}
+
+function mergeActivityCollections(...groups: AgentActivity[][]): AgentActivity[] {
+  const merged = new Map<number, AgentActivity>();
+  for (const group of groups) {
+    for (const activity of group) {
+      merged.set(activity.id, activity);
+    }
+  }
+  return sortActivitiesAscending([...merged.values()]);
+}
+
 const visibleActivities = computed(() =>
-  activities.value
-    .filter((a) => a.activity_type !== 'agent_state')
-    .slice(-30),
+  mergeActivityCollections(loadedActivities.value, activities.value)
+    .filter((a) => a.activity_type !== 'agent_state'),
 );
 const DONE_STATUSES = new Set(['DONE', 'CANCELLED']);
 
@@ -212,6 +231,7 @@ async function scrollActivitiesToBottom(): Promise<void> {
     return;
   }
   activityListRef.value.scrollTop = activityListRef.value.scrollHeight;
+  lastActivityScrollTop.value = activityListRef.value.scrollTop;
 }
 
 let _activityListResizeObserver: ResizeObserver | null = null;
@@ -247,24 +267,113 @@ function syncActivityFollowState(): void {
   shouldFollowActivities.value = isActivityListNearBottom();
 }
 
+function handleActivityListScroll(): void {
+  const listEl = activityListRef.value;
+  if (!listEl) {
+    return;
+  }
+  const currentScrollTop = listEl.scrollTop;
+  const scrollingUp = currentScrollTop < lastActivityScrollTop.value;
+  syncActivityFollowState();
+  if (scrollingUp && currentScrollTop <= 24) {
+    loadOlderActivities().catch(console.error);
+  }
+  lastActivityScrollTop.value = currentScrollTop;
+}
+
 async function loadActivities(): Promise<void> {
   if (!props.open || props.agentId === null) {
+    loadedActivities.value = [];
+    activitiesHasMore.value = false;
     activitiesErrorMessage.value = '';
+    activitiesLoadingOlder.value = false;
     activitiesLoading.value = false;
     return;
   }
 
-  activitiesLoading.value = activities.value.length === 0;
+  const requestToken = ++activityRequestToken;
+  activitiesLoading.value = true;
   activitiesErrorMessage.value = '';
+  activitiesLoadingOlder.value = false;
+  loadedActivities.value = [];
+  activitiesHasMore.value = false;
+  lastActivityScrollTop.value = 0;
 
   try {
-    await loadAgentActivities(props.agentId);
+    const page = await getAgentActivitiesPage(props.agentId, { limit: ACTIVITY_PAGE_SIZE });
+    if (requestToken !== activityRequestToken) {
+      return;
+    }
+    loadedActivities.value = sortActivitiesAscending(page.activities);
+    activitiesHasMore.value = page.hasMore;
     await scrollActivitiesToBottom();
   } catch (error) {
+    if (requestToken !== activityRequestToken) {
+      return;
+    }
     activitiesErrorMessage.value = t('agent.loadFailed');
     console.error(error);
   } finally {
-    activitiesLoading.value = false;
+    if (requestToken === activityRequestToken) {
+      activitiesLoading.value = false;
+    }
+  }
+}
+
+async function loadOlderActivities(): Promise<void> {
+  if (
+    !props.open
+    || props.agentId === null
+    || activitiesLoading.value
+    || activitiesLoadingOlder.value
+    || !activitiesHasMore.value
+    || loadedActivities.value.length === 0
+  ) {
+    return;
+  }
+
+  const oldestLoadedId = loadedActivities.value[0]?.id;
+  const listEl = activityListRef.value;
+  if (!oldestLoadedId || !listEl) {
+    return;
+  }
+
+  const requestToken = activityRequestToken;
+  const previousScrollHeight = listEl.scrollHeight;
+  const previousScrollTop = listEl.scrollTop;
+  activitiesLoadingOlder.value = true;
+
+  try {
+    const page = await getAgentActivitiesPage(props.agentId, {
+      limit: ACTIVITY_PAGE_SIZE,
+      beforeId: oldestLoadedId,
+    });
+    if (requestToken !== activityRequestToken) {
+      return;
+    }
+
+    if (page.activities.length > 0) {
+      loadedActivities.value = mergeActivityCollections(page.activities, loadedActivities.value);
+      await nextTick();
+      if (activityListRef.value === listEl) {
+        listEl.scrollTop = listEl.scrollHeight - previousScrollHeight + previousScrollTop;
+        lastActivityScrollTop.value = listEl.scrollTop;
+      }
+    }
+
+    activitiesHasMore.value = page.hasMore;
+  } catch (error) {
+    if (requestToken !== activityRequestToken) {
+      return;
+    }
+    if (loadedActivities.value.length === 0 && activities.value.length === 0) {
+      activitiesErrorMessage.value = t('agent.loadFailed');
+    }
+    console.error(error);
+  } finally {
+    if (requestToken === activityRequestToken) {
+      activitiesLoadingOlder.value = false;
+    }
   }
 }
 
@@ -449,6 +558,7 @@ watch(
     shouldFollowActivities.value = true;
     hasAutoScrolledForCurrentAgent.value = true;
     await scrollActivitiesToBottom();
+    lastActivityScrollTop.value = activityListRef.value?.scrollTop ?? 0;
     attachActivityListResizeObserver(el);
   },
 );
@@ -558,9 +668,12 @@ watch(
                     v-else
                     ref="activityListRef"
                     class="agent-activity-list sidebar-scroll"
-                    @scroll="syncActivityFollowState"
+                    @scroll="handleActivityListScroll"
                   >
                     <div ref="activityContentRef" class="agent-activity-list__content">
+                      <div v-if="activitiesLoadingOlder" class="agent-activity-list__loading-more">
+                        {{ t('agent.loadingEarlierActivities') }}
+                      </div>
                       <AgentActivityItem
                         v-for="activity in visibleActivities"
                         :key="activity.id"
@@ -1033,6 +1146,13 @@ watch(
   flex-direction: column;
   gap: 4px;
   padding: 4px 10px 4px;
+}
+
+.agent-activity-list__loading-more {
+  padding: 4px 0 6px;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  text-align: center;
 }
 
 .agent-task-list {

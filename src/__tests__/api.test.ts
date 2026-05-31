@@ -5,7 +5,7 @@ import {
   showTokenDialog,
 } from '../appUiState';
 import { clearToken, setToken } from '../authStore';
-import { getAgentActivities, getSystemStatus, getTeamPresetExport, getTeamTasks, getTeams } from '../api';
+import { getAgentActivities, getAgentActivitiesPage, getSystemStatus, getTeamPresetExport, getTeamTasks, getTeams } from '../api';
 
 describe('api request handling', () => {
   beforeEach(() => {
@@ -139,6 +139,26 @@ describe('getAgentActivities', () => {
     expect(result).toHaveLength(2);
     expect(result[0]?.activity_type).toBe('llm_infer');
     expect(result[1]?.activity_type).toBe('tool_call');
+  });
+
+  it('supports paging older activities with limit and before_id', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      activities: [],
+      pagination: { has_more: true },
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getAgentActivitiesPage(42, { limit: 50, beforeId: 123 });
+
+    const [url] = fetchMock.mock.calls[0] as [string];
+    expect(url).toContain('/agents/42/activities.json');
+    expect(url).toContain('exclude=AGENT_STATE');
+    expect(url).toContain('limit=50');
+    expect(url).toContain('before_id=123');
+    expect(result.hasMore).toBe(true);
   });
 });
 

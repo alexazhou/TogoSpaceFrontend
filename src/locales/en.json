@@ -98,6 +98,7 @@
     "tasks": "Tasks",
     "loadingInfo": "Loading agent info…",
     "loadingActivities": "Loading agent activities…",
+    "loadingEarlierActivities": "Loading earlier activity records…",
     "loadingTasks": "Loading agent tasks…",
     "noActivities": "No activity records.",
     "noTasks": "No open tasks.",
