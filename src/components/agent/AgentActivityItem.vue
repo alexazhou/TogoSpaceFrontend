@@ -559,6 +559,8 @@ const activityView = computed(() => {
     || (activity.activity_type === 'llm_infer' && Boolean(currentModel))
     || (activity.activity_type !== 'tool_call' && Boolean(currentMetadataToolName))
   ) || activity.activity_type === 'message_received';
+  const chatReplyContent = activity.activity_type === 'chat_reply' ? activity.detail.trim() : '';
+  const chatReplyIsLong = chatReplyContent.split('\n').length > 5 || chatReplyContent.length > 350;
 
   return {
     chatReplyContent,
