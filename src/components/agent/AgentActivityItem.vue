@@ -25,6 +25,47 @@ function formatActivityTime(value: string | null | undefined): string {
   return value.replace('T', ' ').slice(0, 19);
 }
 
+function formatActivityTimeShort(value: string | null | undefined, t: (key: string) => string): string {
+  if (!value) {
+    return '';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const now = new Date();
+  const timeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+
+  // 今天 00:00
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // 昨天 00:00
+  const yesterdayStart = new Date(todayStart);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+  // 今年 1月1日 00:00
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+
+  if (date >= todayStart) {
+    // 今天：只显示时分秒
+    return timeStr;
+  }
+  if (date >= yesterdayStart) {
+    // 昨天：显示 "昨天 HH:mm:ss"
+    return `${t('agent.yesterday')} ${timeStr}`;
+  }
+  if (date >= yearStart) {
+    // 今年内（本月或更早）：显示 "MM-DD HH:mm:ss"
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${month}-${day} ${timeStr}`;
+  }
+  // 更早：显示 "YYYY-MM-DD HH:mm:ss"
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day} ${timeStr}`;
+}
+
 function formatDuration(durationMs: number | null | undefined): string {
   if (durationMs == null || Number.isNaN(durationMs) || durationMs < 0) {
     return '0ms';
@@ -594,6 +635,7 @@ const activityView = computed(() => {
     showToolArguments: showToolName && Boolean(currentToolArguments) && !executeBashResult,
     showToolName,
     startedAtText: formatActivityTime(activity.started_at),
+    startedAtTimeText: formatActivityTimeShort(activity.started_at, t),
     stateSymbol: activityStatusSymbol(activity.status),
     stderr: currentStderr,
     stdout: currentStdout,
@@ -624,6 +666,7 @@ const activityView = computed(() => {
     <div class="agent-activity-item__row">
       <span class="agent-activity-item__state-anchor" tabindex="0">
         <span class="agent-activity-item__state" :data-status="activity.status">{{ activityView.stateSymbol }}</span>
+        <span v-if="activityView.startedAtTimeText" class="agent-activity-item__timestamp">{{ activityView.startedAtTimeText }}</span>
         <span class="agent-activity-item__state-popover">
           <span class="agent-activity-item__state-row">
             <span class="agent-activity-item__state-row-left">
@@ -835,6 +878,16 @@ const activityView = computed(() => {
 .agent-activity-item__state[data-status='failed'],
 .agent-activity-item__state[data-status='cancelled'] {
   color: var(--danger, #f85149);
+}
+
+.agent-activity-item__timestamp {
+  flex: none;
+  color: var(--muted);
+  font-size: 0.65rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  margin-left: 2px;
 }
 
 .agent-activity-item__state-popover {
