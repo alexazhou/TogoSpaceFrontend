@@ -51,9 +51,7 @@ function formatTaskDateTime(value: string | null): string {
   if (!value) {
     return '';
   }
-  // Backend sends naive datetime, treat as UTC and convert to local time
-  const utcTime = value.replace(' ', 'T') + 'Z';
-  const date = new Date(utcTime);
+  const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return '';
   }

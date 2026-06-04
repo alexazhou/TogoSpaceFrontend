@@ -55,9 +55,7 @@ export function formatPreview(senderDisplayName: string, content: string): strin
 }
 
 export function formatTime(time: string): string {
-  // Backend sends naive datetime (no timezone), treat as UTC and convert to local time
-  const utcTime = time.replace(' ', 'T') + 'Z';
-  const date = new Date(utcTime);
+  const date = new Date(time);
 
   if (Number.isNaN(date.getTime())) {
     return '';
