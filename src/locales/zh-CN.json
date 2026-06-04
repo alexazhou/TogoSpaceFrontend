@@ -144,7 +144,6 @@
     "finish_action": "结束行动",
     "start_chat": "发起聊天"
   },
-  "yesterday": "昨天",
   "tokenEstimate": "估算 {count}",
   "retryScheduled": "{seconds}s 后重试（{attempt}/{max}）",
   "retryingProgress": "正在重试（{attempt}/{max}）",

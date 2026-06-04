@@ -144,7 +144,6 @@
     "finish_action": "Finish Action",
     "start_chat": "Start Chat"
   },
-  "yesterday": "Yesterday",
   "tokenEstimate": "Est. {count}",
   "retryScheduled": "Retry in {seconds}s ({attempt}/{max})",
   "retryingProgress": "Retrying ({attempt}/{max})",

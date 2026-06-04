@@ -51,11 +51,13 @@ function formatTaskDateTime(value: string | null): string {
   if (!value) {
     return '';
   }
-  const date = new Date(value);
+  // Backend sends naive datetime, treat as UTC and convert to local time
+  const utcTime = value.replace(' ', 'T') + 'Z';
+  const date = new Date(utcTime);
   if (Number.isNaN(date.getTime())) {
     return '';
   }
-  return `${date.toLocaleDateString()} ${formatTime(value)}`.trim();
+  return formatTime(value);
 }
 
 function taskStatusLabel(status: AgentTaskStatus): string {

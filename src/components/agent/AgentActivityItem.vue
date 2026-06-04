@@ -25,44 +25,29 @@ function formatActivityTime(value: string | null | undefined): string {
   return value.replace('T', ' ').slice(0, 19);
 }
 
-function formatActivityTimeShort(value: string | null | undefined, t: (key: string) => string): string {
+function formatActivityTimeShort(value: string | null | undefined): string {
   if (!value) {
     return '';
   }
-  const date = new Date(value);
+  // Backend sends naive datetime, treat as UTC and convert to local time
+  const utcTime = value.replace(' ', 'T') + 'Z';
+  const date = new Date(utcTime);
   if (Number.isNaN(date.getTime())) {
     return '';
   }
 
   const now = new Date();
-  const timeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
-
-  // 今天 00:00
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  // 昨天 00:00
-  const yesterdayStart = new Date(todayStart);
-  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-  // 今年 1月1日 00:00
-  const yearStart = new Date(now.getFullYear(), 0, 1);
-
-  if (date >= todayStart) {
-    // 今天：只显示时分秒
-    return timeStr;
-  }
-  if (date >= yesterdayStart) {
-    // 昨天：显示 "昨天 HH:mm:ss"
-    return `${t('agent.yesterday')} ${timeStr}`;
-  }
-  if (date >= yearStart) {
-    // 今年内（本月或更早）：显示 "MM-DD HH:mm:ss"
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${month}-${day} ${timeStr}`;
-  }
-  // 更早：显示 "YYYY-MM-DD HH:mm:ss"
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const timeStr = `${hours}:${minutes}:${seconds}`;
+
+  if (year === now.getFullYear()) {
+    return `${month}-${day} ${timeStr}`;
+  }
   return `${year}-${month}-${day} ${timeStr}`;
 }
 
@@ -635,7 +620,7 @@ const activityView = computed(() => {
     showToolArguments: showToolName && Boolean(currentToolArguments) && !executeBashResult,
     showToolName,
     startedAtText: formatActivityTime(activity.started_at),
-    startedAtTimeText: formatActivityTimeShort(activity.started_at, t),
+    startedAtTimeText: formatActivityTimeShort(activity.started_at),
     stateSymbol: activityStatusSymbol(activity.status),
     stderr: currentStderr,
     stdout: currentStdout,
