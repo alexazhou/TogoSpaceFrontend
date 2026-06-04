@@ -267,6 +267,7 @@ export async function loadTeamRooms(teamId: number): Promise<RoomState[]> {
   const baseRooms = await fetchRooms(teamId);
   const roomIds = baseRooms.map((room) => room.room_id).filter((roomId) => roomId > 0);
   const previewMap = new Map<number, string>();
+  const timeMap = new Map<number, string>();
 
   if (roomIds.length > 0) {
     try {
@@ -274,6 +275,7 @@ export async function loadTeamRooms(teamId: number): Promise<RoomState[]> {
       for (const item of lastMessageItems) {
         const senderDisplayName = resolveMessageSenderDisplayName(teamId, item.sender_id);
         previewMap.set(item.room_id, formatPreview(senderDisplayName, item.content));
+        timeMap.set(item.room_id, item.send_time);
       }
     } catch {
       // 房间列表本身可用时，不让 preview 补充失败阻塞整个加载流程。
@@ -289,6 +291,7 @@ export async function loadTeamRooms(teamId: number): Promise<RoomState[]> {
       resolveSenderDisplayName: (senderId) => resolveMessageSenderDisplayName(teamId, senderId),
     }),
     unread: 0,
+    last_message_time: timeMap.get(room.room_id) ?? null,
     current_turn_agent_id: room.current_turn_agent_id ?? null,
   }));
 

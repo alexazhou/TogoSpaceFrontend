@@ -38,6 +38,7 @@ function createRoom(overrides: Partial<RoomState>): RoomState {
     current_turn_agent_id: null,
     preview: '旧预览',
     unread: 0,
+    last_message_time: null,
     ...overrides,
   };
 }

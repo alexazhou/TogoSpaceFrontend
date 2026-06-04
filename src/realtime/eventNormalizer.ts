@@ -288,6 +288,7 @@ export function normalizeWsEventPayload(payload: unknown): FrontendRealtimeEvent
       current_turn_agent_id: null,
       preview: '',
       unread: 0,
+      last_message_time: null,
     };
     return { type: 'room_added', teamId, room };
   }
