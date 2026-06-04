@@ -511,6 +511,7 @@ export function applyRealtimeEvent(event: FrontendRealtimeEvent): void {
             nextMessage.sender_display_name || resolveMessageSenderDisplayName(event.teamId, nextMessage.sender_id),
             nextMessage.content,
           ),
+          last_message_time: nextMessage.time,
           unread: shouldResetUnread ? 0 : room.unread + 1,
         };
       }),
