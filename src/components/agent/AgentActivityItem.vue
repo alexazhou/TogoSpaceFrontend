@@ -481,7 +481,7 @@ function activitySummary(
     return '';
   }
 
-  if (activity.activity_type === 'llm_infer' && activity.status === 'failed') {
+  if ((activity.activity_type === 'llm_infer' || activity.activity_type === 'compact') && activity.status === 'failed') {
     return '';
   }
 
@@ -558,7 +558,7 @@ const activityView = computed(() => {
     || showToolName
     || (activity.activity_type === 'llm_infer' && Boolean(currentModel))
     || (activity.activity_type !== 'tool_call' && Boolean(currentMetadataToolName))
-  ) || activity.activity_type === 'message_received';
+  ) || activity.activity_type === 'message_received' || activity.activity_type === 'compact';
   const chatReplyContent = activity.activity_type === 'chat_reply' ? activity.detail.trim() : '';
   const chatReplyIsLong = chatReplyContent.split('\n').length > 5 || chatReplyContent.length > 350;
 
