@@ -489,13 +489,13 @@ watch(
 }
 
 .agent-supervise-section {
-  padding: 4px 10px 10px;
+  padding: 8px 0 0;
   flex-shrink: 0;
-  background: color-mix(in srgb, var(--panel-bg) 97%, var(--surface-soft) 3%);
-  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
-  border-top: 1px solid var(--border-subtle);
-  border-radius: 0 0 18px 18px;
-  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--panel-border) 84%, var(--border-subtle) 16%);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .agent-supervise-section__input-row {

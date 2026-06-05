@@ -775,8 +775,8 @@ const activityView = computed(() => {
   gap: 3px;
   padding: 6px 8px;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--panel-bg) 94%, var(--surface-soft) 6%);
-  border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
+  background: var(--surface-activity-item);
+  border: 1px solid var(--border-activity-item);
   flex-shrink: 0;
   position: relative;
 }
@@ -787,7 +787,7 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item[data-status='started'] {
-  background: var(--surface-panel-muted);
+  background: var(--surface-activity-item-active);
   border-color: var(--border-subtle);
 }
 
@@ -958,8 +958,8 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item__chip--danger {
-  background: color-mix(in srgb, var(--danger, #f85149) 16%, transparent);
-  color: color-mix(in srgb, var(--danger, #f85149) 78%, var(--text) 22%);
+  background: var(--surface-chip-danger);
+  color: var(--text-danger-accent);
 }
 
 .agent-activity-item__status {
@@ -1012,8 +1012,8 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__status {
-  background: color-mix(in srgb, var(--danger, #f85149) 18%, transparent);
-  color: var(--danger, #f85149);
+  background: var(--surface-chip-danger);
+  color: var(--text-danger-accent);
 }
 
 .agent-activity-item__summary {
@@ -1067,18 +1067,18 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item__summary--danger {
-  color: color-mix(in srgb, var(--danger, #f85149) 76%, var(--text) 24%);
+  color: var(--text-danger-accent);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__send-chat-content {
-  color: color-mix(in srgb, var(--danger, #f85149) 68%, var(--text) 32%);
+  color: var(--text-danger-accent);
 }
 
 
 
 .agent-activity-item__error {
   margin: 0;
-  color: var(--danger, #f85149);
+  color: var(--text-danger-accent);
   font-size: 0.7rem;
   font-weight: 600;
   line-height: 1.35;
@@ -1220,7 +1220,7 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item__tool-result--stderr {
-  color: var(--danger, #f85149);
+  color: var(--text-danger-accent);
 }
 
 .agent-activity-item__received-message {
