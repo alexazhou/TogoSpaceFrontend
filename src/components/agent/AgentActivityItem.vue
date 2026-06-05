@@ -917,9 +917,12 @@ const activityView = computed(() => {
 
 .agent-activity-item__title {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
   color: var(--text-strong);
   font-size: 0.82rem;
-  line-height: 1.2;
+  line-height: 1;
   font-weight: 600;
 }
 
