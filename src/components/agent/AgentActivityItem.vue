@@ -934,14 +934,14 @@ const activityView = computed(() => {
 
 .agent-activity-item__chip {
   flex: none;
-  display: inline-block;
-  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
   max-width: 180px;
   min-width: 0;
   height: 18px;
   padding: 0 8px;
-  line-height: 18px;
-  text-align: center;
+  line-height: 1;
   border-radius: 4px;
   background: var(--surface-chip);
   color: var(--text-strong);
@@ -954,8 +954,7 @@ const activityView = computed(() => {
 .agent-activity-item__chip--mono {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 0.66rem;
-  position: relative;
-  top: -1px;
+  padding-bottom: 1px;
 }
 
 .agent-activity-item__chip--danger {
