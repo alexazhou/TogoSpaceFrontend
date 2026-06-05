@@ -940,7 +940,7 @@ const activityView = computed(() => {
   max-width: 180px;
   min-width: 0;
   height: 18px;
-  padding: 0 8px;
+  padding: 0 6px;
   line-height: 1;
   border-radius: 4px;
   background: var(--surface-chip);
