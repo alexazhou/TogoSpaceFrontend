@@ -556,7 +556,6 @@ const activityView = computed(() => {
   const inlineTitle = !(
     Boolean(currentSummary)
     || showToolName
-    || (activity.activity_type === 'llm_infer' && Boolean(currentModel))
     || (activity.activity_type !== 'tool_call' && Boolean(currentMetadataToolName))
   ) || activity.activity_type === 'message_received' || activity.activity_type === 'compact';
   const chatReplyContent = activity.activity_type === 'chat_reply' ? activity.detail.trim() : '';
@@ -659,6 +658,11 @@ const activityView = computed(() => {
         class="agent-activity-item__chip agent-activity-item__chip--danger"
         :title="activityView.retryHistoryText"
       >{{ activityView.retryHistoryText }}</span>
+      <span
+        v-if="activityView.sendMessagePrefix"
+        class="agent-activity-item__direction"
+        aria-hidden="true"
+      >➡️</span>
       <span
         v-if="activityView.sendMessagePrefix"
         class="agent-activity-item__chip"
@@ -960,6 +964,17 @@ const activityView = computed(() => {
 .agent-activity-item__chip--danger {
   background: var(--surface-chip-danger);
   color: var(--text-danger-accent);
+}
+
+.agent-activity-item__direction {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1;
 }
 
 .agent-activity-item__status {
