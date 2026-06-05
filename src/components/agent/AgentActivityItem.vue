@@ -933,11 +933,13 @@ const activityView = computed(() => {
   flex: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   max-width: 180px;
   min-width: 0;
   height: 18px;
   padding: 0 6px;
-  border-radius: 999px;
+  line-height: 1;
+  border-radius: 4px;
   background: var(--surface-chip);
   color: var(--text-strong);
   font-weight: 600;
@@ -948,7 +950,8 @@ const activityView = computed(() => {
 
 .agent-activity-item__chip--mono {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
+  padding-bottom: 1px;
 }
 
 .agent-activity-item__chip--danger {
