@@ -290,7 +290,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 4px 10px 4px;
+  padding: 4px 0 10px;
 }
 
 .agent-activity-list__loading-more {
@@ -305,13 +305,13 @@ watch(
   display: grid;
   place-items: center;
   color: var(--muted);
-  margin: 0 10px 10px;
+  margin: 0 0 10px;
 }
 
 .loading-card,
 .error-banner {
   padding: 14px;
-  margin: 0 10px 10px;
+  margin: 0 0 10px;
 }
 
 .loading-card {

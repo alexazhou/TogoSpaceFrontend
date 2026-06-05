@@ -108,6 +108,7 @@ const emit = defineEmits<{
 .agent-detail-dialog {
   --agent-divider-vertical: color-mix(in srgb, var(--panel-border) 92%, var(--border-subtle) 8%);
   --agent-divider-strong: color-mix(in srgb, var(--panel-border) 84%, var(--border-subtle) 16%);
+  --agent-divider-emphasis: color-mix(in srgb, var(--panel-border) 94%, var(--border-subtle) 6%);
   position: relative;
   width: min(1180px, calc(100vw - 40px));
   height: min(820px, calc(100vh - 40px));
@@ -235,7 +236,8 @@ const emit = defineEmits<{
   left: 18px;
   right: 0;
   height: 1px;
-  background: var(--agent-divider-strong);
+  background: var(--agent-divider-emphasis);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--agent-divider-emphasis) 24%, transparent);
   z-index: 2;
   pointer-events: none;
 }

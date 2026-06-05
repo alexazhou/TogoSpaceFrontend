@@ -489,13 +489,26 @@ watch(
 }
 
 .agent-supervise-section {
-  padding: 8px 0 0;
+  position: relative;
+  margin-top: 0;
+  padding: 4px 0 0;
   flex-shrink: 0;
   background: transparent;
   border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--panel-border) 84%, var(--border-subtle) 16%);
   border-radius: 0;
   box-shadow: none;
+}
+
+.agent-supervise-section::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--agent-divider-emphasis, color-mix(in srgb, var(--panel-border) 94%, var(--border-subtle) 6%));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--agent-divider-emphasis, var(--panel-border)) 24%, transparent);
+  pointer-events: none;
 }
 
 .agent-supervise-section__input-row {
