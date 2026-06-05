@@ -192,7 +192,7 @@
       "LOW": "低优先级"
     },
     "parseFailed": "解析失败",
-    "sendToRoomPrefix": "To 房间【{room}】: ",
+    "sendToRoomPrefix": "房间【{room}】",
     "startChatTarget": "→ {agent}",
     "finishActionRoomLabel": "房间【{room}】",
     "backupLabel": "备选Agent",

@@ -192,7 +192,7 @@
       "LOW": "Low"
     },
     "parseFailed": "Parse Failed",
-    "sendToRoomPrefix": "To Room [{room}]: ",
+    "sendToRoomPrefix": "Room [{room}]",
     "startChatTarget": "→ {agent}",
     "finishActionRoomLabel": "Room [{room}]",
     "backupLabel": "Backup Agents",
