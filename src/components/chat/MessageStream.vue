@@ -112,6 +112,9 @@ function resolveMessageStatus(message: MessageInfo): MessageStatus {
 
 const streamMessages = computed(() => props.messages.filter((message) => message.seq !== null));
 const floatingMessages = computed(() => props.messages.filter((message) => message.seq === null));
+const shouldDockWorkingIndicator = computed(
+  () => Boolean(props.workingAgent) && floatingMessages.value.length === 0,
+);
 
 function messageKey(message: MessageInfo, index: number): string {
   return String(message.db_id ?? `${message.time}-${message.sender_id}-${index}`);
@@ -364,6 +367,7 @@ onBeforeUnmount(() => {
     <div
       v-if="workingAgent"
       class="working-indicator working-indicator--clickable"
+      :class="{ 'working-indicator--dock-bottom': shouldDockWorkingIndicator }"
       role="button"
       tabindex="0"
       @click="emit('clickWorkingAgent', workingAgent.id)"
@@ -804,6 +808,10 @@ onBeforeUnmount(() => {
   color: var(--text-secondary);
   font-size: 0.78rem;
   animation: fade-in 0.25s ease-out;
+}
+
+.working-indicator--dock-bottom {
+  margin-top: auto;
 }
 
 .working-indicator--clickable {
