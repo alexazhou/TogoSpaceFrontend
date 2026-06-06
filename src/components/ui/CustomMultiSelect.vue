@@ -181,7 +181,8 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 2px 8px;
   border-radius: 6px;
-  background: var(--surface-pill);
+  background: color-mix(in srgb, var(--interactive-selected) 75%, transparent);
+  border: 1px solid var(--interactive-focus-border);
   color: var(--text-primary);
   font-size: 0.8rem;
   line-height: 1.4;
