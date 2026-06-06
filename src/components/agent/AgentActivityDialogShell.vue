@@ -109,6 +109,7 @@ const emit = defineEmits<{
   --agent-divider-vertical: color-mix(in srgb, var(--panel-border) 92%, var(--border-subtle) 8%);
   --agent-divider-strong: color-mix(in srgb, var(--panel-border) 84%, var(--border-subtle) 16%);
   --agent-divider-emphasis: color-mix(in srgb, var(--panel-border) 94%, var(--border-subtle) 6%);
+  --agent-divider-glow: var(--accent);
   position: relative;
   width: min(1180px, calc(100vw - 40px));
   height: min(820px, calc(100vh - 40px));
@@ -124,6 +125,10 @@ const emit = defineEmits<{
     inset 0 0 0 1px color-mix(in srgb, var(--panel-border) 88%, transparent);
 }
 
+:global([data-theme='light']) .agent-detail-dialog {
+  --agent-divider-glow: var(--border-strong);
+}
+
 .agent-detail-dialog::before {
   content: '';
   position: absolute;
@@ -131,9 +136,18 @@ const emit = defineEmits<{
   bottom: 16px;
   left: 264px;
   width: 1px;
-  background: var(--agent-divider-vertical);
-  box-shadow: 1px 0 0 color-mix(in srgb, var(--agent-divider-vertical) 24%, transparent);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--agent-divider-glow) 80%, transparent) 15%,
+    color-mix(in srgb, var(--agent-divider-glow) 80%, transparent) 85%,
+    transparent 100%
+  );
+  filter: 
+    drop-shadow(0 0 6px color-mix(in srgb, var(--agent-divider-glow) 60%, transparent))
+    drop-shadow(0 0 2px color-mix(in srgb, var(--agent-divider-glow) 90%, transparent));
   pointer-events: none;
+  z-index: 10;
 }
 
 .agent-detail-head {
