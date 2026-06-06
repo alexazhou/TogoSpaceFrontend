@@ -192,7 +192,9 @@ function handleActivityListScroll(): void {
   }
   const currentScrollTop = listEl.scrollTop;
   const scrollingUp = currentScrollTop < lastActivityScrollTop.value;
-  syncActivityFollowState();
+  if (currentScrollTop !== lastActivityScrollTop.value) {
+    syncActivityFollowState();
+  }
   if (scrollingUp && currentScrollTop <= 24) {
     loadOlderActivities().catch(console.error);
   }
