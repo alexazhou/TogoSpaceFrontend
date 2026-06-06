@@ -26,7 +26,9 @@
     "copy": "复制",
     "copied": "已复制",
     "enableCodeWrap": "开启自动换行",
-    "disableCodeWrap": "关闭自动换行"
+    "disableCodeWrap": "关闭自动换行",
+    "fullscreen": "全屏",
+    "exitFullscreen": "退出全屏"
   },
   "language": {
     "switcher": "切换语言",

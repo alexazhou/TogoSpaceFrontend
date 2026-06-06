@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import TeamMemberGraph from './TeamMemberGraph.vue';
 import type { TeamGraphNode } from './teamGraphTypes';
@@ -42,53 +43,88 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+const isFullscreen = ref(false);
+
+function toggleFullscreen(): void {
+  isFullscreen.value = !isFullscreen.value;
+}
+
+function handleKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && isFullscreen.value) {
+    isFullscreen.value = false;
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <template>
-  <section class="member-panel">
-    <div class="member-panel-head">
-      <div class="member-panel-head-segment member-panel-head-segment--label">
-        <span class="panel-label">{{ t('agent.teamMembersLabel') }}</span>
-      </div>
-    </div>
-
-    <div v-if="actions.length" class="member-panel-actions">
+  <Teleport to="body" :disabled="!isFullscreen">
+    <section class="member-panel" :class="{ 'member-panel--fullscreen': isFullscreen }">
+      <div class="member-panel-head">
+        <div class="member-panel-head-segment member-panel-head-segment--label">
+          <span class="panel-label">{{ t('agent.teamMembersLabel') }}</span>
+        </div>
         <button
-          v-for="action in actions"
-          :key="action.key"
           type="button"
-          class="secondary-button member-panel-action"
-          :class="{ 'member-panel-action--primary': action.primary }"
-          :disabled="action.disabled"
-          @click="emit('action', action.key)"
+          class="member-panel-fullscreen-button"
+          :title="isFullscreen ? t('common.exitFullscreen') : t('common.fullscreen')"
+          @click="toggleFullscreen"
         >
-          {{ action.label }}
+          <svg v-if="!isFullscreen" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 3h7v2H5v5H3V3zm11 0h7v7h-2V5h-5V3zM3 14h2v5h5v2H3v-7zm18 0v7h-7v-2h5v-5h2z" fill="currentColor" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10 3v7H3V8h5V3h2zm4 0h2v5h5v2h-7V3zM3 14h7v7H8v-5H3v-2zm11 0h7v2h-5v5h-2v-7z" fill="currentColor" />
+          </svg>
         </button>
-    </div>
+      </div>
 
-    <div v-if="statusMessage" class="member-panel-status">
-      <strong>{{ statusMessage }}</strong>
-    </div>
+      <div v-if="actions.length" class="member-panel-actions">
+          <button
+            v-for="action in actions"
+            :key="action.key"
+            type="button"
+            class="secondary-button member-panel-action"
+            :class="{ 'member-panel-action--primary': action.primary }"
+            :disabled="action.disabled"
+            @click="emit('action', action.key)"
+          >
+            {{ action.label }}
+          </button>
+      </div>
 
-    <TeamMemberGraph
-      v-else
-      :team-name="teamName"
-      :selected-agents="selectedAgents"
-      :selected-agent-ids="selectedAgentIds"
-      :member-templates="memberTemplates"
-      :root-node="rootNode"
-      :readonly="readonly"
-      :show-edit-action="showEditAction"
-      @toggle-agent="emit('toggleAgent', $event)"
-      @view-agent="(agentId, nodeId, agentName) => emit('viewAgent', agentId, nodeId, agentName)"
-      @edit-agent="emit('editAgent', $event)"
-      @edit-department="emit('editDepartment', $event)"
-      @view-department="emit('viewDepartment', $event)"
-      @add-subordinate="emit('addSubordinate', $event)"
-      @edit-pending-slot="emit('editPendingSlot', $event)"
-      @remove-pending-slot="emit('removePendingSlot', $event)"
-    />
-  </section>
+      <div v-if="statusMessage" class="member-panel-status">
+        <strong>{{ statusMessage }}</strong>
+      </div>
+
+      <TeamMemberGraph
+        v-else
+        :team-name="teamName"
+        :selected-agents="selectedAgents"
+        :selected-agent-ids="selectedAgentIds"
+        :member-templates="memberTemplates"
+        :root-node="rootNode"
+        :readonly="readonly"
+        :show-edit-action="showEditAction"
+        @toggle-agent="emit('toggleAgent', $event)"
+        @view-agent="(agentId, nodeId, agentName) => emit('viewAgent', agentId, nodeId, agentName)"
+        @edit-agent="emit('editAgent', $event)"
+        @edit-department="emit('editDepartment', $event)"
+        @view-department="emit('viewDepartment', $event)"
+        @add-subordinate="emit('addSubordinate', $event)"
+        @edit-pending-slot="emit('editPendingSlot', $event)"
+        @remove-pending-slot="emit('removePendingSlot', $event)"
+      />
+    </section>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -111,6 +147,33 @@ const { t } = useI18n();
     background-color 0.18s ease;
 }
 
+.member-panel--fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  border-radius: 0;
+  border: none;
+  padding: 16px 20px;
+  overflow: hidden;
+  grid-template-rows: minmax(0, 1fr);
+  animation: member-panel-expand 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.member-panel--fullscreen :deep(.member-graph) {
+  height: 100%;
+}
+
+@keyframes member-panel-expand {
+  from {
+    opacity: 0.6;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .member-panel:focus-within {
   border-color: color-mix(in srgb, var(--focus-border) 88%, #ffffff 12%);
   box-shadow:
@@ -119,14 +182,62 @@ const { t } = useI18n();
   background: color-mix(in srgb, var(--panel-bg) 84%, var(--selected) 16%);
 }
 
+.member-panel--fullscreen:focus-within {
+  box-shadow: none;
+}
+
 .member-panel-head {
   position: absolute;
   top: 10px;
   left: 12px;
+  right: 12px;
   z-index: 2;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   min-height: 36px;
+}
+
+.member-panel--fullscreen .member-panel-head {
+  top: 16px;
+  left: 20px;
+  right: 20px;
+}
+
+.member-panel-fullscreen-button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--focus-border) 28%, var(--panel-border) 72%);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel-bg) 90%, transparent);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.member-panel-fullscreen-button:hover {
+  border-color: var(--focus-border);
+  background: color-mix(in srgb, var(--selected) 32%, var(--panel-bg) 68%);
+  color: var(--text-strong);
+  transform: scale(1.06);
+}
+
+.member-panel-fullscreen-button:active {
+  transform: scale(0.96);
+}
+
+.member-panel-fullscreen-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 .member-panel-head-segment {

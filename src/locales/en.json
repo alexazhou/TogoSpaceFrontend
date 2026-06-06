@@ -26,7 +26,9 @@
     "copy": "Copy",
     "copied": "Copied",
     "enableCodeWrap": "Enable code wrapping",
-    "disableCodeWrap": "Disable code wrapping"
+    "disableCodeWrap": "Disable code wrapping",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen"
   },
   "language": {
     "switcher": "Switch language",
