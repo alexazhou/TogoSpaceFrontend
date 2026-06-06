@@ -55,13 +55,19 @@ const visibleActivities = computed(() =>
     .filter((activity) => activity.activity_type !== 'agent_state'),
 );
 
+let programmaticScroll = false;
+
 async function scrollActivitiesToBottom(): Promise<void> {
   await nextTick();
   if (!activityListRef.value) {
     return;
   }
+  programmaticScroll = true;
   activityListRef.value.scrollTop = activityListRef.value.scrollHeight;
   lastActivityScrollTop.value = activityListRef.value.scrollTop;
+  setTimeout(() => {
+    programmaticScroll = false;
+  }, 50);
 }
 
 function detachActivityListResizeObserver(): void {
@@ -73,11 +79,18 @@ function attachActivityListResizeObserver(contentEl: HTMLElement): void {
   detachActivityListResizeObserver();
   activityListResizeObserver = new ResizeObserver(() => {
     if (shouldFollowActivities.value && activityListRef.value) {
+      programmaticScroll = true;
       activityListRef.value.scrollTop = activityListRef.value.scrollHeight;
       lastActivityScrollTop.value = activityListRef.value.scrollTop;
+      setTimeout(() => {
+        programmaticScroll = false;
+      }, 50);
     }
   });
   activityListResizeObserver.observe(contentEl);
+  if (activityListRef.value) {
+    activityListResizeObserver.observe(activityListRef.value);
+  }
 }
 
 onUnmounted(detachActivityListResizeObserver);
@@ -88,11 +101,22 @@ function isActivityListNearBottom(): boolean {
     return true;
   }
   const distanceToBottom = listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight;
-  return distanceToBottom <= 20;
+  return distanceToBottom <= 120;
 }
 
-function syncActivityFollowState(): void {
-  shouldFollowActivities.value = isActivityListNearBottom();
+function syncActivityFollowState(reason: string = 'unknown'): void {
+  const wasFollowing = shouldFollowActivities.value;
+  const isNearBottom = isActivityListNearBottom();
+  
+  if (wasFollowing && !isNearBottom) {
+    const listEl = activityListRef.value;
+    console.log(`[AgentActivityPanel] Detaching from bottom! Reason: ${reason}`);
+    console.log(`[AgentActivityPanel] scrollHeight: ${listEl?.scrollHeight}, scrollTop: ${listEl?.scrollTop}, clientHeight: ${listEl?.clientHeight}, distanceToBottom: ${listEl ? (listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight) : 'N/A'}`);
+  } else if (!wasFollowing && isNearBottom) {
+    console.log(`[AgentActivityPanel] Re-attaching to bottom! Reason: ${reason}`);
+  }
+  
+  shouldFollowActivities.value = isNearBottom;
 }
 
 async function loadActivities(): Promise<void> {
@@ -171,8 +195,12 @@ async function loadOlderActivities(): Promise<void> {
       loadedActivities.value = mergeActivityCollections(page.activities, loadedActivities.value);
       await nextTick();
       if (activityListRef.value === listEl) {
+        programmaticScroll = true;
         listEl.scrollTop = listEl.scrollHeight - previousScrollHeight + previousScrollTop;
         lastActivityScrollTop.value = listEl.scrollTop;
+        setTimeout(() => {
+          programmaticScroll = false;
+        }, 50);
       }
     }
 
@@ -192,20 +220,27 @@ async function loadOlderActivities(): Promise<void> {
   }
 }
 
-function handleActivityListScroll(): void {
+function handleActivityListScroll(event: Event): void {
   const listEl = activityListRef.value;
   if (!listEl) {
     return;
   }
+  
   const currentScrollTop = listEl.scrollTop;
-  const scrollingUp = currentScrollTop < lastActivityScrollTop.value;
-  if (currentScrollTop !== lastActivityScrollTop.value) {
-    syncActivityFollowState();
+  const delta = Math.abs(currentScrollTop - lastActivityScrollTop.value);
+  
+  if (!programmaticScroll && delta > 2) {
+    syncActivityFollowState(`user_scroll(scrollTop: ${currentScrollTop}, prev: ${lastActivityScrollTop.value}, delta: ${delta})`);
   }
+
+  const scrollingUp = currentScrollTop < lastActivityScrollTop.value;
   if (scrollingUp && currentScrollTop <= 24) {
     loadOlderActivities().catch(console.error);
   }
-  lastActivityScrollTop.value = currentScrollTop;
+  
+  if (programmaticScroll || delta > 2) {
+    lastActivityScrollTop.value = currentScrollTop;
+  }
 }
 
 watch(

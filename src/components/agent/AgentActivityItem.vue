@@ -77,6 +77,9 @@ function shouldShowToolName(activity: AgentActivity): boolean {
 }
 
 function displayToolName(toolNameValue: string): string {
+  if (!toolNameValue) {
+    return '';
+  }
   const i18nKey = `agent.toolNames.${toolNameValue}`;
   const translated = t(i18nKey);
   // 如果翻译后的内容包含 key 路径，说明没有定义翻译，回退到原始名称

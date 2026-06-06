@@ -384,6 +384,7 @@ onBeforeUnmount(() => {
         <span class="dot"></span>
         <span class="dot"></span>
       </span>
+      <i class="fa-solid fa-chevron-right working-indicator-icon"></i>
     </div>
 
     <div v-if="floatingMessages.length" class="floating-messages-dock">
@@ -859,6 +860,20 @@ onBeforeUnmount(() => {
 
 .working-indicator-dots .dot:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+.working-indicator-icon {
+  margin-left: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  opacity: 0.75;
+  transition: opacity 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.working-indicator--clickable:hover .working-indicator-icon {
+  opacity: 1;
+  color: var(--text-primary);
+  transform: translateX(2px);
 }
 
 @keyframes dot-pulse {
