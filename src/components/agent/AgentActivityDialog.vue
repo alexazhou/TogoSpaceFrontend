@@ -9,6 +9,7 @@ import AgentCardBase from './AgentCardBase.vue';
 import AgentActivityDialogShell from './AgentActivityDialogShell.vue';
 import AgentActivityPanel from './AgentActivityPanel.vue';
 import AgentTaskPanel from './AgentTaskPanel.vue';
+import AgentPropertiesPanel from './AgentPropertiesPanel.vue';
 import type { AgentDetail, AgentStatus } from '../../types';
 
 const { t } = useI18n();
@@ -30,7 +31,7 @@ const loading = ref(false);
 const errorMessage = ref('');
 const resuming = ref(false);
 const stopping = ref(false);
-const activeTab = ref<'activities' | 'tasks'>('activities');
+const activeTab = ref<'activities' | 'tasks' | 'properties'>('activities');
 const taskPanelCount = ref(0);
 const superviseContent = ref('');
 const supervising = ref(false);
@@ -255,13 +256,14 @@ watch(
 </script>
 
 <template>
-  <AgentActivityDialogShell
+    <AgentActivityDialogShell
     :open="open"
     :close-label="t('common.close')"
     :active-tab="activeTab"
     :panel-tabs-label="t('agent.panelTabs')"
     :activities-label="t('agent.activities')"
     :tasks-label="t('agent.tasks')"
+    :properties-label="t('agent.properties')"
     :activity-badge-label="activityBadgeLabel"
     :activity-realtime-state="activityRealtimeState"
     :task-count-label="taskCountLabel"
@@ -327,6 +329,12 @@ watch(
         :agent-id="agentId"
         :team-id="displayAgent?.team_id ?? null"
         @count-change="taskPanelCount = $event"
+      />
+      <AgentPropertiesPanel
+        v-show="activeTab === 'properties'"
+        :agent-id="agentId"
+        :initial-agent="displayAgent"
+        @saved="agent = $event"
       />
     </template>
 

@@ -41,6 +41,8 @@ export default defineConfig({
       '/config/directories.json': createApiProxy(backendTarget),
       '/config/language.json': createApiProxy(backendTarget),
       '/config/llm_services/': createApiProxy(backendTarget),
+      '/config/skills/': createApiProxy(backendTarget),
+      '/config/tools/': createApiProxy(backendTarget),
       '/config/quick_init.json': createApiProxy(backendTarget),
       '/system/status.json': createApiProxy(backendTarget),
       '/system/schedule/resume.json': createApiProxy(backendTarget),

@@ -1,0 +1,190 @@
+<script setup lang="ts">
+import { ref, onMounted, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { getAvailableSkills, getAvailableTools, updateAgentProperties, SkillConfig, ToolConfig } from '../../api';
+import { showGlobalSuccessToast } from '../../appUiState';
+import CustomMultiSelect from '../ui/CustomMultiSelect.vue';
+import type { AgentDetail } from '../../types';
+
+const props = defineProps<{
+  agentId: number | null;
+  initialAgent: AgentDetail | null;
+}>();
+
+const emit = defineEmits<{
+  saved: [agent: AgentDetail];
+}>();
+
+const { t } = useI18n();
+
+const loadingConfig = ref(false);
+const saving = ref(false);
+
+const availableTools = ref<ToolConfig[]>([]);
+const availableSkills = ref<SkillConfig[]>([]);
+
+const toolOptions = computed(() => availableTools.value.map(t => ({
+  value: t.name,
+  label: t.name,
+  category: t.category
+})));
+
+const skillOptions = computed(() => availableSkills.value.map(s => ({
+  value: s.name,
+  label: s.name,
+})));
+
+const selectedTools = ref<string[]>([]);
+const selectedSkills = ref<string[]>([]);
+
+async function loadConfig() {
+  loadingConfig.value = true;
+  try {
+    const [tools, skills] = await Promise.all([
+      getAvailableTools(),
+      getAvailableSkills(),
+    ]);
+    availableTools.value = tools;
+    availableSkills.value = skills;
+  } catch (error) {
+    console.error('Failed to load tools and skills config', error);
+  } finally {
+    loadingConfig.value = false;
+  }
+}
+
+watch(
+  () => props.initialAgent,
+  (agent) => {
+    if (agent) {
+      selectedTools.value = [...(agent.allow_tools || [])];
+      selectedSkills.value = [...(agent.allow_skills || [])];
+    } else {
+      selectedTools.value = [];
+      selectedSkills.value = [];
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  loadConfig();
+});
+
+const canSave = computed(() => props.agentId !== null && !saving.value && hasChanges.value);
+
+const hasChanges = computed(() => {
+  if (!props.initialAgent) return false;
+  
+  const initialTools = [...(props.initialAgent.allow_tools || [])].sort();
+  const currentTools = [...selectedTools.value].sort();
+  if (initialTools.join(',') !== currentTools.join(',')) return true;
+  
+  const initialSkills = [...(props.initialAgent.allow_skills || [])].sort();
+  const currentSkills = [...selectedSkills.value].sort();
+  if (initialSkills.join(',') !== currentSkills.join(',')) return true;
+  
+  return false;
+});
+
+function handleRestore() {
+  if (props.initialAgent) {
+    selectedTools.value = [...(props.initialAgent.allow_tools || [])];
+    selectedSkills.value = [...(props.initialAgent.allow_skills || [])];
+  }
+}
+
+async function handleSave() {
+  if (!props.agentId) return;
+  saving.value = true;
+  try {
+    const updatedAgent = await updateAgentProperties(props.agentId, {
+      allow_tools: selectedTools.value,
+      allow_skills: selectedSkills.value,
+    });
+    showGlobalSuccessToast(t('agent.propertiesSaved'));
+    emit('saved', updatedAgent);
+  } catch (error) {
+    console.error('Failed to save properties', error);
+  } finally {
+    saving.value = false;
+  }
+}
+</script>
+
+<template>
+  <div class="agent-properties-panel">
+    <div v-if="loadingConfig" class="loading-state">
+      {{ t('common.loading') }}
+    </div>
+    <div v-else class="properties-form">
+      <div class="form-section">
+        <h3 class="section-title">{{ t('agent.allowTools') }}</h3>
+        <CustomMultiSelect
+          v-model="selectedTools"
+          :options="toolOptions"
+          :placeholder="t('common.none')"
+        />
+      </div>
+
+      <div class="form-section">
+        <h3 class="section-title">{{ t('agent.skills') }}</h3>
+        <CustomMultiSelect
+          v-model="selectedSkills"
+          :options="skillOptions"
+          :placeholder="t('common.none')"
+        />
+      </div>
+
+      <div class="form-actions">
+        <button
+          v-if="hasChanges"
+          type="button"
+          class="secondary-button"
+          :disabled="saving"
+          @click="handleRestore"
+          style="margin-right: 12px;"
+        >
+          {{ t('common.cancel') }}
+        </button>
+        <button
+          type="button"
+          class="primary-button save-button"
+          :disabled="!canSave"
+          @click="handleSave"
+        >
+          {{ saving ? t('common.saving') : t('agent.saveProperties') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.agent-properties-panel {
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.properties-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.form-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+</style>

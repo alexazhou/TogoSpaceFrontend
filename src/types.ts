@@ -26,6 +26,8 @@ export interface AgentInfo {
   employ_status?: string | null;
   driver?: string;
   special?: 'operator' | 'system' | null;
+  allow_tools?: string[] | null;
+  allow_skills?: string[] | null;
 }
 
 export interface AgentDetail extends AgentInfo {

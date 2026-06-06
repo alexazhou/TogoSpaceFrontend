@@ -57,7 +57,9 @@ type RawAgentInfo = Partial<AgentInfo> & {
   role_template_id?: number;
   employ_status?: string;
   driver?: string;
-  special?: string | null;
+  special?: 'operator' | 'system' | null;
+  allow_tools?: string[] | null;
+  allow_skills?: string[] | null;
 };
 
 type RawAgentDetail = Partial<AgentDetail> & {
@@ -439,6 +441,8 @@ function normalizeAgent(agent: RawAgentInfo): AgentInfo {
     employ_status: agent.employ_status ?? null,
     driver: normalizeDriverTypeValue(typeof agent.driver === 'string' ? agent.driver : ''),
     special: normalizedSpecial,
+    allow_tools: Array.isArray(agent.allow_tools) ? agent.allow_tools : null,
+    allow_skills: Array.isArray(agent.allow_skills) ? agent.allow_skills : null,
   };
 }
 
@@ -979,6 +983,41 @@ export interface SystemStatus {
   schedule_state?: 'STOPPED' | 'BLOCKED' | 'RUNNING' | 'stopped' | 'blocked' | 'running';
   not_running_reason?: string;
   development_mode?: boolean;
+}
+
+export async function checkSystemStatus(): Promise<{ initialized: boolean }> {
+  return await requestJson<{ initialized: boolean }>('/system/status.json');
+}
+
+export interface SkillConfig {
+  name: string;
+  description: string;
+}
+
+export interface ToolConfig {
+  name: string;
+  category: string;
+}
+
+export async function getAvailableSkills(): Promise<SkillConfig[]> {
+  const data = await requestJson<{ skills: SkillConfig[] }>('/config/skills/list.json');
+  return data.skills;
+}
+
+export async function getAvailableTools(): Promise<ToolConfig[]> {
+  const data = await requestJson<{ tools: ToolConfig[] }>('/config/tools/list.json');
+  return data.tools;
+}
+
+export async function updateAgentProperties(
+  agentId: number,
+  payload: { allow_tools?: string[] | null; allow_skills?: string[] | null }
+): Promise<AgentDetail> {
+  const data = await requestJson<RawAgentDetail>(`/agents/${agentId}/modify_properties.json`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return normalizeAgentDetail(data);
 }
 
 export async function getSystemStatus(): Promise<SystemStatus> {
