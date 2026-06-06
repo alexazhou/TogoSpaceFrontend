@@ -311,6 +311,9 @@
     "emptyNameError": "Member name cannot be empty",
     "duplicateNameError": "Member name \"{name}\" already exists",
     "emptyDeptNameError": "Department name cannot be empty",
+    "cancelEditTitle": "Discard changes",
+    "cancelEditMsg": "You have unsaved changes to the team members. Are you sure you want to discard them?",
+    "cancelEditConfirmBtn": "Discard",
     "unassignedDepartment": "Unassigned",
     "subtitle": "Member"
   },

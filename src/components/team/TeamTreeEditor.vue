@@ -71,7 +71,7 @@ const confirmState = ref<{
   message: string;
   confirmLabel: string;
   danger: boolean;
-  action: null | { type: 'remove-member'; nodeId: string; memberName: string } | { type: 'disable-team' };
+  action: null | { type: 'remove-member'; nodeId: string; memberName: string } | { type: 'disable-team' } | { type: 'cancel-edit' };
 }>({
   title: '',
   message: '',
@@ -733,6 +733,7 @@ const memberPanelActions = computed(() => {
       label: isSavingTeamMembers.value ? t('teamTree.saving') : t('common.save'),
       disabled: !hasTeamMemberChanges.value || isSavingTeamMembers.value || treeHasPendingNode(draftOrgTree.value),
       primary: true,
+      showBadge: hasTeamMemberChanges.value,
     },
   ];
 });
@@ -895,7 +896,17 @@ function handleMemberPanelAction(actionKey: string): void {
   }
 
   if (actionKey === 'cancel') {
-    cancelTeamMemberEdit();
+    if (hasTeamMemberChanges.value) {
+      confirmState.value = {
+        title: t('teamTree.cancelEditTitle'),
+        message: t('teamTree.cancelEditMsg'),
+        confirmLabel: t('teamTree.cancelEditConfirmBtn'),
+        danger: true,
+        action: { type: 'cancel-edit' },
+      };
+    } else {
+      cancelTeamMemberEdit();
+    }
     return;
   }
 
@@ -1161,6 +1172,12 @@ async function confirmDangerAction(): Promise<void> {
     pendingEditAfterDisable.value = true;
     closeConfirmDialog();
     emit('disableTeam', props.teamId);
+    return;
+  }
+
+  if (action.type === 'cancel-edit') {
+    cancelTeamMemberEdit();
+    closeConfirmDialog();
     return;
   }
 

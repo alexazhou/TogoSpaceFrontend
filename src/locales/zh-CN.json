@@ -311,6 +311,9 @@
     "emptyNameError": "成员名称不能为空",
     "duplicateNameError": "成员名称“{name}”已存在",
     "emptyDeptNameError": "部门名称不能为空",
+    "cancelEditTitle": "放弃修改",
+    "cancelEditMsg": "你已经对团队成员进行了修改，是否确认放弃这些修改？",
+    "cancelEditConfirmBtn": "放弃修改",
     "unassignedDepartment": "未分配部门",
     "subtitle": "成员"
   },

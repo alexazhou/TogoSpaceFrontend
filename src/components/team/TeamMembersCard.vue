@@ -9,6 +9,7 @@ type MemberPanelAction = {
   label: string;
   disabled?: boolean;
   primary?: boolean;
+  showBadge?: boolean;
 };
 
 withDefaults(defineProps<{
@@ -97,6 +98,7 @@ onBeforeUnmount(() => {
             :disabled="action.disabled"
             @click="emit('action', action.key)"
           >
+            <span v-if="action.showBadge" class="member-panel-action__badge" aria-hidden="true"></span>
             {{ action.label }}
           </button>
       </div>
@@ -299,6 +301,21 @@ onBeforeUnmount(() => {
 .member-panel-action--primary:disabled {
   border-color: color-mix(in srgb, var(--panel-border) 76%, transparent 24%);
   background: color-mix(in srgb, var(--surface-soft) 82%, var(--panel-bg) 18%);
+}
+
+.member-panel-action {
+  position: relative;
+}
+
+.member-panel-action__badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--state-danger);
+  border: 1px solid var(--panel-bg);
 }
 
 .member-panel-status {
