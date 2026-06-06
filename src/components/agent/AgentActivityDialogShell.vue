@@ -109,7 +109,12 @@ const emit = defineEmits<{
   --agent-divider-vertical: color-mix(in srgb, var(--panel-border) 92%, var(--border-subtle) 8%);
   --agent-divider-strong: color-mix(in srgb, var(--panel-border) 84%, var(--border-subtle) 16%);
   --agent-divider-emphasis: color-mix(in srgb, var(--panel-border) 94%, var(--border-subtle) 6%);
-  --agent-divider-glow: var(--accent);
+  
+  /* Divider glow tokens */
+  --agent-divider-glow-bg: var(--accent);
+  --agent-divider-glow-shadow-1: var(--interactive-focus-ring);
+  --agent-divider-glow-shadow-2: var(--accent);
+
   position: relative;
   width: min(1180px, calc(100vw - 40px));
   height: min(820px, calc(100vh - 40px));
@@ -125,9 +130,7 @@ const emit = defineEmits<{
     inset 0 0 0 1px color-mix(in srgb, var(--panel-border) 88%, transparent);
 }
 
-:global([data-theme='light']) .agent-detail-dialog {
-  --agent-divider-glow: var(--border-strong);
-}
+
 
 .agent-detail-dialog::before {
   content: '';
@@ -139,13 +142,13 @@ const emit = defineEmits<{
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    color-mix(in srgb, var(--agent-divider-glow) 80%, transparent) 15%,
-    color-mix(in srgb, var(--agent-divider-glow) 80%, transparent) 85%,
+    var(--agent-divider-glow-bg) 15%,
+    var(--agent-divider-glow-bg) 85%,
     transparent 100%
   );
   filter: 
-    drop-shadow(0 0 6px color-mix(in srgb, var(--agent-divider-glow) 60%, transparent))
-    drop-shadow(0 0 2px color-mix(in srgb, var(--agent-divider-glow) 90%, transparent));
+    drop-shadow(0 0 6px var(--agent-divider-glow-shadow-1))
+    drop-shadow(0 0 2px var(--agent-divider-glow-shadow-2));
   pointer-events: none;
   z-index: 10;
 }
@@ -453,5 +456,13 @@ const emit = defineEmits<{
     min-height: 0;
     padding: 0;
   }
+}
+</style>
+
+<style>
+:root[data-theme='light'] .agent-detail-dialog {
+  --agent-divider-glow-bg: var(--border-strong);
+  --agent-divider-glow-shadow-1: var(--interactive-focus-ring);
+  --agent-divider-glow-shadow-2: var(--border-strong);
 }
 </style>
