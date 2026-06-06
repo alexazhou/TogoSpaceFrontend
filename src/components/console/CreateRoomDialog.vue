@@ -527,6 +527,7 @@ watch(
   gap: 10px;
 }
 
+.create-room-actions > .primary-button,
 .create-room-actions > .ghost-button,
 .create-room-actions > .secondary-button {
   min-width: 88px;

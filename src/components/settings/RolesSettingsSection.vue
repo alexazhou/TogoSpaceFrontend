@@ -315,9 +315,9 @@ onMounted(() => {
 }
 
 .role-chip--user {
-  border-color: color-mix(in srgb, var(--accent) 18%, var(--panel-border) 82%);
-  background: color-mix(in srgb, var(--accent) 10%, var(--panel-bg) 90%);
-  color: color-mix(in srgb, var(--text-strong) 90%, var(--accent) 10%);
+  border-color: color-mix(in srgb, var(--state-success) 30%, var(--panel-border) 70%);
+  background: color-mix(in srgb, var(--state-success) 12%, var(--panel-bg) 88%);
+  color: color-mix(in srgb, var(--state-success) 90%, var(--text-strong) 10%);
 }
 
 @media (max-width: 780px) {
