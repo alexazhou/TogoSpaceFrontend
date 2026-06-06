@@ -963,7 +963,7 @@ const activityView = computed(() => {
 
 .agent-activity-item__chip--danger {
   background: var(--surface-chip-danger);
-  color: var(--text-danger-accent);
+  color: var(--danger);
 }
 
 .agent-activity-item__direction {
@@ -1028,7 +1028,7 @@ const activityView = computed(() => {
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__status {
   background: var(--surface-chip-danger);
-  color: var(--text-danger-accent);
+  color: var(--danger);
 }
 
 .agent-activity-item__summary {
@@ -1082,18 +1082,18 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item__summary--danger {
-  color: var(--text-danger-accent);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__send-chat-content {
-  color: var(--text-danger-accent);
+  color: var(--danger);
 }
 
 
 
 .agent-activity-item__error {
   margin: 0;
-  color: var(--text-danger-accent);
+  color: var(--danger);
   font-size: 0.7rem;
   font-weight: 600;
   line-height: 1.35;
@@ -1112,41 +1112,41 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__summary {
-  color: var(--text-danger-muted);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__chip {
   background: var(--surface-chip-danger);
-  color: var(--text-danger-strong);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__tool-result,
 .agent-activity-item[data-status='failed'] .agent-activity-item__received-message {
-  color: var(--text-danger-strong);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__tool-result--code {
-  color: var(--text-danger-muted);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__summary--code {
-  color: var(--text-danger-muted);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__summary--bash-description {
-  color: var(--text-danger-strong);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__tool-result--code {
-  color: var(--text-danger-muted);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__tool-result--stdout {
-  color: var(--text-danger-strong);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__received-sender {
-  color: var(--text-danger-strong);
+  color: var(--danger);
 }
 
 .agent-activity-item--expanded .agent-activity-item__row {
@@ -1235,7 +1235,7 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item__tool-result--stderr {
-  color: var(--text-danger-accent);
+  color: var(--danger);
 }
 
 .agent-activity-item__received-message {

@@ -12,6 +12,10 @@ const props = defineProps<{
   agentId: number | null;
 }>();
 
+const emit = defineEmits<{
+  followChange: [boolean];
+}>();
+
 const { t } = useI18n();
 
 const activityListRef = ref<HTMLElement | null>(null);
@@ -22,6 +26,9 @@ const activitiesLoadingOlder = ref(false);
 const activitiesErrorMessage = ref('');
 const activitiesHasMore = ref(false);
 const shouldFollowActivities = ref(true);
+watch(shouldFollowActivities, (val) => {
+  emit('followChange', val);
+}, { immediate: true });
 const lastActivityScrollTop = ref(0);
 const ACTIVITY_PAGE_SIZE = 50;
 let activityRequestToken = 0;

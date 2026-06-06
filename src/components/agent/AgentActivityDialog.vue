@@ -37,6 +37,7 @@ const supervising = ref(false);
 const superviseError = ref('');
 const superviseFocused = ref(false);
 const superviseTextareaRef = ref<HTMLTextAreaElement | null>(null);
+const isActivitiesFollowing = ref(true);
 
 const runtimeStatus = useAgentStatus(() => props.agentId);
 
@@ -318,6 +319,7 @@ watch(
         v-show="activeTab === 'activities'"
         :open="open"
         :agent-id="agentId"
+        @follow-change="isActivitiesFollowing = $event"
       />
       <AgentTaskPanel
         v-show="activeTab === 'tasks'"
@@ -329,7 +331,7 @@ watch(
     </template>
 
     <template #supervise>
-      <section class="agent-supervise-section">
+      <section class="agent-supervise-section" :class="{ 'is-following': isActivitiesFollowing && activeTab === 'activities' }">
         <div class="agent-supervise-section__input-row">
           <div class="agent-supervise-section__editor" :class="{ 'is-focused': superviseFocused }">
             <textarea
@@ -509,6 +511,12 @@ watch(
   background: var(--agent-divider-emphasis, color-mix(in srgb, var(--panel-border) 94%, var(--border-subtle) 6%));
   box-shadow: 0 1px 0 color-mix(in srgb, var(--agent-divider-emphasis, var(--panel-border)) 24%, transparent);
   pointer-events: none;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.agent-supervise-section.is-following::after {
+  background: var(--accent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .agent-supervise-section__input-row {
