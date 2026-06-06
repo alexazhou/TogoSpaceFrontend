@@ -46,6 +46,7 @@ const emit = defineEmits<{
   saveTeamInfo: [];
   resetTeamInfoDraft: [];
   treeSaved: [];
+  disableTeam: [teamId: number];
   'update:name': [value: string];
   'update:workingDirectory': [value: string];
   'update:slogan': [value: string];
@@ -116,6 +117,7 @@ const disabledTeams = computed(() => props.teams.filter((team) => !team.enabled)
           :team-name="selectedTeamDetail.name"
           :team-enabled="selectedTeamDetail.enabled"
           @saved="emit('treeSaved')"
+          @disable-team="emit('disableTeam', $event)"
         />
 
         <div class="team-detail-danger-actions">
