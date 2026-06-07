@@ -108,6 +108,8 @@
     "skills": "技能",
     "skillsDesc": "授权的额外能力（例如使用浏览器）",
     "skillList": "技能列表",
+    "builtinSkill": "内置",
+    "userSkill": "用户添加",
     "saveProperties": "保存修改",
     "propertiesSaved": "属性已保存",
     "loadingInfo": "正在加载 Agent 信息…",

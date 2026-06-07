@@ -5,6 +5,7 @@ type CustomSelectOption = {
   value: string;
   label: string;
   category?: string;
+  categoryType?: 'info' | 'success' | 'warning' | 'danger';
 };
 
 const props = defineProps<{
@@ -117,7 +118,7 @@ onBeforeUnmount(() => {
       >
         <span class="custom-select__option-text">
           {{ option.label }}
-          <span v-if="option.category" class="custom-select__category">{{ option.category }}</span>
+          <span v-if="option.category" :class="['custom-select__category', option.categoryType ? `is-${option.categoryType}` : '']">{{ option.category }}</span>
         </span>
         <span v-if="modelValue.includes(option.value)" class="custom-select__check">✓</span>
       </button>
@@ -246,10 +247,35 @@ onBeforeUnmount(() => {
 
 .custom-select__category {
   font-size: 0.75rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--surface-pill);
-  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--text-primary) 12%, transparent);
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 20%, transparent);
+}
+
+.custom-select__category.is-info {
+  background: color-mix(in srgb, var(--state-info) 15%, transparent);
+  color: var(--state-info);
+  border-color: color-mix(in srgb, var(--state-info) 50%, transparent);
+}
+
+.custom-select__category.is-success {
+  background: color-mix(in srgb, var(--state-success) 15%, transparent);
+  color: var(--state-success);
+  border-color: color-mix(in srgb, var(--state-success) 50%, transparent);
+}
+
+.custom-select__category.is-warning {
+  background: color-mix(in srgb, var(--state-warning) 15%, transparent);
+  color: var(--state-warning);
+  border-color: color-mix(in srgb, var(--state-warning) 50%, transparent);
+}
+
+.custom-select__category.is-danger {
+  background: color-mix(in srgb, var(--state-danger) 15%, transparent);
+  color: var(--state-danger);
+  border-color: color-mix(in srgb, var(--state-danger) 50%, transparent);
 }
 
 .custom-select__option:hover,

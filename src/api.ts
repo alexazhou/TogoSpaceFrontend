@@ -992,6 +992,7 @@ export async function checkSystemStatus(): Promise<{ initialized: boolean }> {
 export interface SkillConfig {
   name: string;
   description: string;
+  is_builtin?: boolean;
 }
 
 export interface ToolConfig {

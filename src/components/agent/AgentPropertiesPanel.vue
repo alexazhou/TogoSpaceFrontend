@@ -33,6 +33,8 @@ const toolOptions = computed(() => availableTools.value.map(t => ({
 const skillOptions = computed(() => availableSkills.value.map(s => ({
   value: s.name,
   label: s.name,
+  category: s.is_builtin ? t('agent.builtinSkill') : t('agent.userSkill'),
+  categoryType: s.is_builtin ? 'info' : 'success'
 })));
 
 const configModeOptions = computed(() => [

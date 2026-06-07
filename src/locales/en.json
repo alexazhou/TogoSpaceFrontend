@@ -108,6 +108,8 @@
     "skills": "Skills",
     "skillsDesc": "Agent has no skills by default, need to manually add them",
     "skillList": "Skill List",
+    "builtinSkill": "Built-in",
+    "userSkill": "User Added",
     "saveProperties": "Save Properties",
     "propertiesSaved": "Properties saved",
     "loadingInfo": "Loading agent info…",
