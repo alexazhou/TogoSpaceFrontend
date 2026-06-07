@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { getAvailableSkills, getAvailableTools, updateAgentProperties, SkillConfig, ToolConfig } from '../../api';
 import { showGlobalSuccessToast } from '../../appUiState';
 import CustomMultiSelect from '../ui/CustomMultiSelect.vue';
+import CustomSelect from '../ui/CustomSelect.vue';
 import type { AgentDetail } from '../../types';
 
 const props = defineProps<{
@@ -34,6 +35,12 @@ const skillOptions = computed(() => availableSkills.value.map(s => ({
   label: s.name,
 })));
 
+const configModeOptions = computed(() => [
+  { value: 'auto', label: t('common.auto') },
+  { value: 'manual', label: t('common.manual') }
+]);
+
+const configModeTools = ref('auto');
 const selectedTools = ref<string[]>([]);
 const selectedSkills = ref<string[]>([]);
 
@@ -57,9 +64,16 @@ watch(
   () => props.initialAgent,
   (agent) => {
     if (agent) {
-      selectedTools.value = [...(agent.allow_tools || [])];
+      if (agent.allow_tools === null || agent.allow_tools === undefined) {
+        configModeTools.value = 'auto';
+        selectedTools.value = [];
+      } else {
+        configModeTools.value = 'manual';
+        selectedTools.value = [...agent.allow_tools];
+      }
       selectedSkills.value = [...(agent.allow_skills || [])];
     } else {
+      configModeTools.value = 'auto';
       selectedTools.value = [];
       selectedSkills.value = [];
     }
@@ -76,9 +90,16 @@ const canSave = computed(() => props.agentId !== null && !saving.value && hasCha
 const hasChanges = computed(() => {
   if (!props.initialAgent) return false;
   
-  const initialTools = [...(props.initialAgent.allow_tools || [])].sort();
-  const currentTools = [...selectedTools.value].sort();
-  if (initialTools.join(',') !== currentTools.join(',')) return true;
+  const initialAutoTools = props.initialAgent.allow_tools === null || props.initialAgent.allow_tools === undefined;
+  const isCurrentlyAuto = configModeTools.value === 'auto';
+  
+  if (initialAutoTools !== isCurrentlyAuto) return true;
+  
+  if (!isCurrentlyAuto) {
+    const initialTools = [...(props.initialAgent.allow_tools || [])].sort();
+    const currentTools = [...selectedTools.value].sort();
+    if (initialTools.join(',') !== currentTools.join(',')) return true;
+  }
   
   const initialSkills = [...(props.initialAgent.allow_skills || [])].sort();
   const currentSkills = [...selectedSkills.value].sort();
@@ -89,7 +110,13 @@ const hasChanges = computed(() => {
 
 function handleRestore() {
   if (props.initialAgent) {
-    selectedTools.value = [...(props.initialAgent.allow_tools || [])];
+    if (props.initialAgent.allow_tools === null || props.initialAgent.allow_tools === undefined) {
+      configModeTools.value = 'auto';
+      selectedTools.value = [];
+    } else {
+      configModeTools.value = 'manual';
+      selectedTools.value = [...props.initialAgent.allow_tools];
+    }
     selectedSkills.value = [...(props.initialAgent.allow_skills || [])];
   }
 }
@@ -99,7 +126,7 @@ async function handleSave() {
   saving.value = true;
   try {
     const updatedAgent = await updateAgentProperties(props.agentId, {
-      allow_tools: selectedTools.value,
+      allow_tools: configModeTools.value === 'auto' ? null : selectedTools.value,
       allow_skills: selectedSkills.value,
     });
     showGlobalSuccessToast(t('agent.propertiesSaved'));
@@ -126,11 +153,28 @@ async function handleSave() {
             <span class="tooltip-content">{{ t('agent.allowToolsDesc') }}</span>
           </span>
         </h3>
-        <CustomMultiSelect
-          v-model="selectedTools"
-          :options="toolOptions"
-          :placeholder="t('common.auto')"
-        />
+        
+        <div class="config-mode-row">
+          <span class="row-label">{{ t('common.configMode') }}</span>
+          <CustomSelect
+            v-model="configModeTools"
+            :options="configModeOptions"
+            class="compact-select"
+            style="width: 120px;"
+          />
+        </div>
+
+        <div class="config-mode-row" v-if="configModeTools === 'manual'">
+          <span class="row-label">{{ t('agent.toolList') }}</span>
+          <div style="flex: 1; min-width: 0;">
+            <CustomMultiSelect
+              v-model="selectedTools"
+              :options="toolOptions"
+              :placeholder="t('common.none')"
+              class="compact-select"
+            />
+          </div>
+        </div>
       </div>
 
       <div class="form-section">
@@ -141,11 +185,17 @@ async function handleSave() {
             <span class="tooltip-content">{{ t('agent.skillsDesc') }}</span>
           </span>
         </h3>
-        <CustomMultiSelect
-          v-model="selectedSkills"
-          :options="skillOptions"
-          :placeholder="t('common.none')"
-        />
+        <div class="config-mode-row">
+          <span class="row-label">{{ t('agent.skillList') }}</span>
+          <div style="flex: 1; min-width: 0;">
+            <CustomMultiSelect
+              v-model="selectedSkills"
+              :options="skillOptions"
+              :placeholder="t('common.none')"
+              class="compact-select"
+            />
+          </div>
+        </div>
       </div>
 
       <div class="form-actions">
@@ -194,6 +244,32 @@ async function handleSave() {
   color: var(--text-primary);
   display: flex;
   align-items: center;
+}
+
+.config-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.row-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.compact-select :deep(.custom-select__button) {
+  padding: 4px 10px;
+  min-height: 28px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.compact-select :deep(.custom-select__option) {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 13px;
 }
 
 .info-icon {
