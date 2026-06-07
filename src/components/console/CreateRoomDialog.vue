@@ -8,6 +8,7 @@ import { showGlobalSuccessToast } from '../../appUiState';
 import { loadRoleTemplates, loadTeamAgents, loadTeamRooms } from '../../realtime/runtimeStore';
 import { useRoleTemplates, useTeamAgents } from '../../realtime/selectors';
 import { displayName } from '../../utils';
+import type { AgentStatus } from '../../types';
 import ConfirmDialog from '../ui/ConfirmDialog.vue';
 
 type CreateRoomMemberOption = {
@@ -15,7 +16,7 @@ type CreateRoomMemberOption = {
   name: string;
   avatarName: string;
   subtitle?: string | null;
-  status?: 'active' | 'idle' | 'failed';
+  status?: AgentStatus;
 };
 
 const props = defineProps<{
