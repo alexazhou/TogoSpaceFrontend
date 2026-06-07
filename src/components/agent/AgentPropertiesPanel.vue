@@ -119,16 +119,28 @@ async function handleSave() {
     </div>
     <div v-else class="properties-form">
       <div class="form-section">
-        <h3 class="section-title">{{ t('agent.allowTools') }}</h3>
+        <h3 class="section-title">
+          {{ t('agent.allowTools') }}
+          <span class="tooltip-wrapper">
+            <span class="info-icon">ⓘ</span>
+            <span class="tooltip-content">{{ t('agent.allowToolsDesc') }}</span>
+          </span>
+        </h3>
         <CustomMultiSelect
           v-model="selectedTools"
           :options="toolOptions"
-          :placeholder="t('common.none')"
+          :placeholder="t('common.auto')"
         />
       </div>
 
       <div class="form-section">
-        <h3 class="section-title">{{ t('agent.skills') }}</h3>
+        <h3 class="section-title">
+          {{ t('agent.skills') }}
+          <span class="tooltip-wrapper">
+            <span class="info-icon">ⓘ</span>
+            <span class="tooltip-content">{{ t('agent.skillsDesc') }}</span>
+          </span>
+        </h3>
         <CustomMultiSelect
           v-model="selectedSkills"
           :options="skillOptions"
@@ -180,6 +192,75 @@ async function handleSave() {
   font-weight: 600;
   margin-bottom: 12px;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+}
+
+.info-icon {
+  display: inline-flex;
+  margin-left: 6px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: normal;
+  cursor: help;
+  align-items: center;
+  justify-content: center;
+}
+
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tooltip-content {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 4px);
+  transform: translateY(-50%);
+  padding: 6px 12px;
+  background: var(--surface-panel, #333);
+  color: var(--text-primary, #fff);
+  border: 1px solid var(--border-strong, #555);
+  font-size: 12px;
+  font-weight: normal;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease, left 0.15s ease;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.tooltip-content::before,
+.tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  border-style: solid;
+  pointer-events: none;
+}
+
+.tooltip-content::after {
+  border-width: 5px;
+  border-color: transparent var(--border-strong, #555) transparent transparent;
+}
+
+.tooltip-content::before {
+  border-width: 4px;
+  border-color: transparent var(--surface-panel, #333) transparent transparent;
+  z-index: 1;
+  margin-right: -1px;
+}
+
+.tooltip-wrapper:hover .tooltip-content {
+  opacity: 1;
+  visibility: visible;
+  left: calc(100% + 8px);
 }
 
 .form-actions {
