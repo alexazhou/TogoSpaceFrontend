@@ -786,6 +786,8 @@ const activityView = computed(() => {
   border: 1px solid var(--border-activity-item);
   flex-shrink: 0;
   position: relative;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .agent-activity-item:hover,
@@ -1218,6 +1220,7 @@ const activityView = computed(() => {
   -webkit-line-clamp: 5;
   overflow: hidden;
   white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .agent-activity-item__tool-result--description {
@@ -1266,6 +1269,7 @@ const activityView = computed(() => {
   padding-right: 4px;
   font-size: 0.8rem;
   line-height: 1.55;
+  min-width: 0;
 }
 
 .agent-activity-item__chat-reply--collapsed {
