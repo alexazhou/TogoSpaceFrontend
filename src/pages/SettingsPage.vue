@@ -7,6 +7,7 @@ import { backupDatabase, getAgents, getDeptTree, getTeamPresetExport } from '../
 import { showGlobalSuccessToast, showQuickInit, totalMessageCount } from '../appUiState';
 import ModelsSettingsSection from '../components/settings/ModelsSettingsSection.vue';
 import RolesSettingsSection from '../components/settings/RolesSettingsSection.vue';
+import SkillsSettingsSection from '../components/settings/SkillsSettingsSection.vue';
 import SettingsNavSidebar from '../components/settings/SettingsNavSidebar.vue';
 import SystemMaintenanceSection from '../components/settings/SystemMaintenanceSection.vue';
 import TeamPresetExportDialog from '../components/settings/TeamPresetExportDialog.vue';
@@ -361,6 +362,12 @@ watch(
 
         <ModelsSettingsSection
           v-else-if="currentSectionId === 'models'"
+          :breadcrumb-items="breadcrumbItems"
+          @navigate-breadcrumb="handleBreadcrumbNavigate"
+        />
+
+        <SkillsSettingsSection
+          v-else-if="currentSectionId === 'skills'"
           :breadcrumb-items="breadcrumbItems"
           @navigate-breadcrumb="handleBreadcrumbNavigate"
         />

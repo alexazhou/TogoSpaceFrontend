@@ -546,6 +546,23 @@
         "actions": "Actions"
       }
     },
+    "skills": {
+      "title": "Skill Management",
+      "loading": "Loading skills...",
+      "empty": "No skills available.",
+      "builtin": "Built-in",
+      "userCustom": "User added",
+      "table": {
+        "name": "Skill Name",
+        "description": "Description",
+        "type": "Type",
+        "actions": "Actions"
+      },
+      "view": "View",
+      "detailsTitle": "Skill Details",
+      "files": "Files",
+      "restartPrompt": "Note: Newly added skills (or modified files) will only take effect and appear here after restarting the backend service."
+    },
     "nav": {
       "label": "Navigation",
       "ariaLabel": "Settings navigation",
@@ -557,6 +574,8 @@
       "rolesNote": "Role templates and responsibilities",
       "models": "LLM Service Management",
       "modelsNote": "Model services and call policies",
+      "skills": "Skill Management",
+      "skillsNote": "System skills and user-defined skills",
       "maintenance": "System Maintenance",
       "maintenanceNote": "Database backup and maintenance actions",
       "runtime": "Runtime & Storage",

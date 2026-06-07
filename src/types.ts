@@ -354,3 +354,10 @@ export interface LlmServiceTestResult {
     raw_error?: string;
   };
 }
+
+export interface SkillInfo {
+  name: string;
+  description: string;
+  is_builtin: boolean;
+  files: string[];
+}

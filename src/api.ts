@@ -27,6 +27,7 @@ import type {
   TeamRoomDetail,
   TeamDetail,
   TeamSummary,
+  SkillInfo,
 } from './types';
 import { showGlobalRequestError, showTokenDialog } from './appUiState';
 import { getToken } from './authStore';
@@ -1125,4 +1126,9 @@ export async function superviseAgent(
     method: 'POST',
     body: JSON.stringify({ content, insert_immediately: insertImmediately }),
   });
+}
+
+export async function getSkills(): Promise<SkillInfo[]> {
+  const result = await requestJson<{ skills: SkillInfo[] }>(`/config/skills/list.json?_t=${Date.now()}`);
+  return result.skills;
 }

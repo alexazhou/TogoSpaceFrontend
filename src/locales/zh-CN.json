@@ -546,6 +546,23 @@
         "actions": "操作"
       }
     },
+    "skills": {
+      "title": "技能管理",
+      "loading": "正在加载技能...",
+      "empty": "当前没有可用的技能。",
+      "builtin": "系统内置",
+      "userCustom": "用户添加",
+      "table": {
+        "name": "技能名称",
+        "description": "描述",
+        "type": "类型",
+        "actions": "操作"
+      },
+      "view": "查看",
+      "detailsTitle": "技能详情",
+      "files": "相关文件",
+      "restartPrompt": "注意：新增加的技能（或修改的文件），需要重启后端服务后才会生效并在此处显示。"
+    },
     "nav": {
       "label": "导航菜单",
       "ariaLabel": "设置导航",
@@ -557,6 +574,8 @@
       "rolesNote": "角色模板与职责分配",
       "models": "大模型服务管理",
       "modelsNote": "模型服务与调用策略",
+      "skills": "技能管理",
+      "skillsNote": "系统技能与用户自定义技能",
       "maintenance": "系统维护",
       "maintenanceNote": "数据库备份与维护操作",
       "runtime": "运行与存储",

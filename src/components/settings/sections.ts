@@ -2,6 +2,7 @@ export const SETTINGS_ROUTE_SECTIONS = [
   'teams',
   'roles',
   'models',
+  'skills',
   'maintenance',
 ] as const;
 
@@ -13,6 +14,7 @@ export const SETTINGS_NAV_ITEMS = [
   'teams',
   'roles',
   'models',
+  'skills',
   'maintenance',
   'quickInit',
 ] as const;

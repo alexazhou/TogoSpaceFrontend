@@ -34,7 +34,7 @@ const skillOptions = computed(() => availableSkills.value.map(s => ({
   value: s.name,
   label: s.name,
   category: s.is_builtin ? t('agent.builtinSkill') : t('agent.userSkill'),
-  categoryType: s.is_builtin ? 'info' : 'success'
+  categoryType: (s.is_builtin ? 'info' : 'success') as 'info' | 'success'
 })));
 
 const configModeOptions = computed(() => [
