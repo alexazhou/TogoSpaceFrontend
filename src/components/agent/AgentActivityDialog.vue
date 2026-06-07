@@ -63,12 +63,9 @@ const statusLabel = computed(() => {
   if (!currentStatus.value) {
     return '';
   }
-  if (currentStatus.value === 'active') {
-    return t('agent.status.active');
-  }
-  if (currentStatus.value === 'failed') {
-    return t('agent.status.failed');
-  }
+  if (currentStatus.value === 'active') return t('agent.status.active');
+  if (currentStatus.value === 'failed') return t('agent.status.failed');
+  if (currentStatus.value === 'closed') return t('agent.status.closed');
   return t('agent.status.idle');
 });
 
@@ -442,7 +439,8 @@ watch(
   border-color: var(--danger, #f85149);
 }
 
-.agent-status-panel[data-status='failed'] {
+.agent-status-panel[data-status='failed'],
+.agent-status-panel[data-status='closed'] {
   color: var(--danger, #f85149);
 }
 
@@ -493,7 +491,8 @@ watch(
   box-shadow: none;
 }
 
-.agent-status-panel[data-status='failed'] .status-dot {
+.agent-status-panel[data-status='failed'] .status-dot,
+.agent-status-panel[data-status='closed'] .status-dot {
   background: var(--danger, #f85149);
   box-shadow: none;
 }

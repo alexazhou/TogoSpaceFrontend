@@ -88,7 +88,8 @@
     "status": {
       "active": "忙碌",
       "idle": "空闲",
-      "failed": "失败"
+      "failed": "失败",
+      "closed": "已关闭"
     },
     "stop": "停止",
     "stopping": "停止中…",

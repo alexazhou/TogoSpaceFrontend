@@ -1,4 +1,4 @@
-export type AgentStatus = 'active' | 'idle' | 'failed';
+export type AgentStatus = 'active' | 'idle' | 'failed' | 'closed';
 export type AgentActivityType =
   | 'llm_infer'
   | 'tool_call'

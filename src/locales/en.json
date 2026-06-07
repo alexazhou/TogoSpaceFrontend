@@ -88,7 +88,8 @@
     "status": {
       "active": "Active",
       "idle": "Idle",
-      "failed": "Failed"
+      "failed": "Failed",
+      "closed": "Closed"
     },
     "stop": "Stop",
     "stopping": "Stopping…",
