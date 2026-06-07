@@ -1270,6 +1270,7 @@ const activityView = computed(() => {
   font-size: 0.8rem;
   line-height: 1.55;
   min-width: 0;
+  color: var(--text);
 }
 
 .agent-activity-item__chat-reply--collapsed {
