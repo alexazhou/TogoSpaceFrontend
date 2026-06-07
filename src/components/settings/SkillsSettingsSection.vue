@@ -153,15 +153,15 @@ onMounted(() => {
   gap: 8px;
   padding: 10px 14px;
   margin-bottom: 12px;
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface-soft) 88%);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  background: color-mix(in srgb, var(--state-warning) 10%, var(--surface-panel) 90%);
+  border: 1px solid color-mix(in srgb, var(--state-warning) 30%, var(--border-default) 70%);
   border-radius: 12px;
-  color: var(--text-secondary);
+  color: color-mix(in srgb, var(--text-primary) 85%, var(--state-warning) 15%);
   font-size: 0.86rem;
 }
 
 .skills-info-banner .info-icon {
-  color: var(--accent);
+  color: var(--state-warning);
   font-size: 1.1em;
 }
 
