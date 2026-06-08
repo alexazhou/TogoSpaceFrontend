@@ -540,6 +540,10 @@
       "deleteConfirmTitle": "Delete Role Template",
       "deleteConfirmMsg": "Confirm deleting template \"{name}\"? This cannot be undone.",
       "deleteConfirmBtn": "Delete",
+      "saveConfirmTitle": "Save Confirmation",
+      "saveConfirmMsg": "Are you sure you want to save the modifications to this role template?",
+      "cancelConfirmTitle": "Cancel Confirmation",
+      "cancelConfirmMsg": "You have unsaved changes. Are you sure you want to discard them?",
       "table": {
         "id": "ID",
         "type": "Type",

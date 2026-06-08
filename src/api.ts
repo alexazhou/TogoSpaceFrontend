@@ -115,10 +115,8 @@ type RawRoleTemplateSummary = Partial<RoleTemplateSummary> & {
   id?: unknown;
   name?: unknown;
   i18n?: unknown;
-  model?: unknown;
   soul?: unknown;
   type?: string | null;
-  allowed_tools?: unknown;
 };
 
 type RawTeamSummary = {
@@ -598,7 +596,6 @@ function normalizeRoleTemplateSummary(template: RawRoleTemplateSummary): RoleTem
     id: Number(template.id ?? 0),
     name: String(template.name ?? ''),
     i18n: normalizeEntityI18n(template.i18n),
-    model: String(template.model ?? ''),
     soul: String(template.soul ?? ''),
     type: template.type,
   };
@@ -609,9 +606,6 @@ function normalizeRoleTemplateDetail(template: RawRoleTemplateSummary, templateI
     ...normalizeRoleTemplateSummary(template),
     id: Number(template.id ?? templateId ?? 0),
     soul: String(template.soul ?? ''),
-    allowed_tools: Array.isArray(template.allowed_tools)
-      ? template.allowed_tools.map((item) => String(item))
-      : null,
   };
 }
 
@@ -698,8 +692,6 @@ export async function getRoleTemplateDetail(templateId: number): Promise<RoleTem
 export async function createRoleTemplate(payload: {
   name: string;
   soul: string;
-  model: string;
-  allowed_tools: string[] | null;
 }): Promise<RoleTemplateDetail> {
   const data = await requestJson<RawRoleTemplateSummary>('/role_templates/create.json', {
     method: 'POST',
@@ -711,8 +703,6 @@ export async function createRoleTemplate(payload: {
 export async function updateRoleTemplate(templateId: number, payload: {
   name: string;
   soul: string;
-  model: string;
-  allowed_tools: string[] | null;
 }): Promise<RoleTemplateDetail> {
   const data = await requestJson<RawRoleTemplateSummary>(`/role_templates/${templateId}/modify.json`, {
     method: 'POST',

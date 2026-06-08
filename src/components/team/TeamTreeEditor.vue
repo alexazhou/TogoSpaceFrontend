@@ -576,7 +576,6 @@ const memberTemplateOptions = computed(() => {
         id: template.id,
         name: template.name,
         displayName: displayName(template),
-        model: template.model || '',
         soul: template.soul || '',
       });
     }
@@ -588,7 +587,6 @@ const memberTemplateOptions = computed(() => {
         id: node.roleTemplateId,
         name: t('agent.templateFallback', { id: node.roleTemplateId }),
         displayName: t('agent.templateFallback', { id: node.roleTemplateId }),
-        model: '',
         soul: '',
       });
     }
@@ -630,8 +628,7 @@ const {
 });
 
 const currentTemplateModelLabel = computed(() => {
-  const templateModel = currentMemberTemplateOption.value?.model || '';
-  return templateModel || resolveDefaultModelLabel(frontendConfig.value);
+  return resolveDefaultModelLabel(frontendConfig.value);
 });
 
 const currentTemplateName = computed(() => currentMemberTemplateOption.value?.displayName || '');

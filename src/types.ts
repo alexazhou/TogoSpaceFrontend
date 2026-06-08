@@ -310,14 +310,12 @@ export interface RoleTemplateSummary {
   id: number;
   name: string;
   i18n: EntityI18n;
-  model: string;
   soul?: string;
   type?: string | null;
 }
 
 export interface RoleTemplateDetail extends RoleTemplateSummary {
   soul: string;
-  allowed_tools: string[] | null;
 }
 
 export type LlmServiceType = 'openai-compatible' | 'anthropic' | 'google' | 'deepseek';

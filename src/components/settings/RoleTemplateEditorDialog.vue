@@ -17,8 +17,6 @@ type EditorMode = 'create' | 'edit';
 type RoleTemplateFormSnapshot = {
   name: string;
   soul: string;
-  model: string;
-  allowed_tools: string[] | null;
 };
 
 const emit = defineEmits<{
@@ -36,12 +34,12 @@ const isSaving = ref(false);
 const isDeleting = ref(false);
 const advancedOpen = ref(false);
 const deleteConfirmOpen = ref(false);
+const saveConfirmOpen = ref(false);
+const cancelConfirmOpen = ref(false);
 const statusText = ref('');
 const form = ref({
   name: '',
   soul: '',
-  model: '',
-  allowedToolsText: '',
 });
 
 const isCreating = computed(() => mode.value === 'create');
@@ -81,8 +79,6 @@ const isSystemReadonlyFields = computed(() => !isCreating.value && isSystemTempl
 const formSnapshot = computed<RoleTemplateFormSnapshot>(() => ({
   name: form.value.name.trim(),
   soul: form.value.soul,
-  model: form.value.model.trim(),
-  allowed_tools: normalizeAllowedToolsList(parseAllowedTools()),
 }));
 const currentDetailSnapshot = computed<RoleTemplateFormSnapshot | null>(() => {
   if (!currentDetail.value) {
@@ -91,8 +87,6 @@ const currentDetailSnapshot = computed<RoleTemplateFormSnapshot | null>(() => {
   return {
     name: currentDetail.value.name.trim(),
     soul: currentDetail.value.soul,
-    model: currentDetail.value.model.trim(),
-    allowed_tools: normalizeAllowedToolsList(currentDetail.value.allowed_tools),
   };
 });
 const isDirty = computed(() => {
@@ -114,30 +108,12 @@ const canSave = computed(() => {
   return !!currentDetail.value && !isSystemTemplate.value && isDirty.value;
 });
 
-function parseAllowedTools(): string[] | null {
-  const items = form.value.allowedToolsText
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-  return items.length ? items : null;
-}
 
-function normalizeAllowedToolsList(value: string[] | null | undefined): string[] | null {
-  if (!Array.isArray(value)) {
-    return null;
-  }
-  const normalized = value
-    .map((item) => String(item).trim())
-    .filter(Boolean);
-  return normalized.length ? normalized : null;
-}
 
 function resetForm(detail?: RoleTemplateDetail | null): void {
   form.value = {
     name: detail?.name || '',
     soul: detail?.soul || '',
-    model: detail?.model || '',
-    allowedToolsText: (detail?.allowed_tools ?? []).join(', '),
   };
   advancedOpen.value = false;
   statusText.value = '';
@@ -150,7 +126,22 @@ function closeDialog(): void {
   currentDetail.value = null;
   editorLoading.value = false;
   deleteConfirmOpen.value = false;
+  saveConfirmOpen.value = false;
+  cancelConfirmOpen.value = false;
   resetForm(null);
+}
+
+function requestClose(): void {
+  if (isDirty.value) {
+    cancelConfirmOpen.value = true;
+  } else {
+    closeDialog();
+  }
+}
+
+function confirmCancel(): void {
+  cancelConfirmOpen.value = false;
+  closeDialog();
 }
 
 function openCreate(): void {
@@ -181,6 +172,18 @@ async function openEdit(templateId: number): Promise<void> {
   }
 }
 
+function requestSave(): void {
+  if (!canSave.value) {
+    return;
+  }
+  saveConfirmOpen.value = true;
+}
+
+async function confirmSave(): Promise<void> {
+  saveConfirmOpen.value = false;
+  await saveTemplate();
+}
+
 async function saveTemplate(): Promise<void> {
   if (!canSave.value) {
     return;
@@ -194,8 +197,6 @@ async function saveTemplate(): Promise<void> {
       const created = await createRoleTemplate({
         name: form.value.name.trim(),
         soul: form.value.soul,
-        model: form.value.model.trim(),
-        allowed_tools: parseAllowedTools(),
       });
       showGlobalSuccessToast(t('settings.roles.createSuccess'));
       emit('changed', { preferredId: created.id });
@@ -210,8 +211,6 @@ async function saveTemplate(): Promise<void> {
     const updated = await updateRoleTemplate(selectedTemplateId.value, {
       name: form.value.name.trim(),
       soul: form.value.soul,
-      model: form.value.model.trim(),
-      allowed_tools: parseAllowedTools(),
     });
     showGlobalSuccessToast(t('settings.roles.saveSuccess'));
     emit('changed', { preferredId: updated.id });
@@ -261,14 +260,14 @@ defineExpose({
 
 <template>
   <Teleport to="body">
-    <div v-if="visible" class="editor-overlay" @click.self="closeDialog">
+    <div v-if="visible" class="editor-overlay" @click.self="requestClose">
       <section class="editor-dialog panel scrollbar-thin">
         <header class="editor-head">
           <div class="editor-head-copy">
             <p class="editor-eyebrow">{{ dialogEyebrow }}</p>
             <h3>{{ dialogTitle }}</h3>
           </div>
-          <button type="button" class="ghost-button editor-close" :aria-label="t('common.close')" @click="closeDialog">
+          <button type="button" class="ghost-button editor-close" :aria-label="t('common.close')" @click="requestClose">
             ×
           </button>
         </header>
@@ -313,46 +312,7 @@ defineExpose({
             </label>
           </div>
 
-          <section class="advanced-card">
-            <button
-              type="button"
-              class="advanced-toggle"
-              :aria-expanded="advancedOpen"
-              @click="advancedOpen = !advancedOpen"
-            >
-              <div>
-                <p class="editor-eyebrow">Advanced</p>
-                <strong>{{ t('settings.roles.advanced') }}</strong>
-              </div>
-              <span class="advanced-toggle__state">{{ advancedOpen ? t('common.collapse') : t('common.expand') }}</span>
-            </button>
 
-            <div v-if="advancedOpen" class="advanced-grid">
-              <label class="role-field">
-                <span>{{ t('settings.roles.modelLabel') }}</span>
-                <input
-                  v-model="form.model"
-                  type="text"
-                  class="role-input"
-                  :class="{ 'role-input--readonly': isSystemReadonlyFields }"
-                  :placeholder="t('settings.roles.modelPlaceholder')"
-                  :readonly="isSystemReadonlyFields"
-                />
-              </label>
-
-              <label class="role-field role-field--wide">
-                <span>{{ t('settings.roles.toolsLabel') }}</span>
-                <input
-                  v-model="form.allowedToolsText"
-                  type="text"
-                  class="role-input"
-                  :class="{ 'role-input--readonly': isSystemReadonlyFields }"
-                  :placeholder="t('settings.roles.toolsPlaceholder')"
-                  :readonly="isSystemReadonlyFields"
-                />
-              </label>
-            </div>
-          </section>
         </template>
 
         <p v-if="statusText" class="editor-status">{{ statusText }}</p>
@@ -367,10 +327,10 @@ defineExpose({
           >
             {{ isDeleting ? t('settings.roles.deleting') : t('settings.roles.deleteBtn') }}
           </button>
-          <button type="button" class="secondary-button" @click="closeDialog">
+          <button type="button" class="secondary-button" @click="requestClose">
             {{ t('common.cancel') }}
           </button>
-          <button type="button" class="secondary-button" :disabled="!canSave" @click="saveTemplate">
+          <button type="button" class="secondary-button" :disabled="!canSave" @click="requestSave">
             {{ isSaving ? t('settings.roles.saving') : (isCreating ? t('settings.roles.createBtn') : t('settings.roles.saveBtn')) }}
           </button>
         </footer>
@@ -384,6 +344,25 @@ defineExpose({
         danger
         @close="deleteConfirmOpen = false"
         @confirm="confirmDelete"
+      />
+
+      <ConfirmDialog
+        :open="saveConfirmOpen"
+        :title="t('settings.roles.saveConfirmTitle')"
+        :message="t('settings.roles.saveConfirmMsg')"
+        :confirm-label="t('common.save')"
+        @close="saveConfirmOpen = false"
+        @confirm="confirmSave"
+      />
+
+      <ConfirmDialog
+        :open="cancelConfirmOpen"
+        :title="t('settings.roles.cancelConfirmTitle')"
+        :message="t('settings.roles.cancelConfirmMsg')"
+        :confirm-label="t('common.confirm')"
+        danger
+        @close="cancelConfirmOpen = false"
+        @confirm="confirmCancel"
       />
     </div>
   </Teleport>

@@ -540,6 +540,10 @@
       "deleteConfirmTitle": "删除角色模板",
       "deleteConfirmMsg": "确认删除模板“{name}”？删除后无法恢复。",
       "deleteConfirmBtn": "删除",
+      "saveConfirmTitle": "保存确认",
+      "saveConfirmMsg": "是否保存对角色模板的修改？",
+      "cancelConfirmTitle": "取消确认",
+      "cancelConfirmMsg": "您有未保存的修改，确定要放弃修改吗？",
       "table": {
         "id": "ID",
         "type": "类型",

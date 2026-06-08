@@ -107,7 +107,6 @@ onMounted(() => {
               <th>{{ t('settings.roles.table.id') }}</th>
               <th>{{ t('settings.roles.nameLabel') }}</th>
               <th>{{ t('settings.roles.table.type') }}</th>
-              <th>{{ t('settings.roles.modelLabel') }}</th>
               <th class="roles-table-actions-head">{{ t('settings.roles.table.actions') }}</th>
             </tr>
           </thead>
@@ -130,7 +129,6 @@ onMounted(() => {
                   {{ isSystemType(template.type) ? t('settings.roles.systemTemplate') : t('settings.roles.userTemplate') }}
                 </span>
               </td>
-              <td class="roles-cell-model">{{ template.model || t('common.auto') }}</td>
               <td class="roles-cell-actions">
                 <button type="button" class="ghost-button" @click.stop="openEdit(template.id)">
                   {{ t('common.edit') }}
@@ -262,13 +260,11 @@ onMounted(() => {
   padding-top: 18px;
 }
 
-.roles-cell-id,
-.roles-cell-model {
+.roles-cell-id {
   color: var(--muted);
 }
 
-.roles-cell-id,
-.roles-cell-model {
+.roles-cell-id {
   white-space: nowrap;
 }
 
@@ -281,9 +277,7 @@ onMounted(() => {
   font-size: 0.96rem;
 }
 
-.roles-cell-model {
-  width: 132px;
-}
+
 
 .roles-cell-actions,
 .roles-table-actions-head {

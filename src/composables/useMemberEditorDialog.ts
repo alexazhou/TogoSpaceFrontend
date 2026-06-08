@@ -7,7 +7,6 @@ export type MemberTemplateOption = {
   id: number;
   name: string;
   displayName: string;
-  model: string;
   soul: string;
 };
 
