@@ -132,7 +132,20 @@ const selectedMemberAvatarSeed = computed(() => (
             <small class="member-editor-field-note member-editor-field-note--placeholder" aria-hidden="true">{{ t('member.employeeNote') }}</small>
           </label>
           <label class="member-editor-field">
-            <span>{{ t('member.driver') }}</span>
+            <span class="member-editor-field-label">
+              {{ t('member.driver') }}
+              <span class="info-tooltip-wrapper">
+                <i class="info-icon">i</i>
+                <div class="info-tooltip">
+                  <ul>
+                    <li><b>自动</b>：默认等同于使用 TSP 驱动</li>
+                    <li><b>TSP</b>：功能完备的协议驱动，支持自由对话与本地文件操作（推荐首选）</li>
+                    <li><b>NATIVE</b>：基于 Python 实现的原生驱动，仅支持基础交谈，无法访问本地文件</li>
+                    <li><b>CLAUDE</b>：使用 Claude Code 作为 Agent 的驱动，相关能力仍在开发中（暂勿选择）</li>
+                  </ul>
+                </div>
+              </span>
+            </span>
             <select
               v-model="driverModel"
               class="member-editor-input"
@@ -375,6 +388,97 @@ const selectedMemberAvatarSeed = computed(() => (
   font-size: 0.74rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.member-editor-field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface-soft) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 60%, transparent);
+  color: var(--muted);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 600;
+  cursor: help;
+  text-transform: none;
+  letter-spacing: normal;
+  transition: all 0.15s ease;
+}
+
+.info-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 240px;
+  padding: 8px 12px;
+  background: var(--text-strong);
+  color: var(--panel-bg);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+  z-index: 100;
+  text-align: left;
+}
+
+.info-tooltip::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0;
+  border-style: solid;
+  border-color: var(--text-strong) transparent transparent transparent;
+}
+
+.info-tooltip-wrapper:hover .info-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.info-tooltip-wrapper:hover .info-icon {
+  background: color-mix(in srgb, var(--surface-soft) 100%, transparent);
+  color: var(--text-strong);
+}
+
+.info-tooltip ul {
+  margin: 0;
+  padding: 0 0 0 16px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: normal;
+}
+
+.info-tooltip li {
+  margin-bottom: 3px;
+}
+
+.info-tooltip li:last-child {
+  margin-bottom: 0;
 }
 
 .member-editor-field-note {

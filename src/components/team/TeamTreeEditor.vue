@@ -147,8 +147,8 @@ function createDepartmentNameAllocator(initialDepartmentNames: string[] = []): (
 }
 
 function parseDriverTypeValue(driver: string): string {
-  const normalized = driver.trim().toLowerCase();
-  if (normalized === 'native' || normalized === 'claude_sdk' || normalized === 'tsp') {
+  const normalized = driver.trim().toUpperCase();
+  if (normalized === 'NATIVE' || normalized === 'CLAUDE_SDK' || normalized === 'TSP') {
     return normalized;
   }
   return '';

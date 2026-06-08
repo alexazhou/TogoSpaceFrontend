@@ -104,7 +104,7 @@
     "tasks": "Tasks",
     "properties": "Properties",
     "allowTools": "Allowed Tools",
-    "allowToolsDesc": "When empty, all tools are allowed by default",
+    "allowToolsDesc": "Under Auto mode, all tools are allowed by default",
     "toolList": "Tool List",
     "skills": "Skills",
     "skillsDesc": "Agent has no skills by default, need to manually add them",

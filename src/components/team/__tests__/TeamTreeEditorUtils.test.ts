@@ -8,8 +8,8 @@ function createDraftNodeId(prefix = 'node'): string {
 }
 
 function parseDriverTypeValue(driver: string): string {
-  const normalized = driver.trim().toLowerCase();
-  if (normalized === 'native' || normalized === 'claude_sdk' || normalized === 'tsp') {
+  const normalized = driver.trim().toUpperCase();
+  if (normalized === 'NATIVE' || normalized === 'CLAUDE_SDK' || normalized === 'TSP') {
     return normalized;
   }
   return '';
@@ -192,17 +192,17 @@ describe('TeamTreeEditor utility functions', () => {
 
   describe('parseDriverTypeValue', () => {
     it('returns valid driver types', () => {
-      expect(parseDriverTypeValue('native')).toBe('native');
-      expect(parseDriverTypeValue('NATIVE')).toBe('native');
-      expect(parseDriverTypeValue('  native  ')).toBe('native');
-      expect(parseDriverTypeValue('claude_sdk')).toBe('claude_sdk');
-      expect(parseDriverTypeValue('tsp')).toBe('tsp');
+      expect(parseDriverTypeValue('native')).toBe('NATIVE');
+      expect(parseDriverTypeValue('NATIVE')).toBe('NATIVE');
+      expect(parseDriverTypeValue('  native  ')).toBe('NATIVE');
+      expect(parseDriverTypeValue('claude_sdk')).toBe('CLAUDE_SDK');
+      expect(parseDriverTypeValue('tsp')).toBe('TSP');
     });
 
     it('returns empty for invalid driver types', () => {
       expect(parseDriverTypeValue('unknown')).toBe('');
       expect(parseDriverTypeValue('')).toBe('');
-      expect(parseDriverTypeValue('Native')).toBe('native'); // lowercase conversion
+      expect(parseDriverTypeValue('Native')).toBe('NATIVE'); // lowercase conversion
     });
   });
 

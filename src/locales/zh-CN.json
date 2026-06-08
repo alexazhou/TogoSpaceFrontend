@@ -104,7 +104,7 @@
     "tasks": "任务",
     "properties": "属性",
     "allowTools": "允许工具",
-    "allowToolsDesc": "默认不填写时允许使用全部工具",
+    "allowToolsDesc": "自动模式下默认允许使用全部工具",
     "toolList": "工具列表",
     "skills": "技能",
     "skillsDesc": "授权的额外能力（例如使用浏览器）",
