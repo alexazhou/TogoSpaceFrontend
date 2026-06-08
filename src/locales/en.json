@@ -9,6 +9,7 @@
     "close": "Close",
     "back": "Back",
     "reset": "Reset",
+    "refresh": "Refresh",
     "loading": "Loading...",
     "create": "Create",
     "edit": "Edit",
@@ -19,6 +20,8 @@
     "unknown": "Unknown",
     "notSet": "Not set",
     "auto": "Auto",
+    "manual": "Manual",
+    "configMode": "Config Mode",
     "collapse": "Collapse",
     "expand": "Expand",
     "closeAlert": "Close alert",
@@ -26,7 +29,9 @@
     "copy": "Copy",
     "copied": "Copied",
     "enableCodeWrap": "Enable code wrapping",
-    "disableCodeWrap": "Disable code wrapping"
+    "disableCodeWrap": "Disable code wrapping",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen"
   },
   "language": {
     "switcher": "Switch language",
@@ -86,7 +91,8 @@
     "status": {
       "active": "Active",
       "idle": "Idle",
-      "failed": "Failed"
+      "failed": "Failed",
+      "closed": "Closed"
     },
     "stop": "Stop",
     "stopping": "Stopping…",
@@ -96,6 +102,17 @@
     "panelTabs": "Agent panel tabs",
     "activities": "Activities",
     "tasks": "Tasks",
+    "properties": "Properties",
+    "allowTools": "Allowed Tools",
+    "allowToolsDesc": "When empty, all tools are allowed by default",
+    "toolList": "Tool List",
+    "skills": "Skills",
+    "skillsDesc": "Agent has no skills by default, need to manually add them",
+    "skillList": "Skill List",
+    "builtinSkill": "Built-in",
+    "userSkill": "User Added",
+    "saveProperties": "Save Properties",
+    "propertiesSaved": "Properties saved",
     "loadingInfo": "Loading agent info…",
     "loadingActivities": "Loading agent activities…",
     "loadingEarlierActivities": "Loading earlier activity records…",
@@ -192,7 +209,7 @@
       "LOW": "Low"
     },
     "parseFailed": "Parse Failed",
-    "sendToRoomPrefix": "To Room [{room}]: ",
+    "sendToRoomPrefix": "Room [{room}]",
     "startChatTarget": "→ {agent}",
     "finishActionRoomLabel": "Room [{room}]",
     "backupLabel": "Backup Agents",
@@ -301,12 +318,18 @@
     "updatedToTree": "Updated to org tree",
     "editTeamOrg": "Edit Team Org",
     "stopTeamBeforeEdit": "Disable team \"{name}\" manually before editing the org.",
+    "disableToEditTitle": "Disable Team to Edit",
+    "disableToEditMsg": "Team \"{name}\" is currently running. Editing the org structure requires disabling the team first. Disable now?",
+    "disableToEditBtn": "Disable & Edit",
     "newDeptPrefix": "New Dept",
     "removeMemberTitle": "Remove Member",
     "removeMemberConfirm": "Confirm removing member \"{name}\"?",
     "emptyNameError": "Member name cannot be empty",
     "duplicateNameError": "Member name \"{name}\" already exists",
     "emptyDeptNameError": "Department name cannot be empty",
+    "cancelEditTitle": "Discard changes",
+    "cancelEditMsg": "You have unsaved changes to the team members. Are you sure you want to discard them?",
+    "cancelEditConfirmBtn": "Discard",
     "unassignedDepartment": "Unassigned",
     "subtitle": "Member"
   },
@@ -525,6 +548,23 @@
         "actions": "Actions"
       }
     },
+    "skills": {
+      "title": "Skill Management",
+      "loading": "Loading skills...",
+      "empty": "No skills available.",
+      "builtin": "Built-in",
+      "userCustom": "User added",
+      "table": {
+        "name": "Skill Name",
+        "description": "Description",
+        "type": "Type",
+        "actions": "Actions"
+      },
+      "view": "View",
+      "detailsTitle": "Skill Details",
+      "files": "Files",
+      "restartPrompt": "Note: Newly added skills (or modified files) will only take effect and appear here after restarting the backend service."
+    },
     "nav": {
       "label": "Navigation",
       "ariaLabel": "Settings navigation",
@@ -536,6 +576,8 @@
       "rolesNote": "Role templates and responsibilities",
       "models": "LLM Service Management",
       "modelsNote": "Model services and call policies",
+      "skills": "Skill Management",
+      "skillsNote": "System skills and user-defined skills",
       "maintenance": "System Maintenance",
       "maintenanceNote": "Database backup and maintenance actions",
       "runtime": "Runtime & Storage",

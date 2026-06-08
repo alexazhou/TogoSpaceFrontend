@@ -76,7 +76,7 @@ const form = ref({
   extra_headers: '',
   provider_params: '',
   context_window_tokens: 131072,
-  reserve_output_tokens: 8192,
+  reserve_output_tokens: 16384,
   compact_trigger_ratio: 0.85,
   compact_summary_max_tokens: 2048,
 });
@@ -171,7 +171,7 @@ function serviceToFormSnapshot(service: LlmServiceInfo): FormSnapshot {
     extra_headers: serializeHeaders(service.extra_headers),
     provider_params: serializeProviderParams(service.provider_params),
     context_window_tokens: service.context_window_tokens ?? 131072,
-    reserve_output_tokens: service.reserve_output_tokens ?? 8192,
+    reserve_output_tokens: service.reserve_output_tokens ?? 16384,
     compact_trigger_ratio: service.compact_trigger_ratio ?? 0.85,
     compact_summary_max_tokens: service.compact_summary_max_tokens ?? 2048,
   };
@@ -211,7 +211,7 @@ function resetForm(service?: LlmServiceInfo | null): void {
     extra_headers: service ? serializeHeaders(service.extra_headers) : '',
     provider_params: service ? serializeProviderParams(service.provider_params) : '',
     context_window_tokens: service?.context_window_tokens ?? 131072,
-    reserve_output_tokens: service?.reserve_output_tokens ?? 8192,
+    reserve_output_tokens: service?.reserve_output_tokens ?? 16384,
     compact_trigger_ratio: service?.compact_trigger_ratio ?? 0.85,
     compact_summary_max_tokens: service?.compact_summary_max_tokens ?? 2048,
   };

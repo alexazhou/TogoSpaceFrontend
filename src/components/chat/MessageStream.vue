@@ -112,6 +112,9 @@ function resolveMessageStatus(message: MessageInfo): MessageStatus {
 
 const streamMessages = computed(() => props.messages.filter((message) => message.seq !== null));
 const floatingMessages = computed(() => props.messages.filter((message) => message.seq === null));
+const shouldDockWorkingIndicator = computed(
+  () => Boolean(props.workingAgent) && floatingMessages.value.length === 0,
+);
 
 function messageKey(message: MessageInfo, index: number): string {
   return String(message.db_id ?? `${message.time}-${message.sender_id}-${index}`);
@@ -364,6 +367,7 @@ onBeforeUnmount(() => {
     <div
       v-if="workingAgent"
       class="working-indicator working-indicator--clickable"
+      :class="{ 'working-indicator--dock-bottom': shouldDockWorkingIndicator }"
       role="button"
       tabindex="0"
       @click="emit('clickWorkingAgent', workingAgent.id)"
@@ -380,6 +384,7 @@ onBeforeUnmount(() => {
         <span class="dot"></span>
         <span class="dot"></span>
       </span>
+      <i class="fa-solid fa-chevron-right working-indicator-icon"></i>
     </div>
 
     <div v-if="floatingMessages.length" class="floating-messages-dock">
@@ -806,6 +811,10 @@ onBeforeUnmount(() => {
   animation: fade-in 0.25s ease-out;
 }
 
+.working-indicator--dock-bottom {
+  margin-top: auto;
+}
+
 .working-indicator--clickable {
   cursor: pointer;
   border-radius: 8px;
@@ -851,6 +860,20 @@ onBeforeUnmount(() => {
 
 .working-indicator-dots .dot:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+.working-indicator-icon {
+  margin-left: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  opacity: 0.75;
+  transition: opacity 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.working-indicator--clickable:hover .working-indicator-icon {
+  opacity: 1;
+  color: var(--text-primary);
+  transform: translateX(2px);
 }
 
 @keyframes dot-pulse {

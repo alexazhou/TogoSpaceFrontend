@@ -16,7 +16,7 @@
   --warn: var(--state-warning);
   --warn-track: var(--state-warning-track);
   --bubble-left: var(--chat-bubble-left-bg);
-  --bubble-left-text: color-mix(in srgb, var(--text-primary) 92%, white 8%);
+  --bubble-left-text: color-mix(in srgb, var(--text-primary) 30%, white 70%);
   --bubble-right: var(--interactive-selected);
   --bubble-right-text: var(--text-on-accent);
   --bubble-shadow: none;

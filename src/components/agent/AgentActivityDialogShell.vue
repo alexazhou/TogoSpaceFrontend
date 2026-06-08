@@ -2,10 +2,11 @@
 defineProps<{
   open: boolean;
   closeLabel: string;
-  activeTab: 'activities' | 'tasks';
+  activeTab: 'activities' | 'tasks' | 'properties';
   panelTabsLabel: string;
   activitiesLabel: string;
   tasksLabel: string;
+  propertiesLabel: string;
   activityBadgeLabel: string;
   activityRealtimeState: string;
   taskCountLabel: string;
@@ -18,7 +19,7 @@ defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  'update:activeTab': [tab: 'activities' | 'tasks'];
+  'update:activeTab': [tab: 'activities' | 'tasks' | 'properties'];
 }>();
 </script>
 
@@ -27,8 +28,57 @@ const emit = defineEmits<{
     <div v-if="open" class="agent-detail-overlay" @click.self="emit('close')">
       <section class="agent-detail-dialog panel">
         <div class="agent-detail-head">
-          <p class="agent-detail-eyebrow">Agent Status Card</p>
-          <button type="button" class="agent-detail-close" :aria-label="closeLabel" @click="emit('close')">×</button>
+          <div class="agent-detail-head__left">
+            <p class="agent-detail-eyebrow">Agent Status Card</p>
+          </div>
+          <div v-if="showStage" class="agent-detail-head__center">
+            <div class="agent-activity-panel__tabs" role="tablist" :aria-label="panelTabsLabel">
+              <button
+                type="button"
+                class="agent-activity-panel__tab"
+                :class="{ 'is-active': activeTab === 'activities' }"
+                :aria-selected="activeTab === 'activities'"
+                @click="emit('update:activeTab', 'activities')"
+              >
+                {{ activitiesLabel }}
+              </button>
+              <button
+                type="button"
+                class="agent-activity-panel__tab"
+                :class="{ 'is-active': activeTab === 'tasks' }"
+                :aria-selected="activeTab === 'tasks'"
+                @click="emit('update:activeTab', 'tasks')"
+              >
+                {{ tasksLabel }}
+              </button>
+              <button
+                type="button"
+                class="agent-activity-panel__tab"
+                :class="{ 'is-active': activeTab === 'properties' }"
+                :aria-selected="activeTab === 'properties'"
+                @click="emit('update:activeTab', 'properties')"
+              >
+                {{ propertiesLabel }}
+              </button>
+            </div>
+          </div>
+          <div class="agent-detail-head__right">
+            <span
+              v-if="showStage && activeTab === 'activities'"
+              class="agent-activity-panel__badge"
+              :data-state="activityRealtimeState"
+            >
+              <span class="agent-activity-panel__badge-dot"></span>
+              {{ activityBadgeLabel }}
+            </span>
+            <span
+              v-else-if="showStage"
+              class="agent-activity-panel__badge agent-activity-panel__badge--count"
+            >
+              {{ taskCountLabel }}
+            </span>
+            <button type="button" class="agent-detail-close" :aria-label="closeLabel" @click="emit('close')">×</button>
+          </div>
         </div>
 
         <div v-if="errorMessage" class="error-banner">{{ errorMessage }}</div>
@@ -40,41 +90,6 @@ const emit = defineEmits<{
           </div>
           <div class="agent-detail-stage__right">
             <section class="agent-activity-panel">
-              <div class="agent-activity-panel__head">
-                <div class="agent-activity-panel__title-line">
-                  <div class="agent-activity-panel__tabs" role="tablist" :aria-label="panelTabsLabel">
-                    <button
-                      type="button"
-                      class="agent-activity-panel__tab"
-                      :class="{ 'is-active': activeTab === 'activities' }"
-                      :aria-selected="activeTab === 'activities'"
-                      @click="emit('update:activeTab', 'activities')"
-                    >
-                      {{ activitiesLabel }}
-                    </button>
-                    <button
-                      type="button"
-                      class="agent-activity-panel__tab"
-                      :class="{ 'is-active': activeTab === 'tasks' }"
-                      :aria-selected="activeTab === 'tasks'"
-                      @click="emit('update:activeTab', 'tasks')"
-                    >
-                      {{ tasksLabel }}
-                    </button>
-                  </div>
-                </div>
-                <span
-                  v-if="activeTab === 'activities'"
-                  class="agent-activity-panel__badge"
-                  :data-state="activityRealtimeState"
-                >
-                  <span class="agent-activity-panel__badge-dot"></span>
-                  {{ activityBadgeLabel }}
-                </span>
-                <span v-else class="agent-activity-panel__badge agent-activity-panel__badge--count">
-                  {{ taskCountLabel }}
-                </span>
-              </div>
               <div class="agent-activity-panel__body">
                 <slot name="panel" />
               </div>
@@ -101,13 +116,23 @@ const emit = defineEmits<{
 }
 
 .agent-detail-dialog {
+  --agent-divider-vertical: color-mix(in srgb, var(--panel-border) 92%, var(--border-subtle) 8%);
+  --agent-divider-strong: color-mix(in srgb, var(--panel-border) 84%, var(--border-subtle) 16%);
+  --agent-divider-emphasis: color-mix(in srgb, var(--panel-border) 94%, var(--border-subtle) 6%);
+  
+  /* Divider glow tokens */
+  --agent-divider-glow-bg: var(--accent);
+  --agent-divider-glow-shadow-1: var(--interactive-focus-ring);
+  --agent-divider-glow-shadow-2: var(--accent);
+
+  position: relative;
   width: min(1180px, calc(100vw - 40px));
   height: min(820px, calc(100vh - 40px));
   max-height: min(820px, calc(100vh - 40px));
   overflow: hidden;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 2px;
+  gap: 0;
   padding: 10px 16px 16px;
   border-radius: 20px;
   box-shadow:
@@ -115,11 +140,60 @@ const emit = defineEmits<{
     inset 0 0 0 1px color-mix(in srgb, var(--panel-border) 88%, transparent);
 }
 
+
+
+.agent-detail-dialog::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 16px;
+  left: 264px;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--agent-divider-glow-bg) 15%,
+    var(--agent-divider-glow-bg) 85%,
+    transparent 100%
+  );
+  filter: 
+    drop-shadow(0 0 6px var(--agent-divider-glow-shadow-1))
+    drop-shadow(0 0 2px var(--agent-divider-glow-shadow-2));
+  pointer-events: none;
+  z-index: 10;
+}
+
 .agent-detail-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
+  padding-bottom: 10px;
+}
+
+.agent-detail-head__left,
+.agent-detail-head__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.agent-detail-head__left {
+  flex: 0 0 248px;
+  padding-right: 18px;
+}
+
+.agent-detail-head__center {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 18px;
+}
+
+.agent-detail-head__right {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .agent-detail-close {
@@ -157,7 +231,7 @@ const emit = defineEmits<{
   height: 100%;
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
-  gap: 12px;
+  gap: 0;
   align-items: stretch;
   padding: 0;
   overflow: hidden;
@@ -169,7 +243,7 @@ const emit = defineEmits<{
   justify-content: center;
   min-height: 0;
   height: 100%;
-  padding-top: 0;
+  padding: 0 18px 0 0;
 }
 
 .agent-detail-stage__right {
@@ -179,36 +253,32 @@ const emit = defineEmits<{
   gap: 0;
   height: 100%;
   position: relative;
+  padding-left: 18px;
+}
+
+.agent-detail-stage__right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 0;
+  height: 1px;
+  background: var(--agent-divider-emphasis);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--agent-divider-emphasis) 24%, transparent);
+  z-index: 2;
+  pointer-events: none;
 }
 
 .agent-activity-panel {
   min-height: 0;
   flex: 1;
-  border-radius: 18px 18px 0 0;
+  border-radius: 0;
   padding: 0;
-  background: color-mix(in srgb, var(--panel-bg) 97%, var(--surface-soft) 3%);
-  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
-  border-bottom: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
-}
-
-.agent-activity-panel__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 6px 10px 6px;
-  border-bottom: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
-
-.agent-activity-panel__title-line {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  min-width: 0;
 }
 
 .agent-activity-panel__tabs {
@@ -221,10 +291,10 @@ const emit = defineEmits<{
 .agent-activity-panel__tab {
   height: 28px;
   padding: 0 12px;
-  border: 1px solid transparent;
+  border: 1px solid var(--panel-border);
   border-radius: 999px;
   background: transparent;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -235,14 +305,14 @@ const emit = defineEmits<{
 }
 
 .agent-activity-panel__tab:hover {
-  color: var(--text-strong);
-  background: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-soft) 60%, transparent);
+  color: var(--text-primary);
 }
 
 .agent-activity-panel__tab.is-active {
   color: var(--text-strong);
-  background: color-mix(in srgb, var(--surface-pill) 82%, var(--surface-panel-muted) 18%);
-  border-color: color-mix(in srgb, var(--border-subtle) 78%, transparent);
+  background: color-mix(in srgb, var(--interactive-selected) 22%, var(--surface-pill) 78%);
+  border-color: color-mix(in srgb, var(--interactive-selected) 34%, var(--panel-border) 66%);
 }
 
 .agent-activity-panel__badge {
@@ -345,6 +415,30 @@ const emit = defineEmits<{
     gap: 6px;
   }
 
+  .agent-detail-head {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding-top: 10px;
+  }
+
+  .agent-detail-head__left,
+  .agent-detail-head__center,
+  .agent-detail-head__right {
+    flex: 1 1 100%;
+    padding-right: 0;
+    padding-left: 0;
+    border-left: 0;
+    justify-content: flex-start;
+  }
+
+  .agent-detail-head__right {
+    margin-left: 0;
+  }
+
+  .agent-detail-dialog::before {
+    display: none;
+  }
+
   .agent-detail-stage {
     grid-template-columns: 1fr;
     min-height: 0;
@@ -354,16 +448,31 @@ const emit = defineEmits<{
 
   .agent-detail-stage__right {
     min-height: 180px;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .agent-detail-stage__right::before {
+    left: 0;
   }
 
   .agent-detail-stage__left {
     align-items: flex-start;
     justify-content: stretch;
+    padding-right: 0;
   }
 
   .agent-activity-panel {
     min-height: 0;
     padding: 0;
   }
+}
+</style>
+
+<style>
+:root[data-theme='light'] .agent-detail-dialog {
+  --agent-divider-glow-bg: var(--border-strong);
+  --agent-divider-glow-shadow-1: var(--interactive-focus-ring);
+  --agent-divider-glow-shadow-2: var(--border-strong);
 }
 </style>

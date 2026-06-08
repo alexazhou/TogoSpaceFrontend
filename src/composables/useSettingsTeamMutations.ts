@@ -229,5 +229,6 @@ export function useSettingsTeamMutations(options: UseSettingsTeamMutationsOption
     teamDeleteConfirm,
     teamEnabledPending,
     teamToggleConfirm,
+    updateTeamEnabledState,
   };
 }

@@ -7,6 +7,7 @@ import { backupDatabase, getAgents, getDeptTree, getTeamPresetExport } from '../
 import { showGlobalSuccessToast, showQuickInit, totalMessageCount } from '../appUiState';
 import ModelsSettingsSection from '../components/settings/ModelsSettingsSection.vue';
 import RolesSettingsSection from '../components/settings/RolesSettingsSection.vue';
+import SkillsSettingsSection from '../components/settings/SkillsSettingsSection.vue';
 import SettingsNavSidebar from '../components/settings/SettingsNavSidebar.vue';
 import SystemMaintenanceSection from '../components/settings/SystemMaintenanceSection.vue';
 import TeamPresetExportDialog from '../components/settings/TeamPresetExportDialog.vue';
@@ -112,6 +113,7 @@ const {
   teamDeleteConfirm,
   teamEnabledPending,
   teamToggleConfirm,
+  updateTeamEnabledState,
 } = useSettingsTeamMutations({
   teamId,
   teams,
@@ -123,6 +125,10 @@ const {
   router,
   t,
 });
+
+function handleDisableTeamForEdit(targetTeamId: number): void {
+  void updateTeamEnabledState(targetTeamId, false);
+}
 function updateSettingsScrollbarHover(event: PointerEvent): void {
   const element = settingsMainRef.value;
   if (!element) {
@@ -341,6 +347,7 @@ watch(
           @save-team-info="saveTeamInfo"
           @reset-team-info-draft="resetTeamInfoDraft"
           @tree-saved="handleTeamTreeSaved"
+          @disable-team="handleDisableTeamForEdit"
           @update:name="teamInfoDraft.name = $event"
           @update:working-directory="teamInfoDraft.workingDirectory = $event"
           @update:slogan="teamInfoDraft.slogan = $event"
@@ -355,6 +362,12 @@ watch(
 
         <ModelsSettingsSection
           v-else-if="currentSectionId === 'models'"
+          :breadcrumb-items="breadcrumbItems"
+          @navigate-breadcrumb="handleBreadcrumbNavigate"
+        />
+
+        <SkillsSettingsSection
+          v-else-if="currentSectionId === 'skills'"
           :breadcrumb-items="breadcrumbItems"
           @navigate-breadcrumb="handleBreadcrumbNavigate"
         />

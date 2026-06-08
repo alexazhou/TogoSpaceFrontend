@@ -482,9 +482,9 @@ defineExpose({
 }
 
 .role-chip--user {
-  border-color: color-mix(in srgb, var(--accent) 18%, var(--panel-border) 82%);
-  background: color-mix(in srgb, var(--accent) 10%, var(--panel-bg) 90%);
-  color: color-mix(in srgb, var(--text-strong) 90%, var(--accent) 10%);
+  border-color: color-mix(in srgb, var(--state-success) 30%, var(--panel-border) 70%);
+  background: color-mix(in srgb, var(--state-success) 12%, var(--panel-bg) 88%);
+  color: color-mix(in srgb, var(--state-success) 90%, var(--text-strong) 10%);
 }
 
 .role-chip--draft {
@@ -577,8 +577,16 @@ defineExpose({
 }
 
 .secondary-button--danger {
-  border-color: color-mix(in srgb, #ef4444 30%, var(--team-create-control-border) 70%);
-  background: color-mix(in srgb, #fee2e2 48%, var(--panel-bg) 52%);
+  border-color: color-mix(in srgb, var(--state-danger) 38%, var(--panel-border) 62%);
+  background: color-mix(in srgb, var(--state-danger) 10%, var(--panel-bg) 90%);
+  color: color-mix(in srgb, var(--state-danger) 88%, var(--text-strong) 12%);
+}
+
+.secondary-button--danger:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--state-danger) 62%, var(--focus-border) 38%);
+  background: color-mix(in srgb, var(--state-danger) 18%, var(--surface-soft) 82%);
+  color: color-mix(in srgb, var(--state-danger) 92%, var(--text-strong) 8%);
+  transform: translateY(-1px);
 }
 
 @media (max-width: 780px) {

@@ -46,6 +46,7 @@ const composerHeightRatio = ref(0.28);
 const chatRef = useTemplateRef('chatRef');
 const chatHeadRef = useTemplateRef('chatHeadRef');
 const chatBannerRef = useTemplateRef('chatBannerRef');
+const messageViewportRef = useTemplateRef('messageViewportRef');
 
 const chatHeight = ref(0);
 const chatHeadHeight = ref(0);
@@ -53,7 +54,8 @@ const chatBannerHeight = ref(0);
 
 let layoutResizeObserver: ResizeObserver | null = null;
 let stopComposerResize: (() => void) | null = null;
-let pendingMessageViewportAdjustFrame: number | null = null;
+let pendingComposerBottomAnchorSync = false;
+let pendingComposerBottomAnchorDistance: number | null = null;
 
 const isScheduling = computed(() => props.currentRoom?.state === 'scheduling');
 const currentTurnAgentId = computed(() => props.currentRoom?.current_turn_agent_id ?? null);
@@ -187,6 +189,9 @@ function bindLayoutResizeObserver(): void {
 
   layoutResizeObserver = new ResizeObserver(() => {
     refreshLayoutMetrics();
+    if (composerDividerDragging.value && pendingComposerBottomAnchorDistance !== null) {
+      preserveMessageBottomAnchor(pendingComposerBottomAnchorDistance);
+    }
   });
 
   if (chatRef.value) {
@@ -197,6 +202,9 @@ function bindLayoutResizeObserver(): void {
   }
   if (chatBannerRef.value) {
     layoutResizeObserver.observe(chatBannerRef.value);
+  }
+  if (messageViewportRef.value) {
+    layoutResizeObserver.observe(messageViewportRef.value);
   }
 }
 
@@ -221,6 +229,20 @@ function preserveMessageBottomAnchor(distanceToBottom: number): void {
   stream.scrollTop = Math.max(0, nextScrollTop);
 }
 
+function scheduleComposerBottomAnchorSync(): void {
+  if (pendingComposerBottomAnchorSync) {
+    return;
+  }
+
+  pendingComposerBottomAnchorSync = true;
+  void nextTick(() => {
+    pendingComposerBottomAnchorSync = false;
+    if (pendingComposerBottomAnchorDistance !== null) {
+      preserveMessageBottomAnchor(pendingComposerBottomAnchorDistance);
+    }
+  });
+}
+
 function startComposerResize(event: PointerEvent): void {
   const metrics = composerMetrics.value;
   if (!metrics) {
@@ -238,6 +260,7 @@ function startComposerResize(event: PointerEvent): void {
 
   const stopResize = (): void => {
     resetComposerDragState();
+    pendingComposerBottomAnchorDistance = null;
     window.removeEventListener('pointermove', handlePointerMove);
     window.removeEventListener('pointerup', stopResize);
     window.removeEventListener('pointercancel', stopResize);
@@ -253,17 +276,10 @@ function startComposerResize(event: PointerEvent): void {
       metrics.maxComposerHeight,
       Math.max(metrics.minComposerHeight, startHeight - (moveEvent.clientY - startY)),
     );
+    pendingComposerBottomAnchorDistance = distanceToBottom;
     composerHeightRatio.value = nextComposerHeight / metrics.availableHeight;
     persistComposerHeightRatio();
-
-    if (pendingMessageViewportAdjustFrame !== null) {
-      cancelAnimationFrame(pendingMessageViewportAdjustFrame);
-    }
-
-    pendingMessageViewportAdjustFrame = window.requestAnimationFrame(() => {
-      preserveMessageBottomAnchor(distanceToBottom);
-      pendingMessageViewportAdjustFrame = null;
-    });
+    scheduleComposerBottomAnchorSync();
   };
 
   window.addEventListener('pointermove', handlePointerMove);
@@ -331,10 +347,8 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   stopComposerResize?.();
   stopComposerResize = null;
-  if (pendingMessageViewportAdjustFrame !== null) {
-    cancelAnimationFrame(pendingMessageViewportAdjustFrame);
-    pendingMessageViewportAdjustFrame = null;
-  }
+  pendingComposerBottomAnchorDistance = null;
+  pendingComposerBottomAnchorSync = false;
   layoutResizeObserver?.disconnect();
   layoutResizeObserver = null;
   resetComposerDragState();
@@ -385,7 +399,7 @@ onBeforeUnmount(() => {
     <div v-if="errorMessage" ref="chatBannerRef" class="banner error">{{ errorMessage }}</div>
     <div v-else-if="reloadingMessages" ref="chatBannerRef" class="banner">{{ t('chat.loadingMessages') }}</div>
 
-    <div class="message-viewport">
+    <div ref="messageViewportRef" class="message-viewport">
       <MessageStream
         :messages="messages"
         :member-profiles="memberProfiles"

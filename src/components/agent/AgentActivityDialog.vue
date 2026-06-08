@@ -9,6 +9,7 @@ import AgentCardBase from './AgentCardBase.vue';
 import AgentActivityDialogShell from './AgentActivityDialogShell.vue';
 import AgentActivityPanel from './AgentActivityPanel.vue';
 import AgentTaskPanel from './AgentTaskPanel.vue';
+import AgentPropertiesPanel from './AgentPropertiesPanel.vue';
 import type { AgentDetail, AgentStatus } from '../../types';
 
 const { t } = useI18n();
@@ -30,13 +31,14 @@ const loading = ref(false);
 const errorMessage = ref('');
 const resuming = ref(false);
 const stopping = ref(false);
-const activeTab = ref<'activities' | 'tasks'>('activities');
+const activeTab = ref<'activities' | 'tasks' | 'properties'>('activities');
 const taskPanelCount = ref(0);
 const superviseContent = ref('');
 const supervising = ref(false);
 const superviseError = ref('');
 const superviseFocused = ref(false);
 const superviseTextareaRef = ref<HTMLTextAreaElement | null>(null);
+const isActivitiesFollowing = ref(true);
 
 const runtimeStatus = useAgentStatus(() => props.agentId);
 
@@ -61,12 +63,9 @@ const statusLabel = computed(() => {
   if (!currentStatus.value) {
     return '';
   }
-  if (currentStatus.value === 'active') {
-    return t('agent.status.active');
-  }
-  if (currentStatus.value === 'failed') {
-    return t('agent.status.failed');
-  }
+  if (currentStatus.value === 'active') return t('agent.status.active');
+  if (currentStatus.value === 'failed') return t('agent.status.failed');
+  if (currentStatus.value === 'closed') return t('agent.status.closed');
   return t('agent.status.idle');
 });
 
@@ -254,13 +253,14 @@ watch(
 </script>
 
 <template>
-  <AgentActivityDialogShell
+    <AgentActivityDialogShell
     :open="open"
     :close-label="t('common.close')"
     :active-tab="activeTab"
     :panel-tabs-label="t('agent.panelTabs')"
     :activities-label="t('agent.activities')"
     :tasks-label="t('agent.tasks')"
+    :properties-label="t('agent.properties')"
     :activity-badge-label="activityBadgeLabel"
     :activity-realtime-state="activityRealtimeState"
     :task-count-label="taskCountLabel"
@@ -318,6 +318,7 @@ watch(
         v-show="activeTab === 'activities'"
         :open="open"
         :agent-id="agentId"
+        @follow-change="isActivitiesFollowing = $event"
       />
       <AgentTaskPanel
         v-show="activeTab === 'tasks'"
@@ -326,10 +327,16 @@ watch(
         :team-id="displayAgent?.team_id ?? null"
         @count-change="taskPanelCount = $event"
       />
+      <AgentPropertiesPanel
+        v-show="activeTab === 'properties'"
+        :agent-id="agentId"
+        :initial-agent="displayAgent"
+        @saved="agent = $event"
+      />
     </template>
 
     <template #supervise>
-      <section class="agent-supervise-section">
+      <section class="agent-supervise-section" :class="{ 'is-following': isActivitiesFollowing && activeTab === 'activities' }">
         <div class="agent-supervise-section__input-row">
           <div class="agent-supervise-section__editor" :class="{ 'is-focused': superviseFocused }">
             <textarea
@@ -432,7 +439,8 @@ watch(
   border-color: var(--danger, #f85149);
 }
 
-.agent-status-panel[data-status='failed'] {
+.agent-status-panel[data-status='failed'],
+.agent-status-panel[data-status='closed'] {
   color: var(--danger, #f85149);
 }
 
@@ -483,19 +491,39 @@ watch(
   box-shadow: none;
 }
 
-.agent-status-panel[data-status='failed'] .status-dot {
+.agent-status-panel[data-status='failed'] .status-dot,
+.agent-status-panel[data-status='closed'] .status-dot {
   background: var(--danger, #f85149);
   box-shadow: none;
 }
 
 .agent-supervise-section {
-  padding: 4px 10px 10px;
+  position: relative;
+  margin-top: 0;
+  padding: 4px 0 0;
   flex-shrink: 0;
-  background: color-mix(in srgb, var(--panel-bg) 97%, var(--surface-soft) 3%);
-  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, white 18%);
-  border-top: 1px solid var(--border-subtle);
-  border-radius: 0 0 18px 18px;
-  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.agent-supervise-section::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--agent-divider-emphasis, color-mix(in srgb, var(--panel-border) 94%, var(--border-subtle) 6%));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--agent-divider-emphasis, var(--panel-border)) 24%, transparent);
+  pointer-events: none;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.agent-supervise-section.is-following::after {
+  background: var(--accent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .agent-supervise-section__input-row {

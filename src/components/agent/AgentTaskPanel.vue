@@ -239,7 +239,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 8px 10px 8px;
+  padding: 8px 0;
 }
 
 .agent-task-filter {
@@ -276,7 +276,7 @@ watch(
   display: grid;
   place-items: center;
   color: var(--muted);
-  margin: 0 10px 10px;
+  margin: 0 0 10px;
 }
 
 .loading-card,

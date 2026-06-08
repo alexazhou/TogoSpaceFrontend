@@ -101,6 +101,9 @@ function shouldShowToolName(activity: AgentActivity): boolean {
 }
 
 function displayToolName(toolNameValue: string): string {
+  if (!toolNameValue) {
+    return '';
+  }
   const i18nKey = `agent.toolNames.${toolNameValue}`;
   const translated = t(i18nKey);
   // 如果翻译后的内容包含 key 路径，说明没有定义翻译，回退到原始名称
@@ -505,7 +508,7 @@ function activitySummary(
     return '';
   }
 
-  if (activity.activity_type === 'llm_infer' && activity.status === 'failed') {
+  if ((activity.activity_type === 'llm_infer' || activity.activity_type === 'compact') && activity.status === 'failed') {
     return '';
   }
 
@@ -580,9 +583,8 @@ const activityView = computed(() => {
   const inlineTitle = !(
     Boolean(currentSummary)
     || showToolName
-    || (activity.activity_type === 'llm_infer' && Boolean(currentModel))
     || (activity.activity_type !== 'tool_call' && Boolean(currentMetadataToolName))
-  ) || activity.activity_type === 'message_received';
+  ) || activity.activity_type === 'message_received' || activity.activity_type === 'compact';
   const chatReplyContent = activity.activity_type === 'chat_reply' ? activity.detail.trim() : '';
   const chatReplyIsLong = chatReplyContent.split('\n').length > 5 || chatReplyContent.length > 350;
 
@@ -685,6 +687,11 @@ const activityView = computed(() => {
         class="agent-activity-item__chip agent-activity-item__chip--danger"
         :title="activityView.retryHistoryText"
       >{{ activityView.retryHistoryText }}</span>
+      <span
+        v-if="activityView.sendMessagePrefix"
+        class="agent-activity-item__direction"
+        aria-hidden="true"
+      >➡️</span>
       <span
         v-if="activityView.sendMessagePrefix"
         class="agent-activity-item__chip"
@@ -801,10 +808,12 @@ const activityView = computed(() => {
   gap: 3px;
   padding: 6px 8px;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--panel-bg) 94%, var(--surface-soft) 6%);
-  border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
+  background: var(--surface-activity-item);
+  border: 1px solid var(--border-activity-item);
   flex-shrink: 0;
   position: relative;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .agent-activity-item:hover,
@@ -813,7 +822,7 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item[data-status='started'] {
-  background: var(--surface-panel-muted);
+  background: var(--surface-activity-item-active);
   border-color: var(--border-subtle);
 }
 
@@ -953,9 +962,12 @@ const activityView = computed(() => {
 
 .agent-activity-item__title {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
   color: var(--text-strong);
   font-size: 0.82rem;
-  line-height: 1.2;
+  line-height: 1;
   font-weight: 600;
 }
 
@@ -969,11 +981,13 @@ const activityView = computed(() => {
   flex: none;
   display: inline-flex;
   align-items: center;
+  box-sizing: border-box;
   max-width: 180px;
   min-width: 0;
   height: 18px;
   padding: 0 6px;
-  border-radius: 999px;
+  line-height: 1;
+  border-radius: 4px;
   background: var(--surface-chip);
   color: var(--text-strong);
   font-weight: 600;
@@ -984,12 +998,24 @@ const activityView = computed(() => {
 
 .agent-activity-item__chip--mono {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
+  padding-bottom: 1px;
 }
 
 .agent-activity-item__chip--danger {
-  background: color-mix(in srgb, var(--danger, #f85149) 16%, transparent);
-  color: color-mix(in srgb, var(--danger, #f85149) 78%, var(--text) 22%);
+  background: var(--surface-chip-danger);
+  color: var(--danger);
+}
+
+.agent-activity-item__direction {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1;
 }
 
 .agent-activity-item__status {
@@ -1042,8 +1068,8 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__status {
-  background: color-mix(in srgb, var(--danger, #f85149) 18%, transparent);
-  color: var(--danger, #f85149);
+  background: var(--surface-chip-danger);
+  color: var(--danger);
 }
 
 .agent-activity-item__summary {
@@ -1097,18 +1123,18 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item__summary--danger {
-  color: color-mix(in srgb, var(--danger, #f85149) 76%, var(--text) 24%);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__send-chat-content {
-  color: color-mix(in srgb, var(--danger, #f85149) 68%, var(--text) 32%);
+  color: var(--danger);
 }
 
 
 
 .agent-activity-item__error {
   margin: 0;
-  color: var(--danger, #f85149);
+  color: var(--danger);
   font-size: 0.7rem;
   font-weight: 600;
   line-height: 1.35;
@@ -1127,41 +1153,41 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__summary {
-  color: var(--text-danger-muted);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__chip {
   background: var(--surface-chip-danger);
-  color: var(--text-danger-strong);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__tool-result,
 .agent-activity-item[data-status='failed'] .agent-activity-item__received-message {
-  color: var(--text-danger-strong);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__tool-result--code {
-  color: var(--text-danger-muted);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__summary--code {
-  color: var(--text-danger-muted);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__summary--bash-description {
-  color: var(--text-danger-strong);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__tool-result--code {
-  color: var(--text-danger-muted);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'].agent-activity-item--bash-result .agent-activity-item__tool-result--stdout {
-  color: var(--text-danger-strong);
+  color: var(--danger);
 }
 
 .agent-activity-item[data-status='failed'] .agent-activity-item__received-sender {
-  color: var(--text-danger-strong);
+  color: var(--danger);
 }
 
 .agent-activity-item--expanded .agent-activity-item__row {
@@ -1230,6 +1256,7 @@ const activityView = computed(() => {
   -webkit-line-clamp: 5;
   overflow: hidden;
   white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .agent-activity-item__tool-result--description {
@@ -1250,7 +1277,7 @@ const activityView = computed(() => {
 }
 
 .agent-activity-item__tool-result--stderr {
-  color: var(--danger, #f85149);
+  color: var(--danger);
 }
 
 .agent-activity-item__received-message {
@@ -1278,6 +1305,8 @@ const activityView = computed(() => {
   padding-right: 4px;
   font-size: 0.8rem;
   line-height: 1.55;
+  min-width: 0;
+  color: var(--text);
 }
 
 .agent-activity-item__chat-reply--collapsed {

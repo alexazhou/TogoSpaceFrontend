@@ -43,6 +43,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   saved: [];
+  disableTeam: [teamId: number];
 }>();
 
 const { t } = useI18n();
@@ -63,12 +64,14 @@ const memberEditorStatus = ref('');
 const departmentEditorName = ref('');
 const departmentEditorResponsibility = ref('');
 const departmentEditorEditable = ref(true);
+const pendingEditAfterDisable = ref(false);
+
 const confirmState = ref<{
   title: string;
   message: string;
   confirmLabel: string;
   danger: boolean;
-  action: null | { type: 'remove-member'; nodeId: string; memberName: string };
+  action: null | { type: 'remove-member'; nodeId: string; memberName: string } | { type: 'disable-team' } | { type: 'cancel-edit' };
 }>({
   title: '',
   message: '',
@@ -730,6 +733,7 @@ const memberPanelActions = computed(() => {
       label: isSavingTeamMembers.value ? t('teamTree.saving') : t('common.save'),
       disabled: !hasTeamMemberChanges.value || isSavingTeamMembers.value || treeHasPendingNode(draftOrgTree.value),
       primary: true,
+      showBadge: hasTeamMemberChanges.value,
     },
   ];
 });
@@ -857,22 +861,52 @@ async function saveTeamMembers(): Promise<void> {
   }
 }
 
+function enterEditMode(): void {
+  isReadonly.value = false;
+  if (!draftOrgTree.value) {
+    draftOrgTree.value = createPendingNode();
+    teamMemberStatus.value = '';
+  }
+}
+
+watch(
+  () => props.teamEnabled,
+  (enabled) => {
+    if (!enabled && pendingEditAfterDisable.value) {
+      pendingEditAfterDisable.value = false;
+      enterEditMode();
+    }
+  },
+);
+
 function handleMemberPanelAction(actionKey: string): void {
   if (actionKey === 'edit') {
     if (props.teamEnabled) {
-      showGlobalSuccessToast(t('teamTree.stopTeamBeforeEdit', { name: props.teamName }));
+      confirmState.value = {
+        title: t('teamTree.disableToEditTitle'),
+        message: t('teamTree.disableToEditMsg', { name: props.teamName }),
+        confirmLabel: t('teamTree.disableToEditBtn'),
+        danger: false,
+        action: { type: 'disable-team' },
+      };
       return;
     }
-    isReadonly.value = false;
-    if (!draftOrgTree.value) {
-      draftOrgTree.value = createPendingNode();
-      teamMemberStatus.value = '';
-    }
+    enterEditMode();
     return;
   }
 
   if (actionKey === 'cancel') {
-    cancelTeamMemberEdit();
+    if (hasTeamMemberChanges.value) {
+      confirmState.value = {
+        title: t('teamTree.cancelEditTitle'),
+        message: t('teamTree.cancelEditMsg'),
+        confirmLabel: t('teamTree.cancelEditConfirmBtn'),
+        danger: true,
+        action: { type: 'cancel-edit' },
+      };
+    } else {
+      cancelTeamMemberEdit();
+    }
     return;
   }
 
@@ -1131,6 +1165,19 @@ function closeConfirmDialog(): void {
 async function confirmDangerAction(): Promise<void> {
   const action = confirmState.value.action;
   if (!action) {
+    return;
+  }
+
+  if (action.type === 'disable-team') {
+    pendingEditAfterDisable.value = true;
+    closeConfirmDialog();
+    emit('disableTeam', props.teamId);
+    return;
+  }
+
+  if (action.type === 'cancel-edit') {
+    cancelTeamMemberEdit();
+    closeConfirmDialog();
     return;
   }
 

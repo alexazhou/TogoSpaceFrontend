@@ -1,4 +1,4 @@
-export type AgentStatus = 'active' | 'idle' | 'failed';
+export type AgentStatus = 'active' | 'idle' | 'failed' | 'closed';
 export type AgentActivityType =
   | 'llm_infer'
   | 'tool_call'
@@ -26,6 +26,8 @@ export interface AgentInfo {
   employ_status?: string | null;
   driver?: string;
   special?: 'operator' | 'system' | null;
+  allow_tools?: string[] | null;
+  allow_skills?: string[] | null;
 }
 
 export interface AgentDetail extends AgentInfo {
@@ -352,4 +354,11 @@ export interface LlmServiceTestResult {
     error_type?: string;
     raw_error?: string;
   };
+}
+
+export interface SkillInfo {
+  name: string;
+  description: string;
+  is_builtin: boolean;
+  files: string[];
 }

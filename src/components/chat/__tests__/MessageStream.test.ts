@@ -28,6 +28,18 @@ function createMessage(overrides: Partial<MessageInfo> = {}): MessageInfo {
   };
 }
 
+function createMember(overrides: Partial<RoomMemberProfile> = {}): RoomMemberProfile {
+  return {
+    id: 8,
+    name: 'worker',
+    i18n: {},
+    employee_number: 2,
+    role_template_name: 'Operator',
+    is_leader: false,
+    ...overrides,
+  };
+}
+
 describe('MessageStream', () => {
   it('renders published messages with markdown formatting', () => {
     const wrapper = mount(MessageStream, {
@@ -85,5 +97,42 @@ describe('MessageStream', () => {
     await wrapper.find('.sender-avatar').trigger('click');
 
     expect(wrapper.emitted('clickAgent')).toEqual([[7]]);
+  });
+
+  it('docks the working indicator to the bottom when there are no floating messages', () => {
+    const wrapper = mount(MessageStream, {
+      props: {
+        messages: [createMessage()],
+        memberProfiles,
+        workingAgent: createMember({ id: 9 }),
+      },
+      global: {
+        plugins: [i18n],
+      },
+    });
+
+    expect(wrapper.find('.working-indicator').classes()).toContain('working-indicator--dock-bottom');
+  });
+
+  it('does not dock the working indicator when floating messages are shown above the dock', () => {
+    const wrapper = mount(MessageStream, {
+      props: {
+        messages: [
+          createMessage(),
+          createMessage({
+            db_id: 3,
+            seq: null,
+            content: 'queued task',
+          }),
+        ],
+        memberProfiles,
+        workingAgent: createMember({ id: 9 }),
+      },
+      global: {
+        plugins: [i18n],
+      },
+    });
+
+    expect(wrapper.find('.working-indicator').classes()).not.toContain('working-indicator--dock-bottom');
   });
 });
