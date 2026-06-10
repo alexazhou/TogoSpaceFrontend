@@ -25,6 +25,30 @@ function formatActivityTime(value: string | null | undefined): string {
   return value.replace('T', ' ').slice(0, 19);
 }
 
+function formatActivityTimeShort(value: string | null | undefined): string {
+  if (!value) {
+    return '';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const now = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const timeStr = `${hours}:${minutes}:${seconds}`;
+
+  if (year === now.getFullYear()) {
+    return `${month}-${day} ${timeStr}`;
+  }
+  return `${year}-${month}-${day} ${timeStr}`;
+}
+
 function formatDuration(durationMs: number | null | undefined): string {
   if (durationMs == null || Number.isNaN(durationMs) || durationMs < 0) {
     return '0ms';
@@ -596,6 +620,7 @@ const activityView = computed(() => {
     showToolArguments: showToolName && Boolean(currentToolArguments) && !executeBashResult,
     showToolName,
     startedAtText: formatActivityTime(activity.started_at),
+    startedAtTimeText: formatActivityTimeShort(activity.started_at),
     stateSymbol: activityStatusSymbol(activity.status),
     stderr: currentStderr,
     stdout: currentStdout,
@@ -626,6 +651,7 @@ const activityView = computed(() => {
     <div class="agent-activity-item__row">
       <span class="agent-activity-item__state-anchor" tabindex="0">
         <span class="agent-activity-item__state" :data-status="activity.status">{{ activityView.stateSymbol }}</span>
+        <span v-if="activityView.startedAtTimeText" class="agent-activity-item__timestamp">{{ activityView.startedAtTimeText }}</span>
         <span class="agent-activity-item__state-popover">
           <span class="agent-activity-item__state-row">
             <span class="agent-activity-item__state-row-left">
@@ -844,6 +870,16 @@ const activityView = computed(() => {
 .agent-activity-item__state[data-status='failed'],
 .agent-activity-item__state[data-status='cancelled'] {
   color: var(--danger, #f85149);
+}
+
+.agent-activity-item__timestamp {
+  flex: none;
+  color: var(--muted);
+  font-size: 0.65rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  margin-left: 2px;
 }
 
 .agent-activity-item__state-popover {

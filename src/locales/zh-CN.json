@@ -233,7 +233,8 @@
     "private": "单",
     "group": "群",
     "deptGroup": "部门群",
-    "membersCount": "{count} 人"
+    "membersCount": "{count} 人",
+    "sortByTime": "按最后发言时间排序"
   },
   "message": {
     "noMessage": "暂无消息"

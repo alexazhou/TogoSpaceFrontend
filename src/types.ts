@@ -158,6 +158,7 @@ export type WsEvent = WsMessageEvent | WsAgentStatusEvent | WsAgentActivityEvent
 export interface RoomState extends RoomInfo {
   preview: string;
   unread: number;
+  last_message_time: string | null;
 }
 
 export interface RoomMemberProfile {

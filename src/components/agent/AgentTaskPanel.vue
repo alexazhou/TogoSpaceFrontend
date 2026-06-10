@@ -55,7 +55,7 @@ function formatTaskDateTime(value: string | null): string {
   if (Number.isNaN(date.getTime())) {
     return '';
   }
-  return `${date.toLocaleDateString()} ${formatTime(value)}`.trim();
+  return formatTime(value);
 }
 
 function taskStatusLabel(status: AgentTaskStatus): string {

@@ -61,12 +61,19 @@ export function formatTime(time: string): string {
     return '';
   }
 
-  return new Intl.DateTimeFormat('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).format(date);
+  const now = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const timeStr = `${hours}:${minutes}:${seconds}`;
+
+  if (year === now.getFullYear()) {
+    return `${month}-${day} ${timeStr}`;
+  }
+  return `${year}-${month}-${day} ${timeStr}`;
 }
 
 export function bubbleSide(senderId: number): BubbleSide {
