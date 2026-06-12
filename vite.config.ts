@@ -1,7 +1,7 @@
 import { defineConfig, type ProxyOptions } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
-const backendTarget = 'http://127.0.0.1:8080';
+const backendTarget = 'http://127.0.0.1:8180';
 
 function createApiProxy(target: string): ProxyOptions {
   return {
@@ -35,7 +35,7 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: 8181,
     proxy: {
       '/config/frontend.json': createApiProxy(backendTarget),
       '/config/directories.json': createApiProxy(backendTarget),
@@ -58,7 +58,7 @@ export default defineConfig({
       '/teams/create.json': createApiProxy(backendTarget),
       '^/teams/.+\\.json(?:\\?.*)?$': createApiProxy(backendTarget),
       '/ws': {
-        target: 'ws://127.0.0.1:8080',
+        target: 'ws://127.0.0.1:8180',
         ws: true,
       },
     },
