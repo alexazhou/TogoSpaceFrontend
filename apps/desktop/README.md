@@ -38,6 +38,9 @@ cd <frontend-repo>
 The helper script defaults `TOGOSPACE_ROOT` to the parent `TogoSpace`
 repository, prepares `.env`, installs npm dependencies, and forwards any extra
 arguments to `tauri dev`.
+The checked-in `.env.example` only keeps `VITE_API_BASE_URL`; add
+`TOGOSPACE_ROOT` locally only when your `TogoSpace` repository is not the parent
+directory of this frontend workspace.
 
 In source development mode, desktop-managed backend data is written to
 `frontend/.desktop-dev-storage/` so the app does not need write access to the
