@@ -1,3 +1,9 @@
 node_modules
 dist
 .DS_Store
+.dbg/
+.desktop-dev-storage/
+apps/desktop/.env
+apps/desktop/dist/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/resources/extensions/

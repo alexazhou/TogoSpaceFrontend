@@ -1,0 +1,276 @@
+:root {
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Theme schema */
+  /* Page-level background and ambient color anchors. */
+  --surface-page: #0b1017;
+  --surface-page-top: #111823;
+  --bg-canvas-accent-left: rgba(166, 179, 201, 0.09);
+  --bg-canvas-accent-right: rgba(88, 120, 164, 0.07);
+
+  /* Layered surfaces used by panels, overlays, and special content areas. */
+  --surface-panel: #131a24;
+  --surface-panel-muted: #171f2b;
+  --surface-panel-deep: #0f151d;
+  --surface-overlay: rgba(14, 18, 27, 0.94);
+  --surface-elevated: #1a2431;
+  --surface-glass: rgba(19, 26, 36, 0.88);
+  --surface-glass-strong: rgba(20, 28, 38, 0.94);
+  --surface-chat: color-mix(in srgb, var(--surface-panel) 92%, var(--surface-panel-deep) 8%);
+  --surface-input: color-mix(in srgb, var(--surface-panel) 72%, #ffffff 4%);
+  --surface-pill: var(--surface-elevated);
+
+  /* Text hierarchy from primary content to helper copy. */
+  --text-primary: #edf2fb;
+  --text-secondary: #9aa8bc;
+  --text-tertiary: #647388;
+  --text-on-accent: #f6f8fc;
+
+  /* Shared border strengths for cards, inputs, and separators. */
+  --border-subtle: #232d3b;
+  --border-default: #313d4f;
+  --border-strong: #425065;
+
+  /* Interactive emphasis for hover, selected, and focus states. */
+  --interactive-selected: #202c3a;
+  --interactive-hover-border: #53667e;
+  --interactive-focus-border: #6d87a4;
+  --interactive-focus-ring: rgba(109, 135, 164, 0.16);
+  --input-focus-border: #88a0bb;
+  --input-focus-ring: rgba(136, 160, 187, 0.2);
+
+  /* Status colors for success, danger, warning, and info messaging. */
+  --state-success: #6cc1a6;
+  --state-danger: #e27a76;
+  --state-warning: #cba36d;
+  --state-info: #90b3d9;
+  --state-warning-track: rgba(203, 163, 109, 0.18);
+
+  /* Shared depth treatment for elevated containers. */
+  --shadow-panel: 0 8px 20px rgba(3, 7, 12, 0.14);
+  --shadow-soft: 0 10px 26px rgba(4, 8, 14, 0.14);
+  --shadow-floating: 0 18px 40px rgba(2, 7, 13, 0.22);
+
+  /* App semantic tokens */
+  color: var(--text-secondary);
+  background:
+    radial-gradient(circle at top left, var(--bg-canvas-accent-left), transparent 28%),
+    linear-gradient(180deg, var(--surface-page-top) 0%, var(--surface-page) 100%);
+
+  /* Decorative shell glows for the outer app frame. */
+  --shell-glow-left: rgba(160, 176, 198, 0.08);
+  --shell-glow-right: rgba(104, 125, 156, 0.08);
+
+  /* Feedback banner styling shared by error callouts. */
+  --banner-error-bg: rgba(239, 107, 103, 0.1);
+  --banner-error-text: #de736f;
+  --banner-error-border: color-mix(in srgb, var(--state-danger) 24%, var(--border-default) 76%);
+  --panel-border-soft: color-mix(in srgb, var(--border-default) 48%, transparent);
+  --form-input-border: color-mix(in srgb, var(--focus-border) 34%, var(--panel-border) 66%);
+  --form-input-bg: color-mix(in srgb, var(--surface-soft) 82%, var(--panel-bg) 18%);
+  --form-input-focus-ring: color-mix(in srgb, var(--focus-border) 14%, transparent);
+  --form-input-focus-inner: color-mix(in srgb, var(--focus-border) 38%, transparent);
+  --form-input-selected-inner: color-mix(in srgb, var(--selected) 34%, transparent);
+  --form-input-readonly-border: color-mix(in srgb, var(--focus-border) 18%, var(--panel-border) 82%);
+  --form-input-readonly-bg: color-mix(in srgb, var(--surface-soft) 86%, var(--panel-bg) 14%);
+  --form-input-readonly-text: color-mix(in srgb, var(--muted) 84%, var(--text-strong) 16%);
+
+  /* Utility chrome tokens for idle dots, scrollbars, and theme toggles. */
+  --status-dot-idle: var(--text-tertiary);
+  --scrollbar-track: #131b25;
+  --scrollbar-thumb: #3a485a;
+  --scrollbar-thumb-hover: #516278;
+  --markdown-code-scrollbar-track: transparent;
+  --markdown-code-scrollbar-thumb: color-mix(in srgb, var(--markdown-code-bg, var(--surface-panel)) 70%, var(--border-strong) 30%);
+  --markdown-code-scrollbar-thumb-hover: color-mix(in srgb, var(--markdown-code-bg, var(--surface-panel)) 58%, var(--border-strong) 42%);
+  --markdown-code-toolbar-text: color-mix(in srgb, var(--markdown-code-bg, var(--surface-panel)) 56%, var(--text-secondary) 44%);
+  --toolbar-switch-off: #25384b;
+  --toolbar-switch-handle: #d7e0ea;
+  --theme-switch-icon-active: #e3eef8;
+  --chat-bubble-left-bg: #1a232f;
+  --chat-bubble-left-code-bg: #131a22;
+  --chat-floating-message-bg: rgba(20, 28, 38, 0.96);
+  --markdown-code-bg-default: #141b24;
+  --markdown-inline-code-bg-default: #1b2430;
+  --markdown-table-header-bg-default: #171f2a;
+  --markdown-link-color-default: color-mix(in srgb, var(--state-info) 74%, white 26%);
+  --markdown-link-hover-color-default: color-mix(in srgb, var(--state-info) 62%, white 38%);
+  --markdown-link-color-on-accent: #d6e8fb;
+  --markdown-link-hover-color-on-accent: #f2f7fd;
+
+  /* Neutral gray scale for elements that should not have color tinting. */
+  --gray-100: #f8f9fa;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #6c757d;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+
+  /* Room list semantic tokens for badges, unread states, and card emphasis. */
+  --room-private-border: rgba(203, 163, 109, 0.28);
+  --room-private-bg: rgba(203, 163, 109, 0.1);
+  --room-private-text: #d4b481;
+  --room-group-border: rgba(144, 179, 217, 0.28);
+  --room-group-bg: rgba(144, 179, 217, 0.1);
+  --room-group-text: var(--state-info);
+  --room-card-border: rgba(83, 99, 121, 0.3);
+  --room-card-border-stroke: color-mix(in srgb, var(--room-card-border) 82%, var(--surface-panel-muted) 18%);
+  --room-card-border-active: color-mix(in srgb, var(--interactive-focus-border) 68%, var(--border-default) 32%);
+  --unread-bg: rgba(226, 122, 118, 0.12);
+  --unread-text: #f0a39f;
+  --surface-chip: var(--border-strong);
+  --surface-chip-danger: #4b2e3d;
+  --surface-danger-item: #22171b;
+  --surface-activity-item: color-mix(in srgb, var(--surface-elevated) 74%, var(--surface-panel-muted) 26%);
+  --surface-activity-item-active: color-mix(in srgb, var(--surface-elevated) 86%, var(--surface-panel-muted) 14%);
+  --border-activity-item: color-mix(in srgb, var(--border-default) 82%, var(--border-subtle) 18%);
+  --border-danger-item: #5b3848;
+  --text-danger-muted: #d2b4c1;
+  --text-danger-strong: #f3c4d5;
+  --text-danger-accent: #f3c4d5;
+  --text-description: #b4c0d0;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  /* Page-level background and ambient color anchors. */
+  --surface-page: #f3f5f8;
+  --surface-page-top: #f8fafc;
+  --bg-canvas-accent-left: rgba(208, 214, 224, 0.24);
+  --bg-canvas-accent-right: rgba(184, 197, 216, 0.18);
+
+  /* Layered surfaces used by panels, overlays, and special content areas. */
+  --surface-panel: rgba(255, 255, 255, 0.9);
+  --surface-panel-muted: #eef2f6;
+  --surface-panel-deep: #e7edf4;
+  --surface-overlay: rgba(250, 251, 253, 0.96);
+  --surface-elevated: #f1f4f8;
+  --surface-glass: rgba(255, 255, 255, 0.82);
+  --surface-glass-strong: rgba(255, 255, 255, 0.92);
+  --surface-chat: rgba(255, 255, 255, 0.82);
+  --surface-input: #f7f9fb;
+  --surface-pill: var(--surface-elevated);
+
+  /* Text hierarchy from primary content to helper copy. */
+  --text-primary: #1f2937;
+  --text-secondary: #6b7787;
+  --text-tertiary: #95a1b1;
+  --text-on-accent: #f8fbff;
+
+  /* Shared border strengths for cards, inputs, and separators. */
+  --border-subtle: #e6eaef;
+  --border-default: #d7dde6;
+  --border-strong: #c8d1dd;
+
+  /* Interactive emphasis for hover, selected, and focus states. */
+  --interactive-selected: #edf2f8;
+  --interactive-hover-border: #9daec3;
+  --interactive-focus-border: #8699b1;
+  --interactive-focus-ring: rgba(134, 153, 177, 0.18);
+  --input-focus-border: #7288a5;
+  --input-focus-ring: rgba(114, 136, 165, 0.2);
+
+  /* Status colors for success, danger, warning, and info messaging. */
+  --state-success: #2f8a71;
+  --state-danger: #c75c56;
+  --state-warning: #b98534;
+  --state-info: #567ca8;
+  --state-warning-track: rgba(185, 133, 52, 0.2);
+
+  /* Shared depth treatment for elevated containers. */
+  --shadow-panel: none;
+  --shadow-soft: 0 12px 28px rgba(148, 163, 184, 0.12);
+  --shadow-floating: 0 18px 38px rgba(148, 163, 184, 0.16);
+
+  color: #243447;
+  background:
+    radial-gradient(circle at top left, var(--bg-canvas-accent-left), transparent 30%),
+    linear-gradient(180deg, var(--surface-page-top) 0%, var(--surface-page) 100%);
+
+  /* Decorative shell glows for the outer app frame. */
+  --shell-glow-left: rgba(214, 220, 228, 0.22);
+  --shell-glow-right: rgba(196, 205, 218, 0.18);
+
+  /* Feedback banner styling shared by error callouts. */
+  --banner-error-bg: rgba(217, 77, 70, 0.12);
+  --banner-error-text: #b94a45;
+  --banner-error-border: color-mix(in srgb, var(--state-danger) 28%, var(--border-default) 72%);
+  --panel-border-soft: var(--border-default);
+  --form-input-border: color-mix(in srgb, var(--focus-border) 34%, var(--panel-border) 66%);
+  --form-input-bg: color-mix(in srgb, var(--surface-soft) 82%, var(--panel-bg) 18%);
+  --form-input-focus-ring: color-mix(in srgb, var(--focus-border) 14%, transparent);
+  --form-input-focus-inner: color-mix(in srgb, var(--focus-border) 38%, transparent);
+  --form-input-selected-inner: color-mix(in srgb, var(--selected) 34%, transparent);
+  --form-input-readonly-border: color-mix(in srgb, var(--focus-border) 18%, var(--panel-border) 82%);
+  --form-input-readonly-bg: color-mix(in srgb, var(--surface-soft) 86%, var(--panel-bg) 14%);
+  --form-input-readonly-text: color-mix(in srgb, var(--muted) 84%, var(--text-strong) 16%);
+
+  /* Utility chrome tokens for idle dots, scrollbars, and theme toggles. */
+  --status-dot-idle: #98a9bd;
+  --scrollbar-track: var(--surface-panel-deep);
+  --scrollbar-thumb: #b6c1cf;
+  --scrollbar-thumb-hover: #9aa8ba;
+  --markdown-code-toolbar-text: color-mix(in srgb, var(--markdown-code-bg, var(--surface-panel)) 56%, var(--text-secondary) 44%);
+  --toolbar-switch-off: rgba(15, 23, 42, 0.18);
+  --toolbar-switch-handle: #ffffff;
+  --theme-switch-icon-active: #4b7fc0;
+  --chat-bubble-left-bg: #eef2f6;
+  --chat-bubble-left-code-bg: #f7f9fb;
+  --chat-floating-message-bg: rgba(255, 255, 255, 0.96);
+  --markdown-code-bg-default: #f2f4f7;
+  --markdown-inline-code-bg-default: #eef1f4;
+  --markdown-table-header-bg-default: #f8f9fb;
+  --markdown-link-color-default: #567ca8;
+  --markdown-link-hover-color-default: #466f9a;
+  --markdown-link-color-on-accent: #e7f0fb;
+  --markdown-link-hover-color-on-accent: #f6f9fd;
+
+  /* Neutral gray scale for elements that should not have color tinting. */
+  --gray-100: #212529;
+  --gray-200: #343a40;
+  --gray-300: #495057;
+  --gray-400: #6c757d;
+  --gray-500: #adb5bd;
+  --gray-600: #ced4da;
+  --gray-700: #dee2e6;
+  --gray-800: #e9ecef;
+  --gray-900: #f8f9fa;
+
+  /* Room list semantic tokens for badges, unread states, and card emphasis. */
+  --room-private-border: rgba(185, 133, 52, 0.3);
+  --room-private-bg: rgba(246, 237, 220, 0.96);
+  --room-private-text: #926421;
+  --room-group-border: rgba(86, 124, 168, 0.26);
+  --room-group-bg: rgba(233, 239, 247, 0.96);
+  --room-group-text: var(--state-info);
+  --room-card-border: rgba(137, 152, 171, 0.18);
+  --room-card-border-stroke: var(--room-card-border);
+  --room-card-border-active: rgba(134, 153, 177, 0.26);
+  --unread-bg: rgba(199, 92, 86, 0.12);
+  --unread-text: #b85853;
+  --surface-chip: var(--border-default);
+  --surface-chip-danger: #f8d7da;
+  --surface-danger-item: #fdf2f2;
+  --surface-activity-item: rgba(255, 255, 255, 0.94);
+  --surface-activity-item-active: #f7f9fb;
+  --border-activity-item: color-mix(in srgb, var(--border-default) 88%, white 12%);
+  --border-danger-item: #f5c2c7;
+  --text-danger-muted: #842029;
+  --text-danger-strong: #b02a37;
+  --text-danger-accent: #b02a37;
+  --text-description: #53606f;
+  color-scheme: light;
+}
+
+:root:not([data-theme='light']) {
+  --backend-selected-hover: #24486b;
+  --backend-selected-active: #2a5278;
+  --backend-selected-strong: #315c86;
+}
