@@ -1,0 +1,21 @@
+[package]
+name = "togoclient-desktop"
+version = "0.2.0"
+description = "TogoClient desktop shell powered by Tauri"
+authors = ["TRAE"]
+edition = "2021"
+
+[lib]
+name = "togoclient_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.0.0", features = [] }
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tauri = { version = "2.0.0", features = ["tray-icon"] }
+tungstenite = { version = "0.24.0", features = ["native-tls"] }
+ureq = { version = "2.10.1", default-features = false }
+url = "2.5"
