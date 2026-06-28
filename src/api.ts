@@ -974,6 +974,7 @@ export interface SystemStatus {
   schedule_state?: 'STOPPED' | 'BLOCKED' | 'RUNNING' | 'stopped' | 'blocked' | 'running';
   not_running_reason?: string;
   development_mode?: boolean;
+  version?: string;
 }
 
 export async function checkSystemStatus(): Promise<{ initialized: boolean }> {

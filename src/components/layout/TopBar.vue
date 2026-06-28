@@ -36,6 +36,7 @@ const props = defineProps<{
   showBackToConsole?: boolean;
   showConsoleViewTabs?: boolean;
   consoleView?: ConsoleMainView;
+  appVersion?: string;
 }>();
 
 const emit = defineEmits<{
@@ -310,6 +311,7 @@ function closeLogoutConfirm(): void {
         :label="activeTeamToggleLabel"
         @toggle="emit('toggleActiveTeamEnabled', $event)"
       />
+      <span v-if="appVersion" class="topbar-version">v{{ appVersion }}</span>
     </div>
 
     <div v-if="showConsoleViewTabs" class="topbar-center">
@@ -522,6 +524,15 @@ function closeLogoutConfirm(): void {
   align-items: center;
   gap: 5px;
   flex-wrap: wrap;
+}
+
+.topbar-version {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  user-select: none;
+  letter-spacing: 0.02em;
 }
 
 .team-switcher {

@@ -78,6 +78,7 @@ const isLightMode = computed(() => themeMode.value === 'light');
 const scheduleResumePending = ref(false);
 const isConsoleRoute = computed(() => route.name === 'console');
 const consoleView = computed<ConsoleMainView>(() => (route.query.view === 'tasks' ? 'tasks' : 'chat'));
+const appVersion = ref('');
 let removeViewportRootClasses: (() => void) | null = null;
 
 // ── V13: Quick Init Modal ──
@@ -111,6 +112,7 @@ async function checkSystemStatus(): Promise<void> {
     authEnabled.value = status.auth_enabled ?? false;
     updateScheduleState(status.schedule_state ?? '', status.not_running_reason ?? '');
     setGlobalRequestErrorAutoDismiss(status.development_mode ? null : 5000);
+    appVersion.value = status.version ?? '';
 
     // 鉴权启用且无 token 时，触发 token 输入
     if (authEnabled.value && !getToken()) {
@@ -332,6 +334,7 @@ onBeforeUnmount(() => {
       :auth-enabled="authEnabled"
       :show-console-view-tabs="isConsoleRoute"
       :console-view="consoleView"
+      :app-version="appVersion"
       @toggle-theme="toggleTheme"
       @select-team="selectTeam"
       @toggle-active-team-enabled="requestActiveTeamEnabledToggle"
