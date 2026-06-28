@@ -5,6 +5,7 @@ import { getLlmConfig, saveLlmConfig, testLlmProvider } from '../../api';
 import type { LlmConfigPayload, LlmProviderConfig, LlmModelConfig } from '../../types';
 import ProviderEditorDialog from './ProviderEditorDialog.vue';
 import ModelEditorDialog from './ModelEditorDialog.vue';
+import ContextConfigSection from './ContextConfigSection.vue';
 import SettingsBreadcrumb from './SettingsBreadcrumb.vue';
 import type { SettingsBreadcrumbItem } from './types';
 import InfoTooltip from '../ui/InfoTooltip.vue';
@@ -238,42 +239,10 @@ onMounted(() => {
       </section>
 
       <!-- Context Config -->
-      <section class="context-config-section">
-        <h4>
-          {{ t('settings.models.contextConfigTitle', 'Default Context Config') }}
-          <InfoTooltip :text="t('settings.models.contextConfigDesc', 'Global context window and compaction settings')" />
-        </h4>
-        <div class="slots-grid">
-          <label class="svc-field">
-            <span>
-              {{ t('settings.models.contextWindowTokens', 'Context Window Tokens') }}
-              <InfoTooltip :text="t('settings.models.contextWindowTokensDesc', 'Maximum context window size in tokens')" />
-            </span>
-            <input v-model.number="config.context_config.context_window_tokens" type="number" class="svc-input" min="0" step="1024" />
-          </label>
-          <label class="svc-field">
-            <span>
-              {{ t('settings.models.reserveOutputTokens', 'Reserve Output Tokens') }}
-              <InfoTooltip :text="t('settings.models.reserveOutputTokensDesc', 'Reserved tokens for model output')" />
-            </span>
-            <input v-model.number="config.context_config.reserve_output_tokens" type="number" class="svc-input" min="0" step="256" />
-          </label>
-          <label class="svc-field">
-            <span>
-              {{ t('settings.models.compactTriggerRatio', 'Compact Trigger Ratio') }}
-              <InfoTooltip :text="t('settings.models.compactTriggerRatioDesc', 'Ratio of context usage to trigger compaction (0-1)')" />
-            </span>
-            <input v-model.number="config.context_config.compact_trigger_ratio" type="number" class="svc-input" min="0" max="1" step="0.05" />
-          </label>
-          <label class="svc-field">
-            <span>
-              {{ t('settings.models.compactSummaryMaxTokens', 'Compact Summary Max Tokens') }}
-              <InfoTooltip :text="t('settings.models.compactSummaryMaxTokensDesc', 'Maximum tokens for compaction summary')" />
-            </span>
-            <input v-model.number="config.context_config.compact_summary_max_tokens" type="number" class="svc-input" min="0" step="256" />
-          </label>
-        </div>
-      </section>
+      <ContextConfigSection
+        :config="config.context_config"
+        @save="config.context_config = $event"
+      />
 
       <!-- Providers View -->
       <section v-if="detailProviderIndex == null" class="providers-section">

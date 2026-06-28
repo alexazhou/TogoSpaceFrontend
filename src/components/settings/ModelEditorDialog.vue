@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { LlmModelConfig } from '../../types';
+import type { LlmModelConfig, LlmContextConfig } from '../../types';
+import ContextConfigSection from './ContextConfigSection.vue';
 
 type EditorMode = 'create' | 'edit';
 
@@ -35,6 +36,20 @@ const advancedOpen = ref(false);
 const canSave = computed(() => {
   return form.value.name.trim().length > 0 && form.value.protocol.trim().length > 0;
 });
+
+const contextConfigForComponent = computed<LlmContextConfig>(() => ({
+  context_window_tokens: form.value.context_window_tokens,
+  reserve_output_tokens: form.value.reserve_output_tokens,
+  compact_trigger_ratio: form.value.compact_trigger_ratio,
+  compact_summary_max_tokens: form.value.compact_summary_max_tokens,
+}));
+
+function handleContextConfigSave(config: LlmContextConfig): void {
+  form.value.context_window_tokens = config.context_window_tokens;
+  form.value.reserve_output_tokens = config.reserve_output_tokens;
+  form.value.compact_trigger_ratio = config.compact_trigger_ratio;
+  form.value.compact_summary_max_tokens = config.compact_summary_max_tokens;
+}
 
 function closeDialog(): void {
   visible.value = false;
@@ -178,25 +193,12 @@ defineExpose({ openCreate, openEdit });
           </button>
 
           <div v-if="advancedOpen" class="advanced-grid">
-            <label class="svc-field">
-              <span>{{ t('settings.models.contextWindow') }}</span>
-              <input v-model.number="form.context_window_tokens" type="number" class="svc-input" min="1024" />
-            </label>
-
-            <label class="svc-field">
-              <span>{{ t('settings.models.outputReserved') }}</span>
-              <input v-model.number="form.reserve_output_tokens" type="number" class="svc-input" min="256" />
-            </label>
-
-            <label class="svc-field">
-              <span>{{ t('settings.models.compactRatio') }}</span>
-              <input v-model.number="form.compact_trigger_ratio" type="number" class="svc-input" min="0" max="1" step="0.01" />
-            </label>
-
-            <label class="svc-field">
-              <span>{{ t('settings.models.summaryMax') }}</span>
-              <input v-model.number="form.compact_summary_max_tokens" type="number" class="svc-input" min="256" />
-            </label>
+            <div class="svc-field--wide">
+              <ContextConfigSection
+                :config="contextConfigForComponent"
+                @save="handleContextConfigSave"
+              />
+            </div>
 
             <label class="svc-field svc-field--wide">
               <span>{{ t('settings.models.extraHeaders') }}</span>
