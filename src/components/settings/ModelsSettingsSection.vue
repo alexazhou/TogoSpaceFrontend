@@ -156,7 +156,7 @@ async function testModel(providerIndex: number, modelIndex: number) {
   try {
     const res = await testLlmProvider({
       provider: provider,
-      model: model.name,
+      model: model,
     });
     if (res.status === 'ok') {
       alert(`Test successful! Latency: ${res.detail?.duration_ms}ms\nResponse: ${res.detail?.response_text}`);

@@ -1125,7 +1125,7 @@ export async function saveLlmConfig(payload: LlmConfigPayload): Promise<{ status
 
 export async function testLlmProvider(payload: {
   provider: LlmProviderConfig;
-  model: string;
+  model: LlmModelConfig;
 }): Promise<LlmTestResult> {
   return requestJson('/config/llm_test.json', {
     method: 'POST',
