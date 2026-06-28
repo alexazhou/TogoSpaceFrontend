@@ -234,10 +234,11 @@ defineExpose({ openCreate, openEdit });
 
           <label class="svc-field svc-field--wide">
             <span>API Key</span>
-            <div class="svc-input-group">
+            <div class="svc-input-wrapper">
               <input v-model="form.api_key" :type="apiKeyVisible ? 'text' : 'password'" class="svc-input svc-input--flex" placeholder="sk-..." />
-              <button type="button" class="ghost-button" @click="apiKeyVisible = !apiKeyVisible">
-                {{ apiKeyVisible ? t('settings.models.apiKeyHide') : t('settings.models.apiKeyShow') }}
+              <button type="button" class="eye-icon-btn" @click="apiKeyVisible = !apiKeyVisible">
+                <svg v-if="!apiKeyVisible" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
               </button>
             </div>
           </label>
@@ -269,7 +270,16 @@ defineExpose({ openCreate, openEdit });
 .svc-field--wide { grid-column: 1 / -1; }
 .svc-field > span { color: var(--muted); font-size: 0.76rem; }
 .svc-input, .svc-select { height: 40px; width: 100%; border: 1px solid var(--panel-border); border-radius: 12px; background: var(--panel-bg); color: var(--text-strong); padding: 0 12px; font: inherit; font-size: 0.88rem; box-sizing: border-box; }
-.svc-input-group { display: flex; gap: 8px; }
+.svc-input-wrapper { position: relative; display: flex; align-items: center; }
+.svc-input-wrapper .svc-input { padding-right: 40px; }
+.eye-icon-btn {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0; border: none; border-radius: 6px;
+  background: transparent; color: var(--muted); cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.eye-icon-btn:hover { background: color-mix(in srgb, var(--text-strong) 8%, transparent); color: var(--text-strong); }
 .svc-input--flex { flex: 1; min-width: 0; }
 .editor-actions-trailing { display: flex; gap: 8px; justify-content: flex-end; }
 </style>
