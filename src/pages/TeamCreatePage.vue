@@ -2,7 +2,7 @@
 import '../theme/legacy-aliases.css';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { showGlobalSuccessToast, totalMessageCount } from '../appUiState';
+import { showGlobalSuccessToast, totalMessageCount, appVersion } from '../appUiState';
 import { createTeam } from '../api';
 import SettingsNavSidebar from '../components/settings/SettingsNavSidebar.vue';
 import TeamInfoCard from '../components/team/TeamInfoCard.vue';
@@ -151,6 +151,7 @@ onMounted(() => {
       <div class="settings-head-main">
         <div class="settings-title-row">
           <h2>系统设置</h2>
+          <span v-if="appVersion" class="settings-version">v{{ appVersion }}</span>
           <p class="settings-eyebrow">Admin Console</p>
         </div>
       </div>
@@ -259,6 +260,16 @@ onMounted(() => {
   align-items: baseline;
   gap: 14px;
   min-width: 0;
+}
+
+.settings-version {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  user-select: none;
+  letter-spacing: 0.02em;
+  flex: 0 0 auto;
 }
 
 .settings-head h2 {

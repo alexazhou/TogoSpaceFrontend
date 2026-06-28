@@ -4,7 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { backupDatabase, getAgents, getDeptTree, getTeamPresetExport } from '../api';
-import { showGlobalSuccessToast, showQuickInit, totalMessageCount } from '../appUiState';
+import { showGlobalSuccessToast, showQuickInit, totalMessageCount, appVersion } from '../appUiState';
 import ModelsSettingsSection from '../components/settings/ModelsSettingsSection.vue';
 import RolesSettingsSection from '../components/settings/RolesSettingsSection.vue';
 import SkillsSettingsSection from '../components/settings/SkillsSettingsSection.vue';
@@ -304,6 +304,7 @@ watch(
       <div class="settings-head-main">
         <div class="settings-title-row">
           <h2>{{ t('settings.title') }}</h2>
+          <span v-if="appVersion" class="settings-version">v{{ appVersion }}</span>
           <p class="settings-eyebrow">Admin Console</p>
         </div>
       </div>
@@ -509,6 +510,16 @@ watch(
   align-items: baseline;
   gap: 14px;
   min-width: 0;
+}
+
+.settings-version {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  user-select: none;
+  letter-spacing: 0.02em;
+  flex: 0 0 auto;
 }
 
 .settings-eyebrow,

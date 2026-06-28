@@ -34,6 +34,7 @@ export const showTokenDialog = ref(false);
 export const authEnabled = ref(false);
 export const scheduleState = ref<'stopped' | 'blocked' | 'running' | ''>('');
 export const scheduleNotRunningReason = ref('');
+export const appVersion = ref('');
 
 type ScheduleStateInput = 'stopped' | 'blocked' | 'running' | 'STOPPED' | 'BLOCKED' | 'RUNNING' | '';
 

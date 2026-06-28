@@ -16,6 +16,7 @@ import {
   showQuickInit,
   showTokenDialog,
   authEnabled,
+  appVersion,
   totalMessageCount,
   updateScheduleState,
 } from './appUiState';
@@ -78,7 +79,6 @@ const isLightMode = computed(() => themeMode.value === 'light');
 const scheduleResumePending = ref(false);
 const isConsoleRoute = computed(() => route.name === 'console');
 const consoleView = computed<ConsoleMainView>(() => (route.query.view === 'tasks' ? 'tasks' : 'chat'));
-const appVersion = ref('');
 let removeViewportRootClasses: (() => void) | null = null;
 
 // ── V13: Quick Init Modal ──
@@ -334,7 +334,6 @@ onBeforeUnmount(() => {
       :auth-enabled="authEnabled"
       :show-console-view-tabs="isConsoleRoute"
       :console-view="consoleView"
-      :app-version="appVersion"
       @toggle-theme="toggleTheme"
       @select-team="selectTeam"
       @toggle-active-team-enabled="requestActiveTeamEnabledToggle"
