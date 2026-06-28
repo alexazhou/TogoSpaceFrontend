@@ -17,6 +17,7 @@ export function useSettingsNavItems() {
     { id: 'models', label: t('settings.nav.models'), note: t('settings.nav.modelsNote') },
     { id: 'skills', label: t('settings.nav.skills'), note: t('settings.nav.skillsNote') },
     { id: 'maintenance', label: t('settings.nav.maintenance'), note: t('settings.nav.maintenanceNote') },
+    { id: 'advanced', label: t('settings.nav.advanced'), note: t('settings.nav.advancedNote') },
     { id: 'quickInit', label: t('settings.nav.quickInit'), note: t('settings.nav.quickInitNote') },
   ]);
 }

@@ -4,12 +4,14 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { backupDatabase, getAgents, getDeptTree, getTeamPresetExport } from '../api';
-import { showGlobalSuccessToast, showQuickInit, totalMessageCount, appVersion } from '../appUiState';
+import { showGlobalSuccessToast, showQuickInit, totalMessageCount, appVersion, autoCheckUpdate, hasUpdate, latestVersion } from '../appUiState';
 import ModelsSettingsSection from '../components/settings/ModelsSettingsSection.vue';
 import RolesSettingsSection from '../components/settings/RolesSettingsSection.vue';
 import SkillsSettingsSection from '../components/settings/SkillsSettingsSection.vue';
 import SettingsNavSidebar from '../components/settings/SettingsNavSidebar.vue';
 import SystemMaintenanceSection from '../components/settings/SystemMaintenanceSection.vue';
+import AdvancedSettingsSection from '../components/settings/AdvancedSettingsSection.vue';
+import TeamCreateSection from '../components/settings/TeamCreateSection.vue';
 import TeamPresetExportDialog from '../components/settings/TeamPresetExportDialog.vue';
 import TeamsSettingsSection from '../components/settings/TeamsSettingsSection.vue';
 import ClearDataChoiceDialog from '../components/settings/ClearDataChoiceDialog.vue';
@@ -36,6 +38,7 @@ const settingsMainRef = ref<HTMLElement | null>(null);
 const settingsScrollbarHovered = ref(false);
 const isBackingUpDatabase = ref(false);
 const isExportingTeamPreset = ref(false);
+const isCreatingTeam = ref(false);
 const backupConfirmOpen = ref(false);
 const selectedExportTeamId = ref<number | null>(null);
 const teamPresetExportDialogOpen = ref(false);
@@ -48,7 +51,6 @@ const {
   detailTeamId,
   goBack,
   handleBreadcrumbNavigate,
-  openCreateTeam,
   openSection,
   openTeamDetail,
   clearTeamDetail,
@@ -125,6 +127,33 @@ const {
   router,
   t,
 });
+
+function openCreateTeam(): void {
+  isCreatingTeam.value = true;
+}
+
+function handleTeamCreated(teamId: number): void {
+  isCreatingTeam.value = false;
+  void loadTeams();
+  openTeamDetail(teamId);
+}
+
+function handleCreateTeamCancel(): void {
+  isCreatingTeam.value = false;
+}
+
+const createTeamBreadcrumbItems = computed(() => [
+  { key: 'settings', label: t('settings.title'), current: false },
+  { key: 'teams', label: t('settings.nav.teams'), current: false },
+  { key: 'create', label: t('settings.teams.newTeam'), current: true },
+]);
+
+function handleCreateTeamBreadcrumbNavigate(key: string): void {
+  if (key === 'teams' || key === 'settings') {
+    handleCreateTeamCancel();
+    return;
+  }
+}
 
 function handleDisableTeamForEdit(targetTeamId: number): void {
   void updateTeamEnabledState(targetTeamId, false);
@@ -305,11 +334,15 @@ watch(
         <div class="settings-title-row">
           <h2>{{ t('settings.title') }}</h2>
           <div class="settings-eyebrow-group">
-            <span v-if="appVersion" class="settings-version-badge">v{{ appVersion }}</span>
-            <span v-if="hasUpdate" class="settings-update-hint">
-              {{ t('settings.advanced.updateAvailable', { version: latestVersion }) }}
-              <a v-if="releaseUrl" :href="releaseUrl" target="_blank" rel="noopener" class="settings-update-link">{{ t('settings.advanced.goToDownload') }}</a>
-            </span>
+            <a
+              v-if="appVersion && hasUpdate"
+              :href="'https://github.com/alexazhou/TogoSpace/releases'"
+              target="_blank"
+              rel="noopener"
+              class="settings-version-badge settings-version-badge--has-update"
+              :data-tooltip="t('settings.advanced.updateAvailable', { version: latestVersion })"
+            >v{{ appVersion }}*</a>
+            <span v-else-if="appVersion" class="settings-version-badge">v{{ appVersion }}</span>
             <p class="settings-eyebrow">Admin Console</p>
           </div>
         </div>
@@ -331,8 +364,16 @@ watch(
         @pointermove="updateSettingsScrollbarHover"
         @pointerleave="clearSettingsScrollbarHover"
       >
+        <TeamCreateSection
+          v-if="currentSectionId === 'teams' && isCreatingTeam"
+          :breadcrumb-items="createTeamBreadcrumbItems"
+          @navigate-breadcrumb="handleCreateTeamBreadcrumbNavigate"
+          @created="handleTeamCreated"
+          @cancel="handleCreateTeamCancel"
+        />
+
         <TeamsSettingsSection
-          v-if="currentSectionId === 'teams'"
+          v-else-if="currentSectionId === 'teams'"
           :breadcrumb-items="breadcrumbItems"
           :selected-team-detail="selectedTeamDetail"
           :team-info-draft="teamInfoDraft"
@@ -387,6 +428,12 @@ watch(
           @navigate-breadcrumb="handleBreadcrumbNavigate"
           @backup-database="requestBackupDatabase"
           @export-team-preset="requestExportTeamPreset"
+        />
+
+        <AdvancedSettingsSection
+          v-else-if="currentSectionId === 'advanced'"
+          :breadcrumb-items="breadcrumbItems"
+          @navigate-breadcrumb="handleBreadcrumbNavigate"
         />
       </main>
     </div>
@@ -548,6 +595,50 @@ watch(
   user-select: none;
   letter-spacing: 0.02em;
   line-height: 1.3;
+  text-decoration: none;
+}
+
+.settings-version-badge--has-update {
+  color: var(--state-info);
+  background: color-mix(in srgb, var(--state-info) 12%, transparent);
+  border-color: color-mix(in srgb, var(--state-info) 25%, var(--divider));
+  cursor: pointer;
+}
+
+.settings-version-badge--has-update:hover {
+  background: color-mix(in srgb, var(--state-info) 20%, transparent);
+  border-color: color-mix(in srgb, var(--state-info) 40%, var(--divider));
+}
+
+.settings-version-badge--has-update::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.settings-version-badge--has-update {
+  position: relative;
+}
+
+.settings-version-badge--has-update:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .settings-head h2,

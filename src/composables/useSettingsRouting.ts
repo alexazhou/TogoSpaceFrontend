@@ -91,10 +91,6 @@ export function useSettingsRouting(options: UseSettingsRoutingOptions) {
     }).catch(console.error);
   }
 
-  function openCreateTeam(): void {
-    options.router.push({ name: 'team-create' }).catch(console.error);
-  }
-
   function openTeamDetail(targetTeamId: number): void {
     options.router.push({
       name: 'settings',
@@ -159,7 +155,6 @@ export function useSettingsRouting(options: UseSettingsRoutingOptions) {
     goBack,
     handleBreadcrumbNavigate,
     isTeamDetailView,
-    openCreateTeam,
     openSection,
     openTeamDetail,
     clearTeamDetail,

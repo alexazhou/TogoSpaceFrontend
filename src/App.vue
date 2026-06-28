@@ -17,10 +17,14 @@ import {
   showTokenDialog,
   authEnabled,
   appVersion,
+  autoCheckUpdate,
+  hasUpdate,
+  latestVersion,
+  releaseUrl,
   totalMessageCount,
   updateScheduleState,
 } from './appUiState';
-import { getSystemStatus, resumeSchedule, setTeamEnabled } from './api';
+import { checkUpdate, getSystemStatus, resumeSchedule, setTeamEnabled } from './api';
 import { getToken } from './authStore';
 import QuickInitModal from './components/layout/QuickInitModal.vue';
 import TokenDialog from './components/ui/TokenDialog.vue';
@@ -113,6 +117,7 @@ async function checkSystemStatus(): Promise<void> {
     updateScheduleState(status.schedule_state ?? '', status.not_running_reason ?? '');
     setGlobalRequestErrorAutoDismiss(status.development_mode ? null : 5000);
     appVersion.value = status.version ?? '';
+    autoCheckUpdate.value = status.auto_check_update ?? true;
 
     // 鉴权启用且无 token 时，触发 token 输入
     if (authEnabled.value && !getToken()) {
@@ -276,10 +281,6 @@ watch(
       return;
     }
 
-    if (routeName === 'team-create') {
-      return;
-    }
-
     if (routeTeamId === null || !findTeamById(routeTeamId)) {
       redirectToTeam(preferredTeamId.value ?? firstTeamId.value);
     }
@@ -301,6 +302,19 @@ onMounted(async () => {
   applyTheme(themeMode.value);
   startRealtimeClient();
   await Promise.all([loadTeams(), checkSystemStatus()]);
+
+  // Auto-check for updates on startup if enabled
+  if (autoCheckUpdate.value) {
+    checkUpdate()
+      .then((result) => {
+        hasUpdate.value = result.has_update;
+        latestVersion.value = result.latest_version;
+        releaseUrl.value = result.release_url;
+      })
+      .catch(() => {
+        // silently ignore
+      });
+  }
 });
 
 onBeforeUnmount(() => {
@@ -334,6 +348,9 @@ onBeforeUnmount(() => {
       :auth-enabled="authEnabled"
       :show-console-view-tabs="isConsoleRoute"
       :console-view="consoleView"
+      :has-update="hasUpdate"
+      :latest-version="latestVersion"
+      :release-url="releaseUrl"
       @toggle-theme="toggleTheme"
       @select-team="selectTeam"
       @toggle-active-team-enabled="requestActiveTeamEnabledToggle"

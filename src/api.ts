@@ -975,6 +975,7 @@ export interface SystemStatus {
   not_running_reason?: string;
   development_mode?: boolean;
   version?: string;
+  auto_check_update?: boolean;
 }
 
 export async function checkSystemStatus(): Promise<{ initialized: boolean }> {
@@ -1122,4 +1123,24 @@ export async function superviseAgent(
 export async function getSkills(): Promise<SkillInfo[]> {
   const result = await requestJson<{ skills: SkillInfo[] }>(`/config/skills/list.json?_t=${Date.now()}`);
   return result.skills;
+}
+
+export interface UpdateCheckResult {
+  has_update: boolean;
+  current_version: string;
+  latest_version: string;
+  release_url: string;
+  release_notes: string;
+}
+
+export async function checkUpdate(force = false): Promise<UpdateCheckResult> {
+  const qs = force ? '?force=true' : '';
+  return requestJson<UpdateCheckResult>(`/system/check_update.json${qs}`);
+}
+
+export async function updateSystemConfig(payload: { auto_check_update?: boolean }): Promise<{ auto_check_update: boolean }> {
+  return requestJson('/system/update_config.json', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }

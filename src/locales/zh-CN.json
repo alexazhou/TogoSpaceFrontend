@@ -31,7 +31,9 @@
     "enableCodeWrap": "开启自动换行",
     "disableCodeWrap": "关闭自动换行",
     "fullscreen": "全屏",
-    "exitFullscreen": "退出全屏"
+    "exitFullscreen": "退出全屏",
+    "on": "开启",
+    "off": "关闭"
   },
   "language": {
     "switcher": "切换语言",
@@ -79,6 +81,7 @@
     "teamGroupDisabled": "已停用",
     "teamsCount": "{count} 团队",
     "messagesCount": "{count} 条消息",
+    "updateAvailable": "v{version} 可更新",
     "scheduleBlockedReason": "未配置大模型服务，请到后台配置大模型服务",
     "scheduleStoppedReason": "调度已停止",
     "logout": "退出登录",
@@ -583,6 +586,8 @@
       "skillsNote": "系统技能与用户自定义技能",
       "maintenance": "系统维护",
       "maintenanceNote": "数据库备份与维护操作",
+      "advanced": "高级设置",
+      "advancedNote": "更新检查与其他高级选项",
       "runtime": "运行与存储",
       "runtimeNote": "配置目录与运行数据位置",
       "quickInit": "快速初始化",
@@ -616,7 +621,15 @@
       "loadFailed": "团队列表加载失败",
       "loadFailedMsg": "请检查后端服务或网络连接后重试。",
       "noTeams": "当前没有团队",
-      "noTeamsMsg": "先创建一个团队，再继续配置成员、角色和模型服务。"
+      "noTeamsMsg": "先创建一个团队，再继续配置成员、角色和模型服务。",
+      "backToList": "返回团队列表",
+      "creating": "创建中...",
+      "createBtn": "创建团队",
+      "createSuccess": "团队创建成功，请添加成员",
+      "createFailed": "创建团队失败，请检查名称是否重复。",
+      "createConfirmTitle": "确认创建团队",
+      "createConfirmMsg": "确认创建此团队？",
+      "createConfirmBtn": "确认创建"
     },
     "page": {
       "clearDataSuccess": "已清空团队\"{name}\"：{rooms}个房间，{tasks}个任务，{histories}条历史，{messages}条消息，{activities}条活动",
@@ -666,6 +679,18 @@
       "exportSuccess": "团队结构已导出：{file}",
       "exportDialogTitle": "导出团队结构 JSON",
       "exportDialogMsg": "请选择一个团队，系统会按现有 team preset 结构导出为 JSON 文件。"
+    },
+    "advanced": {
+      "title": "高级设置",
+      "autoCheckUpdate": "自动检查更新",
+      "autoCheckUpdateNote": "设置页面打开时自动检查是否有新版本可用",
+      "manualCheck": "手动检查更新",
+      "currentVersion": "当前版本",
+      "checkNow": "立即检查",
+      "checking": "检查中...",
+      "updateAvailable": "发现新版本: v{version}",
+      "upToDate": "已是最新版本",
+      "goToDownload": "前往下载"
     }
   },
   "teamCreate": {

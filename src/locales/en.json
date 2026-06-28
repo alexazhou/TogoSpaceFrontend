@@ -31,7 +31,9 @@
     "enableCodeWrap": "Enable code wrapping",
     "disableCodeWrap": "Disable code wrapping",
     "fullscreen": "Fullscreen",
-    "exitFullscreen": "Exit fullscreen"
+    "exitFullscreen": "Exit fullscreen",
+    "on": "On",
+    "off": "Off"
   },
   "language": {
     "switcher": "Switch language",
@@ -79,6 +81,7 @@
     "teamGroupDisabled": "Disabled",
     "teamsCount": "{count} teams",
     "messagesCount": "{count} messages",
+    "updateAvailable": "v{version} available",
     "scheduleBlockedReason": "No LLM service configured",
     "scheduleStoppedReason": "Scheduling stopped",
     "logout": "Logout",
@@ -583,6 +586,8 @@
       "skillsNote": "System skills and user-defined skills",
       "maintenance": "System Maintenance",
       "maintenanceNote": "Database backup and maintenance actions",
+      "advanced": "Advanced Settings",
+      "advancedNote": "Update check and other advanced options",
       "runtime": "Runtime & Storage",
       "runtimeNote": "Config paths and runtime data locations",
       "quickInit": "Quick Init",
@@ -616,7 +621,15 @@
       "loadFailed": "Failed to load teams",
       "loadFailedMsg": "Check backend service or network connection and retry.",
       "noTeams": "No teams",
-      "noTeamsMsg": "Create a team first, then configure members, roles, and model services."
+      "noTeamsMsg": "Create a team first, then configure members, roles, and model services.",
+      "backToList": "Back to team list",
+      "creating": "Creating...",
+      "createBtn": "Create team",
+      "createSuccess": "Team created successfully, please add members",
+      "createFailed": "Failed to create team, please check if the name is duplicated.",
+      "createConfirmTitle": "Confirm create team",
+      "createConfirmMsg": "Confirm to create this team?",
+      "createConfirmBtn": "Confirm create"
     },
     "page": {
       "clearDataSuccess": "Cleared team \"{name}\": {rooms} rooms, {tasks} tasks, {histories} histories, {messages} messages, {activities} activities",
@@ -666,6 +679,18 @@
       "exportSuccess": "Team structure exported: {file}",
       "exportDialogTitle": "Export Team Structure JSON",
       "exportDialogMsg": "Select a team and the system will export it as a JSON file using the existing team preset structure."
+    },
+    "advanced": {
+      "title": "Advanced Settings",
+      "autoCheckUpdate": "Auto Check Updates",
+      "autoCheckUpdateNote": "Automatically check for new versions when opening the settings page",
+      "manualCheck": "Manual Update Check",
+      "currentVersion": "Current version",
+      "checkNow": "Check Now",
+      "checking": "Checking...",
+      "updateAvailable": "New version available: v{version}",
+      "upToDate": "Up to date",
+      "goToDownload": "Go to download"
     }
   },
   "teamCreate": {

@@ -4,6 +4,7 @@ export const SETTINGS_ROUTE_SECTIONS = [
   'models',
   'skills',
   'maintenance',
+  'advanced',
 ] as const;
 
 export type SettingsRouteSection = (typeof SETTINGS_ROUTE_SECTIONS)[number];
@@ -16,6 +17,7 @@ export const SETTINGS_NAV_ITEMS = [
   'models',
   'skills',
   'maintenance',
+  'advanced',
   'quickInit',
 ] as const;
 

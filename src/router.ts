@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import ConsolePage from './pages/ConsolePage.vue';
 import SettingsPage from './pages/SettingsPage.vue';
-import TeamCreatePage from './pages/TeamCreatePage.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -10,11 +9,6 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: { template: '<div class="route-placeholder"></div>' },
-    },
-    {
-      path: '/teams/new',
-      name: 'team-create',
-      component: TeamCreatePage,
     },
     {
       path: '/teams/:teamId/rooms/:roomId?',

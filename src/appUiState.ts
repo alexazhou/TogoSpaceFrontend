@@ -35,6 +35,10 @@ export const authEnabled = ref(false);
 export const scheduleState = ref<'stopped' | 'blocked' | 'running' | ''>('');
 export const scheduleNotRunningReason = ref('');
 export const appVersion = ref('');
+export const autoCheckUpdate = ref(true);
+export const latestVersion = ref('');
+export const hasUpdate = ref(false);
+export const releaseUrl = ref('');
 
 type ScheduleStateInput = 'stopped' | 'blocked' | 'running' | 'STOPPED' | 'BLOCKED' | 'RUNNING' | '';
 

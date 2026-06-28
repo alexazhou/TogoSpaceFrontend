@@ -36,6 +36,9 @@ const props = defineProps<{
   showBackToConsole?: boolean;
   showConsoleViewTabs?: boolean;
   consoleView?: ConsoleMainView;
+  hasUpdate?: boolean;
+  latestVersion?: string;
+  releaseUrl?: string;
 }>();
 
 const emit = defineEmits<{
@@ -487,6 +490,16 @@ function closeLogoutConfirm(): void {
           </svg>
         </button>
       </div>
+      <a
+        v-if="hasUpdate"
+        :href="releaseUrl || 'https://github.com/alexazhou/TogoSpace/releases'"
+        target="_blank"
+        rel="noopener"
+        class="update-pill"
+      >
+        <span class="update-pill__dot"></span>
+        {{ t('topbar.updateAvailable', { version: latestVersion }) }}
+      </a>
     </div>
   </header>
 
@@ -844,7 +857,39 @@ function closeLogoutConfirm(): void {
 .team-disabled-pill {
   border-color: color-mix(in srgb, var(--state-warning) 28%, var(--border-subtle) 72%);
   background: color-mix(in srgb, var(--state-warning) 16%, var(--surface-pill) 84%);
-  color: color-mix(in srgb, var(--state-warning) 82%, var(--text-primary) 18%);
+}
+
+.update-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--state-info) 35%, var(--border-subtle) 65%);
+  border-radius: 8px;
+  padding: 3px 10px;
+  background: color-mix(in srgb, var(--state-info) 14%, var(--surface-pill) 86%);
+  color: color-mix(in srgb, var(--state-info) 85%, var(--text-primary) 15%);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.update-pill:hover {
+  border-color: color-mix(in srgb, var(--state-info) 55%, var(--interactive-focus-border) 45%);
+  background: color-mix(in srgb, var(--state-info) 22%, var(--surface-pill) 78%);
+  color: var(--text-primary);
+}
+
+.update-pill__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--state-info);
 }
 
 .schedule-state-pill-wrapper {
