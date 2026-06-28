@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import type { LlmProviderConfig } from '../../types';
 import { getProviderPresets } from '../../api';
 import ToggleSwitch from '../ui/ToggleSwitch.vue';
+import BaseUrlSection from './BaseUrlSection.vue';
 
 type EditorMode = 'create' | 'edit';
 
@@ -49,18 +50,6 @@ const form = ref({
   provider_params: '',
 });
 
-function addUrl() {
-  const usedTypes = urlsForm.value.map(u => u.type);
-  const availableType = URL_PROTOCOL_TYPES.find(t => !usedTypes.includes(t.value));
-  if (availableType) {
-    urlsForm.value.push({ type: availableType.value, url: '' });
-  }
-}
-
-function removeUrl(index: number) {
-  urlsForm.value.splice(index, 1);
-}
-
 function handleTypeChange() {
   const preset = providerPresets.value[form.value.type];
   if (preset) {
@@ -78,6 +67,14 @@ const dialogEyebrow = computed(() => (isCreating.value ? 'New Provider' : 'Provi
 
 const canSave = computed(() => {
   return form.value.name.trim().length > 0 && form.value.api_key.trim().length > 0;
+});
+
+const currentTypePresetUrls = computed(() => {
+  const preset = providerPresets.value[form.value.type];
+  if (!preset) return {};
+  return Object.fromEntries(
+    Object.entries(preset).filter(([k]) => k !== 'label')
+  );
 });
 
 function serializeHeaders(headers: Record<string, string> | undefined | null): string {
@@ -226,24 +223,13 @@ defineExpose({ openCreate, openEdit });
           </label>
 
           <div class="svc-field svc-field--wide">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span>Base URLs</span>
-            </div>
-            
-            <div v-for="(item, index) in urlsForm" :key="index" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
-              <select v-model="item.type" class="svc-input svc-select" style="width: 140px; flex-shrink: 0;">
-                <option v-for="type in URL_PROTOCOL_TYPES" :key="type.value" :value="type.value" :disabled="urlsForm.some((u, i) => u.type === type.value && i !== index)">
-                  {{ type.label }}
-                </option>
-              </select>
-              <input v-model="item.url" type="text" class="svc-input svc-input--flex" placeholder="https://..." />
-              <button type="button" class="ghost-button" @click="removeUrl(index)" style="padding: 0 8px; color: var(--error);">
-                ×
-              </button>
-            </div>
-            <button type="button" class="secondary-button" @click="addUrl" :disabled="urlsForm.length >= URL_PROTOCOL_TYPES.length" style="width: 100%; border-style: dashed; justify-content: center;">
-              + Add URL
-            </button>
+            <span>Base URLs</span>
+            <BaseUrlSection
+              :urls="urlsForm"
+              :protocol-types="URL_PROTOCOL_TYPES"
+              :preset-urls="currentTypePresetUrls"
+              @save="urlsForm = $event"
+            />
           </div>
 
           <label class="svc-field svc-field--wide">
