@@ -31,6 +31,7 @@ function createRoom(overrides: Partial<RoomState> = {}): RoomState {
     current_turn_agent_id: null,
     preview: '',
     unread: 0,
+    last_message_time: null,
     ...overrides,
   };
 }

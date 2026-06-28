@@ -236,7 +236,8 @@
     "private": "P",
     "group": "G",
     "deptGroup": "Dept Group",
-    "membersCount": "{count} members"
+    "membersCount": "{count} members",
+    "sortByTime": "Sort by last message time"
   },
   "message": {
     "noMessage": "No messages"
