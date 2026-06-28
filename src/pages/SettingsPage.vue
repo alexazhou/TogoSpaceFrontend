@@ -304,8 +304,14 @@ watch(
       <div class="settings-head-main">
         <div class="settings-title-row">
           <h2>{{ t('settings.title') }}</h2>
-          <span v-if="appVersion" class="settings-version">v{{ appVersion }}</span>
-          <p class="settings-eyebrow">Admin Console</p>
+          <div class="settings-eyebrow-group">
+            <span v-if="appVersion" class="settings-version-badge">v{{ appVersion }}</span>
+            <span v-if="hasUpdate" class="settings-update-hint">
+              {{ t('settings.advanced.updateAvailable', { version: latestVersion }) }}
+              <a v-if="releaseUrl" :href="releaseUrl" target="_blank" rel="noopener" class="settings-update-link">{{ t('settings.advanced.goToDownload') }}</a>
+            </span>
+            <p class="settings-eyebrow">Admin Console</p>
+          </div>
         </div>
       </div>
       <button type="button" class="secondary-button" @click="goBack">{{ topbarBackLabel }}</button>
@@ -507,19 +513,9 @@ watch(
 
 .settings-title-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 14px;
   min-width: 0;
-}
-
-.settings-version {
-  font-size: 0.68rem;
-  font-weight: 500;
-  color: var(--text-tertiary);
-  white-space: nowrap;
-  user-select: none;
-  letter-spacing: 0.02em;
-  flex: 0 0 auto;
 }
 
 .settings-eyebrow,
@@ -530,6 +526,28 @@ watch(
   letter-spacing: 0.14em;
   font-size: 0.68rem;
   flex: 0 0 auto;
+}
+
+.settings-eyebrow-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.settings-version-badge {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-secondary) 22%, var(--divider));
+  border-radius: 6px;
+  padding: 1px 6px;
+  white-space: nowrap;
+  user-select: none;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
 }
 
 .settings-head h2,
