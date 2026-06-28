@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { testLlmService, quickInit } from '../../api';
-import type { LlmServiceTestResult, LlmServiceType } from '../../types';
+import { testLlmProvider, quickInit } from '../../api';
+import type { LlmTestResult, LlmProviderConfig, LlmServiceType } from '../../types';
 
 const SERVICE_TYPES: { value: LlmServiceType; label: string }[] = [
   { value: 'openai-compatible', label: 'OpenAI Compatible' },
@@ -70,13 +70,19 @@ async function handleTest(): Promise<void> {
   saveError.value = '';
   try {
     const parsedProviderParams = parseProviderParams(providerParams.value);
-    const result: LlmServiceTestResult = await testLlmService({
-      mode: 'temp',
-      base_url: baseUrl.value.trim(),
+    const provider: LlmProviderConfig = {
+      name: 'quick_init_temp',
+      enable: true,
+      type: serviceType.value as any,
       api_key: apiKey.value.trim(),
-      type: serviceType.value,
-      model: model.value.trim(),
+      urls: baseUrl.value.trim() ? { base_url: baseUrl.value.trim() } : {},
+      extra_headers: null,
       provider_params: parsedProviderParams,
+      models: []
+    };
+    const result: LlmTestResult = await testLlmProvider({
+      provider,
+      model: model.value.trim(),
     });
     const detailParts: string[] = [];
     if (result.detail?.duration_ms !== undefined) detailParts.push(`${result.detail.duration_ms}ms`);

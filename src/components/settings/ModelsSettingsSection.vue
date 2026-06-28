@@ -1,110 +1,190 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { getLlmServices } from '../../api';
-import { showQuickInit } from '../../appUiState';
-import type { LlmServiceInfo } from '../../types';
-import ModelServiceEditorDialog from './ModelServiceEditorDialog.vue';
+import { getLlmConfig, saveLlmConfig, testLlmProvider } from '../../api';
+import type { LlmConfigPayload, LlmProviderConfig, LlmModelConfig } from '../../types';
+import ProviderEditorDialog from './ProviderEditorDialog.vue';
+import ModelEditorDialog from './ModelEditorDialog.vue';
 import SettingsBreadcrumb from './SettingsBreadcrumb.vue';
 import type { SettingsBreadcrumbItem } from './types';
+import InfoTooltip from '../ui/InfoTooltip.vue';
+import { showGlobalSuccessToast } from '../../appUiState';
 
-defineProps<{
+const props = defineProps<{
   breadcrumbItems: SettingsBreadcrumbItem[];
+  detailProviderIndex?: number | null;
 }>();
 
 const emit = defineEmits<{
   navigateBreadcrumb: [key: string];
+  openProviderModels: [index: number];
+  clearProviderModels: [];
 }>();
 
 const { t } = useI18n();
 
-const services = ref<LlmServiceInfo[]>([]);
-const defaultServer = ref<string | null>(null);
-const activeIndex = ref<number | null>(null);
+const config = ref<LlmConfigPayload | null>(null);
+const initialConfigSnapshot = ref<string>('');
+const isDirty = computed(() => {
+  if (!config.value) return false;
+  return JSON.stringify(config.value) !== initialConfigSnapshot.value;
+});
 const isLoading = ref(false);
+const isSaving = ref(false);
 const statusText = ref('');
-const editorDialogRef = ref<InstanceType<typeof ModelServiceEditorDialog> | null>(null);
 
-function formatServiceType(type: LlmServiceInfo['type']): string {
-  switch (type) {
-    case 'openai-compatible':
-      return 'OpenAI Compatible';
-    case 'anthropic':
-      return 'Anthropic';
-    case 'google':
-      return 'Google';
-    case 'deepseek':
-      return 'DeepSeek';
-    default:
-      return type;
-  }
-}
+const providerDialogRef = ref<InstanceType<typeof ProviderEditorDialog> | null>(null);
+const modelDialogRef = ref<InstanceType<typeof ModelEditorDialog> | null>(null);
 
-async function loadServices(preferredIndex?: number | null): Promise<void> {
-  const data = await getLlmServices();
-  services.value = data.llm_services;
-  defaultServer.value = data.default_llm_server;
+// We need to keep track of which provider we are editing models for
+const currentEditingProviderIndex = ref<number | null>(null);
+const currentEditingModelIndex = ref<number | null>(null);
+const currentEditingProviderIndexForEdit = ref<number | null>(null);
 
-  if (
-    preferredIndex !== null
-    && preferredIndex !== undefined
-    && preferredIndex >= 0
-    && preferredIndex < data.llm_services.length
-  ) {
-    activeIndex.value = preferredIndex;
-    return;
-  }
-
-  if (activeIndex.value !== null && activeIndex.value < data.llm_services.length) {
-    return;
-  }
-
-  activeIndex.value = data.llm_services.length ? 0 : null;
-}
-
-async function loadAll(preferredIndex?: number | null): Promise<void> {
+async function loadData(): Promise<void> {
   isLoading.value = true;
   statusText.value = '';
   try {
-    await loadServices(preferredIndex);
+    config.value = await getLlmConfig();
+    // Initialize context_config with defaults if null
+    if (!config.value.context_config) {
+      config.value.context_config = {
+        compact_trigger_ratio: 0.8,
+        reserve_output_tokens: 4096,
+        context_window_tokens: 128000,
+        compact_summary_max_tokens: 4096,
+      };
+    }
+    initialConfigSnapshot.value = JSON.stringify(config.value);
   } catch (error) {
     console.error(error);
-    statusText.value = t('settings.models.loadFailed');
+    statusText.value = t('settings.models.loadFailed', 'Failed to load configuration');
   } finally {
     isLoading.value = false;
   }
 }
 
-function openCreate(): void {
-  activeIndex.value = null;
-  editorDialogRef.value?.openCreate();
+function resetChanges(): void {
+  if (!initialConfigSnapshot.value) return;
+  config.value = JSON.parse(initialConfigSnapshot.value) as LlmConfigPayload;
 }
 
-function openEdit(index: number): void {
-  const service = services.value[index];
-  if (!service) {
-    return;
+async function saveAll(): Promise<void> {
+  if (!config.value) return;
+  isSaving.value = true;
+  statusText.value = '';
+  try {
+    await saveLlmConfig(config.value);
+    initialConfigSnapshot.value = JSON.stringify(config.value);
+    showGlobalSuccessToast(t('settings.models.saveSuccess', 'Configuration saved successfully!'));
+  } catch (error) {
+    console.error(error);
+    statusText.value = t('settings.models.saveFailed', 'Failed to save configuration');
+  } finally {
+    isSaving.value = false;
   }
-  activeIndex.value = index;
-  editorDialogRef.value?.openEdit({
-    index,
-    service,
-    defaultServer: defaultServer.value,
+}
+
+// Provider actions
+function openAddProvider() {
+  currentEditingProviderIndexForEdit.value = null;
+  providerDialogRef.value?.openCreate();
+}
+
+function openEditProvider(index: number) {
+  if (!config.value) return;
+  currentEditingProviderIndexForEdit.value = index;
+  providerDialogRef.value?.openEdit(config.value.llm_providers[index]);
+}
+
+function deleteProvider(index: number) {
+  if (!config.value || !confirm('Are you sure you want to delete this provider?')) return;
+  config.value.llm_providers.splice(index, 1);
+}
+
+function handleProviderSave(provider: LlmProviderConfig) {
+  if (!config.value) return;
+  if (currentEditingProviderIndexForEdit.value !== null) {
+    provider.models = config.value.llm_providers[currentEditingProviderIndexForEdit.value].models;
+    config.value.llm_providers[currentEditingProviderIndexForEdit.value] = provider;
+  } else {
+    config.value.llm_providers.push(provider);
+  }
+}
+
+// Model actions
+function openAddModel(providerIndex: number) {
+  currentEditingProviderIndex.value = providerIndex;
+  currentEditingModelIndex.value = null;
+  modelDialogRef.value?.openCreate();
+}
+
+function openEditModel(providerIndex: number, modelIndex: number) {
+  if (!config.value) return;
+  currentEditingProviderIndex.value = providerIndex;
+  currentEditingModelIndex.value = modelIndex;
+  modelDialogRef.value?.openEdit(config.value.llm_providers[providerIndex].models[modelIndex]);
+}
+
+function deleteModel(providerIndex: number, modelIndex: number) {
+  if (!config.value || !confirm('Are you sure you want to delete this model?')) return;
+  config.value.llm_providers[providerIndex].models.splice(modelIndex, 1);
+}
+
+function handleModelSave(model: LlmModelConfig) {
+  if (!config.value || currentEditingProviderIndex.value === null) return;
+  const pIndex = currentEditingProviderIndex.value;
+  if (currentEditingModelIndex.value !== null) {
+    config.value.llm_providers[pIndex].models[currentEditingModelIndex.value] = model;
+  } else {
+    config.value.llm_providers[pIndex].models.push(model);
+  }
+}
+
+// Test connectivity
+const testingProviderIndex = ref<number | null>(null);
+const testingModelIndex = ref<number | null>(null);
+async function testModel(providerIndex: number, modelIndex: number) {
+  if (!config.value) return;
+  testingProviderIndex.value = providerIndex;
+  testingModelIndex.value = modelIndex;
+  
+  const provider = config.value.llm_providers[providerIndex];
+  const model = provider.models[modelIndex];
+  
+  try {
+    const res = await testLlmProvider({
+      provider: provider,
+      model: model.name,
+    });
+    if (res.status === 'ok') {
+      alert(`Test successful! Latency: ${res.detail?.duration_ms}ms\nResponse: ${res.detail?.response_text}`);
+    } else {
+      alert(`Test failed: ${res.message}\nDetail: ${res.detail?.raw_error}`);
+    }
+  } catch(e) {
+    alert(`Test error: ${e}`);
+  } finally {
+    testingProviderIndex.value = null;
+    testingModelIndex.value = null;
+  }
+}
+
+const allModelOptions = computed(() => {
+  if (!config.value) return [];
+  const options: string[] = [];
+  config.value.llm_providers.forEach(p => {
+    if (p.enable) {
+      p.models.forEach(m => {
+        options.push(`${m.name}@${p.name}`);
+      });
+    }
   });
-}
-
-function handleDialogChanged(payload: { preferredIndex: number | null }): void {
-  void loadAll(payload.preferredIndex);
-}
-
-onMounted(() => {
-  void loadAll();
+  return options;
 });
 
-watch(showQuickInit, (value) => {
-  if (!value) {
-    void loadAll(activeIndex.value);
-  }
+onMounted(() => {
+  void loadData();
 });
 </script>
 
@@ -112,285 +192,311 @@ watch(showQuickInit, (value) => {
   <section id="models" class="config-section">
     <SettingsBreadcrumb :items="breadcrumbItems" @navigate="emit('navigateBreadcrumb', $event)" />
 
-    <div class="section-head section-head--compact">
-      <div class="section-actions">
-        <span v-if="statusText" class="section-status">{{ statusText }}</span>
-        <button type="button" class="secondary-button" @click="openCreate">
-          {{ t('settings.models.addService') }}
-        </button>
-      </div>
+    <div v-if="statusText" class="section-status-bar">
+      <span class="section-status">{{ statusText }}</span>
     </div>
 
-    <section class="models-table-section">
-      <p v-if="isLoading" class="models-empty">{{ t('settings.models.loading') }}</p>
+    <p v-if="isLoading" class="models-empty">{{ t('settings.models.loading', 'Loading configuration...') }}</p>
 
-      <div v-else-if="services.length" class="settings-table-wrap">
-        <table class="settings-table models-table">
-          <thead>
-            <tr>
-              <th>{{ t('settings.models.nameLabel') }}</th>
-              <th>{{ t('settings.models.typeLabel') }}</th>
-              <th class="models-table-model-head">{{ t('settings.models.modelLabel') }}</th>
-              <th class="models-table-status-head">{{ t('settings.models.table.status') }}</th>
-              <th class="models-table-actions-head">{{ t('settings.models.table.actions') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(service, index) in services"
-              :key="`${service.name}-${index}`"
-              :class="{ active: activeIndex === index }"
-              @click="activeIndex = index"
-            >
-              <td class="models-cell-name">
-                <div class="svc-row-name">
-                  <strong>{{ service.name }}</strong>
-                  <span v-if="service.name === defaultServer" class="svc-chip svc-chip--default">
-                    {{ t('settings.models.defaultBadge') }}
-                  </span>
-                </div>
-              </td>
-              <td class="models-cell-type">{{ formatServiceType(service.type) }}</td>
-              <td class="models-cell-model" :title="service.model">
-                <span class="models-cell-model-text">{{ service.model }}</span>
-              </td>
-              <td class="models-cell-status">
-                <span
-                  class="svc-chip"
-                  :class="service.enable ? 'svc-chip--enabled' : 'svc-chip--disabled'"
-                >
-                  {{ service.enable ? t('settings.models.enabled') : t('settings.models.disabled') }}
-                </span>
-              </td>
-              <td class="models-cell-actions">
-                <button type="button" class="ghost-button" @click.stop="openEdit(index)">
-                  {{ t('common.edit') }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <div v-else-if="config" class="config-content">
+      
+      <!-- Default Models Settings -->
+      <section class="default-models-section">
+        <h4>{{ t('settings.models.defaultModelsTitle', 'Default Models') }}</h4>
+        <div class="slots-grid">
+          <label class="svc-field">
+            <span>
+              {{ t('settings.models.primaryModel', 'Primary Model') }}
+              <InfoTooltip :text="t('settings.models.primaryModelDesc', 'Default model for general tasks')" />
+            </span>
+            <select v-model="config.default_models.primary" class="svc-input svc-select">
+              <option :value="null">-- Select Model --</option>
+              <option v-for="opt in allModelOptions" :key="opt" :value="opt">{{ opt }}</option>
+            </select>
+          </label>
+          <label class="svc-field">
+            <span>
+              {{ t('settings.models.lightweightModel', 'Lightweight Model') }}
+              <InfoTooltip :text="t('settings.models.lightweightModelDesc', 'Faster model for simple tasks')" />
+            </span>
+            <select v-model="config.default_models.lightweight" class="svc-input svc-select">
+              <option :value="null">-- Select Model --</option>
+              <option v-for="opt in allModelOptions" :key="opt" :value="opt">{{ opt }}</option>
+            </select>
+          </label>
+          <label class="svc-field">
+            <span>
+              {{ t('settings.models.visionModel', 'Vision Model') }}
+              <InfoTooltip :text="t('settings.models.visionModelDesc', 'Model capable of processing images')" />
+            </span>
+            <select v-model="config.default_models.vision" class="svc-input svc-select">
+              <option :value="null">-- Select Model --</option>
+              <option v-for="opt in allModelOptions" :key="opt" :value="opt">{{ opt }}</option>
+            </select>
+          </label>
+        </div>
+      </section>
 
-      <p v-else class="models-empty">{{ t('settings.models.empty') }}</p>
-    </section>
+      <!-- Context Config -->
+      <section class="context-config-section">
+        <h4>
+          {{ t('settings.models.contextConfigTitle', 'Default Context Config') }}
+          <InfoTooltip :text="t('settings.models.contextConfigDesc', 'Global context window and compaction settings')" />
+        </h4>
+        <div class="slots-grid">
+          <label class="svc-field">
+            <span>
+              {{ t('settings.models.contextWindowTokens', 'Context Window Tokens') }}
+              <InfoTooltip :text="t('settings.models.contextWindowTokensDesc', 'Maximum context window size in tokens')" />
+            </span>
+            <input v-model.number="config.context_config.context_window_tokens" type="number" class="svc-input" min="0" step="1024" />
+          </label>
+          <label class="svc-field">
+            <span>
+              {{ t('settings.models.reserveOutputTokens', 'Reserve Output Tokens') }}
+              <InfoTooltip :text="t('settings.models.reserveOutputTokensDesc', 'Reserved tokens for model output')" />
+            </span>
+            <input v-model.number="config.context_config.reserve_output_tokens" type="number" class="svc-input" min="0" step="256" />
+          </label>
+          <label class="svc-field">
+            <span>
+              {{ t('settings.models.compactTriggerRatio', 'Compact Trigger Ratio') }}
+              <InfoTooltip :text="t('settings.models.compactTriggerRatioDesc', 'Ratio of context usage to trigger compaction (0-1)')" />
+            </span>
+            <input v-model.number="config.context_config.compact_trigger_ratio" type="number" class="svc-input" min="0" max="1" step="0.05" />
+          </label>
+          <label class="svc-field">
+            <span>
+              {{ t('settings.models.compactSummaryMaxTokens', 'Compact Summary Max Tokens') }}
+              <InfoTooltip :text="t('settings.models.compactSummaryMaxTokensDesc', 'Maximum tokens for compaction summary')" />
+            </span>
+            <input v-model.number="config.context_config.compact_summary_max_tokens" type="number" class="svc-input" min="0" step="256" />
+          </label>
+        </div>
+      </section>
 
-    <ModelServiceEditorDialog ref="editorDialogRef" @changed="handleDialogChanged" />
+      <!-- Providers View -->
+      <section v-if="detailProviderIndex == null" class="providers-section">
+        <div class="providers-header">
+          <h4>{{ t('settings.models.providersTitle', 'LLM Providers') }}</h4>
+          <button type="button" class="secondary-button" @click="openAddProvider">
+            {{ t('settings.models.addProvider', 'Add Provider') }}
+          </button>
+        </div>
+
+        <div class="models-table-wrap">
+          <table class="settings-table models-table">
+            <thead>
+              <tr>
+                <th>Provider Name</th>
+                <th>Type</th>
+                <th>Model Count</th>
+                <th>Status</th>
+                <th class="actions-th">{{ t('settings.models.table.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(provider, pIndex) in config.llm_providers" :key="pIndex" :class="{'provider-disabled': !provider.enable}">
+                <td><strong>{{ provider.name }}</strong></td>
+                <td><span class="models-cell-type">{{ provider.type }}</span></td>
+                <td>{{ provider.models.length }}</td>
+                <td>
+                  <span v-if="provider.enable" class="svc-chip">Enabled</span>
+                  <span v-else class="svc-chip svc-chip--disabled">Disabled</span>
+                </td>
+                <td class="models-cell-actions">
+                  <button type="button" class="ghost-button" @click="openEditProvider(pIndex)">{{ t('common.edit') }}</button>
+                  <button type="button" class="ghost-button" @click="emit('openProviderModels', pIndex)">Models</button>
+                  <button type="button" class="ghost-button text-danger" @click="deleteProvider(pIndex)">{{ t('common.delete') }}</button>
+                </td>
+              </tr>
+              <tr v-if="config.llm_providers.length === 0">
+                <td colspan="5" class="models-empty">No providers configured yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Models View -->
+      <section v-else-if="detailProviderIndex != null && config.llm_providers[detailProviderIndex]" class="providers-section">
+        <div class="providers-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="ghost-button" @click="emit('clearProviderModels')" style="padding: 4px 8px;">&larr; Back</button>
+            <h4 style="margin: 0;">【{{ config.llm_providers[detailProviderIndex].name }}】 Models</h4>
+          </div>
+          <button type="button" class="secondary-button" @click="openAddModel(detailProviderIndex)">
+            {{ t('settings.models.addModel', 'Add Model') }}
+          </button>
+        </div>
+
+        <div class="models-table-wrap">
+          <table class="settings-table models-table">
+            <thead>
+              <tr>
+                <th>{{ t('settings.models.modelNameLabel', 'Model') }}</th>
+                <th>{{ t('settings.models.protocolLabel', 'Protocol') }}</th>
+                <th class="actions-th">{{ t('settings.models.table.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(model, mIndex) in config.llm_providers[detailProviderIndex].models" :key="mIndex">
+                <td><strong>{{ model.name }}</strong></td>
+                <td><span class="models-cell-type">{{ model.protocol }}</span></td>
+                <td class="models-cell-actions">
+                  <button 
+                    type="button" 
+                    class="ghost-button" 
+                    :disabled="testingProviderIndex === detailProviderIndex && testingModelIndex === mIndex"
+                    @click="testModel(detailProviderIndex, mIndex)"
+                  >
+                    Test
+                  </button>
+                  <button type="button" class="ghost-button" @click="openEditModel(detailProviderIndex, mIndex)">Edit</button>
+                  <button type="button" class="ghost-button text-danger" @click="deleteModel(detailProviderIndex, mIndex)">Del</button>
+                </td>
+              </tr>
+              <tr v-if="config.llm_providers[detailProviderIndex].models.length === 0">
+                <td colspan="3" class="models-empty">No models configured for this provider.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="section-footer">
+      <button v-if="isDirty" type="button" class="secondary-button" @click="resetChanges">
+        {{ t('settings.models.resetChanges', 'Reset Changes') }}
+      </button>
+      <button type="button" class="primary-button" :disabled="isSaving || !config || !isDirty" @click="saveAll">
+        {{ isSaving ? t('settings.models.saving', 'Saving...') : t('settings.models.saveAllBtn', 'Save All Changes') }}
+      </button>
+    </div>
+
+    <ProviderEditorDialog ref="providerDialogRef" @save="handleProviderSave" />
+    <ModelEditorDialog ref="modelDialogRef" @save="handleModelSave" />
   </section>
 </template>
 
 <style scoped>
-.config-section {
-  padding: 12px 0 0;
-}
+.config-section { padding: 12px 0 0; }
+.section-status-bar { margin-bottom: 8px; }
+.section-status, .models-empty { color: var(--muted); font-size: 0.86rem; }
 
-.section-head,
-.section-actions {
+.section-footer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.section-head {
-  margin-bottom: 8px;
-}
-
-.section-head--compact {
   justify-content: flex-end;
-}
-
-.section-head h3 {
-  margin: 0;
-  color: var(--text-strong);
-}
-
-.section-status,
-.models-empty {
-  color: var(--muted);
-}
-
-.models-table-section {
-  margin-top: 10px;
-  padding: 0 10px;
-}
-
-.settings-table-wrap {
-  margin-top: 10px;
-  overflow-x: auto;
-  padding: 10px 12px 12px;
-  border-radius: 16px;
-  background: var(--settings-table-surface);
-}
-
-.models-empty {
-  margin-top: 10px;
-  font-size: 0.86rem;
-}
-
-.settings-table {
-  width: 100%;
-  min-width: 0;
-  border-collapse: separate;
-  border-spacing: 0;
-  table-layout: fixed;
-}
-
-.settings-table th,
-.settings-table td {
-  padding: 12px 14px;
-  text-align: left;
-  vertical-align: top;
-}
-
-.settings-table thead th {
-  position: relative;
-  padding-top: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid color-mix(in srgb, var(--divider) 86%, transparent);
-  background: var(--settings-table-head-bg);
-  color: var(--text-strong);
-  font-size: 0.84rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
-.settings-table thead th:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 14px;
-  right: 0;
-  width: 1px;
-  height: calc(100% - 28px);
-  background: color-mix(in srgb, var(--divider) 88%, transparent);
-}
-
-.settings-table tbody td {
-  border-bottom: 1px solid color-mix(in srgb, var(--divider) 76%, transparent);
-  color: var(--text-strong);
-  font-size: 0.84rem;
-  transition:
-    background 140ms ease,
-    box-shadow 140ms ease;
-}
-
-.settings-table tbody tr:hover td,
-.settings-table tbody tr.active td {
-  background: var(--settings-table-row-hover);
-}
-
-.settings-table tbody tr.active td {
-  background: var(--settings-table-row-active);
-  box-shadow: none;
-}
-
-.settings-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.settings-table tbody tr:first-child td {
-  padding-top: 18px;
-}
-
-.svc-row-name strong {
-  color: var(--text-strong);
-  font-size: 0.96rem;
-}
-
-.svc-row-name {
-  display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 0;
-  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--divider) 76%, transparent);
 }
 
-.models-cell-type,
-.models-cell-model {
-  color: var(--muted);
+.config-content { display: grid; gap: 24px; margin-top: 10px; }
+
+.default-models-section h4 { margin: 0 0 12px 0; color: var(--text-strong); font-size: 0.95rem; }
+
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.svc-field { display: grid; gap: 6px; }
+.svc-field > span { color: var(--muted); font-size: 0.76rem; }
+.svc-input, .svc-select {
+  width: 100%; border: 1px solid var(--panel-border); border-radius: 12px;
+  background: var(--panel-bg); color: var(--text-strong); padding: 8px 12px;
+  font: inherit; font-size: 0.88rem; box-sizing: border-box;
+}
+.svc-input[type="number"] {
+  -moz-appearance: textfield;
+}
+.svc-input[type="number"]::-webkit-outer-spin-button,
+.svc-input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-.models-cell-model,
-.models-cell-status {
-  white-space: nowrap;
+.providers-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
 }
+.providers-header h4 { margin: 0; color: var(--text-strong); font-size: 0.95rem; }
 
-.models-cell-type {
-  width: 150px;
+.provider-card {
+  background: var(--settings-table-surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--panel-border);
 }
+.provider-disabled { opacity: 0.7; }
 
-.models-cell-model {
-  width: 210px;
-  overflow: hidden;
+.provider-head {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
 }
-
-.models-cell-model-text {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.models-table-status-head,
-.models-cell-status {
-  width: 108px;
-}
-
-.models-cell-actions,
-.models-table-actions-head {
-  width: 88px;
-  text-align: right;
-}
-
-.models-cell-actions :deep(.ghost-button) {
-  white-space: nowrap;
-}
+.provider-title { display: flex; align-items: center; gap: 8px; }
+.provider-title strong { color: var(--text-strong); font-size: 1.05rem; }
+.provider-actions { display: flex; gap: 8px; }
+.text-danger { color: var(--warn); }
 
 .svc-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 20px;
-  padding: 0 8px;
-  border-radius: 999px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  color: var(--muted);
-  font-size: 0.68rem;
-  white-space: nowrap;
+  display: inline-flex; align-items: center; min-height: 20px; padding: 0 8px;
+  border-radius: 999px; border: 1px solid var(--panel-border); background: var(--panel-bg);
+  color: var(--muted); font-size: 0.68rem; white-space: nowrap;
 }
-
-.svc-chip--default {
-  border-color: color-mix(in srgb, var(--good) 38%, var(--panel-border) 62%);
-  background: color-mix(in srgb, var(--good) 12%, var(--panel-bg) 88%);
-  color: var(--good);
-}
-
-.svc-chip--enabled {
-  border-color: color-mix(in srgb, var(--good) 38%, var(--panel-border) 62%);
-  background: color-mix(in srgb, var(--good) 12%, var(--panel-bg) 88%);
-  color: var(--good);
-}
-
 .svc-chip--disabled {
   border-color: color-mix(in srgb, var(--warn) 28%, var(--panel-border) 72%);
   background: color-mix(in srgb, var(--warn) 8%, var(--panel-bg) 92%);
   color: var(--warn);
 }
 
+
+
+.models-table-wrap {
+  border-radius: 12px;
+  background: var(--panel-bg);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+}
+.settings-table {
+  width: 100%; min-width: 0; border-collapse: separate; border-spacing: 0; table-layout: fixed;
+}
+.settings-table th, .settings-table td {
+  padding: 10px 14px; text-align: left; vertical-align: middle;
+}
+.settings-table thead th {
+  border-bottom: 1px solid color-mix(in srgb, var(--divider) 86%, transparent);
+  color: var(--text-strong); font-size: 0.8rem; font-weight: 700; white-space: nowrap;
+  background: var(--settings-table-head-bg);
+}
+.settings-table tbody td {
+  border-bottom: 1px solid color-mix(in srgb, var(--divider) 76%, transparent);
+  color: var(--text-strong); font-size: 0.84rem;
+}
+.settings-table tbody tr:last-child td { border-bottom: none; }
+.settings-table tbody tr:hover td { background: var(--settings-table-row-hover); }
+
+.models-cell-type { color: var(--muted); }
+.actions-th { width: 180px; text-align: right; }
+.models-cell-actions { 
+  display: flex; 
+  justify-content: flex-end; 
+  gap: 8px; 
+  white-space: nowrap; 
+}
+
+.add-model-row {
+  padding: 8px;
+  background: var(--settings-table-head-bg);
+  border-top: 1px solid var(--panel-border);
+  text-align: center;
+}
+
 @media (max-width: 780px) {
-  .section-head,
-  .section-actions {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .section-actions {
-    width: 100%;
-  }
-
-  .settings-table {
-    min-width: 780px;
-  }
+  .slots-grid { grid-template-columns: 1fr; }
 }
 </style>

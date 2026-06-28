@@ -49,11 +49,14 @@ const {
   breadcrumbItems,
   currentSectionId,
   detailTeamId,
+  detailProviderIndex,
   goBack,
   handleBreadcrumbNavigate,
   openSection,
   openTeamDetail,
   clearTeamDetail,
+  openProviderModels,
+  clearProviderModels,
   topbarBackLabel,
 } = useSettingsRouting({
   route,
@@ -411,7 +414,10 @@ watch(
         <ModelsSettingsSection
           v-else-if="currentSectionId === 'models'"
           :breadcrumb-items="breadcrumbItems"
+          :detail-provider-index="detailProviderIndex"
           @navigate-breadcrumb="handleBreadcrumbNavigate"
+          @open-provider-models="openProviderModels"
+          @clear-provider-models="clearProviderModels"
         />
 
         <SkillsSettingsSection

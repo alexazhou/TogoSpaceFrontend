@@ -15,9 +15,12 @@ import type {
   FrontendConfig,
   FrontendDriverType,
   FrontendModelOption,
-  LlmServiceInfo,
-  LlmServiceListResponse,
-  LlmServiceTestResult,
+  LlmProviderConfig,
+  LlmModelConfig,
+  LlmContextConfig,
+  DefaultModelSlots,
+  LlmConfigPayload,
+  LlmTestResult,
   MessageInfo,
   RoleTemplateDetail,
   RoleTemplateSummary,
@@ -1051,51 +1054,11 @@ export async function quickInit(payload: {
   });
 }
 
-export async function getLlmServices(): Promise<LlmServiceListResponse> {
-  return requestJson<LlmServiceListResponse>('/config/llm_services/list.json');
-}
 
-export async function createLlmService(payload: Partial<LlmServiceInfo>): Promise<{ status: string; index: number }> {
-  return requestJson('/config/llm_services/create.json', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
 
-export async function modifyLlmService(index: number, payload: Record<string, unknown>): Promise<{ status: string }> {
-  return requestJson(`/config/llm_services/${index}/modify.json`, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
 
-export async function deleteLlmService(index: number): Promise<{ status: string; deleted_name: string }> {
-  return requestJson(`/config/llm_services/${index}/delete.json`, {
-    method: 'POST',
-  });
-}
 
-export async function setDefaultLlmService(index: number): Promise<{ status: string; default_llm_server: string }> {
-  return requestJson(`/config/llm_services/${index}/set_default.json`, {
-    method: 'POST',
-  });
-}
 
-export async function testLlmService(payload: {
-  mode: 'saved' | 'temp';
-  index?: number;
-  base_url?: string;
-  api_key?: string;
-  type?: string;
-  model?: string;
-  extra_headers?: Record<string, string>;
-  provider_params?: Record<string, unknown>;
-}): Promise<LlmServiceTestResult> {
-  return requestJson('/config/llm_services/test.json', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
 
 export async function setLanguage(language: AppLocale): Promise<{ language: AppLocale }> {
   return requestJson('/config/language.json', {
@@ -1140,6 +1103,31 @@ export async function checkUpdate(force = false): Promise<UpdateCheckResult> {
 
 export async function updateSystemConfig(payload: { auto_check_update?: boolean }): Promise<{ auto_check_update: boolean }> {
   return requestJson('/system/update_config.json', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getLlmConfig(): Promise<LlmConfigPayload> {
+  return requestJson<LlmConfigPayload>('/config/llm.json');
+}
+
+export async function getProviderPresets(): Promise<Record<string, { label: string; [key: string]: string }>> {
+  return requestJson('/config/provider_types.json');
+}
+
+export async function saveLlmConfig(payload: LlmConfigPayload): Promise<{ status: string }> {
+  return requestJson('/config/llm.json', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function testLlmProvider(payload: {
+  provider: LlmProviderConfig;
+  model: string;
+}): Promise<LlmTestResult> {
+  return requestJson('/config/llm_test.json', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

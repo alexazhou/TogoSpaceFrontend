@@ -318,44 +318,62 @@ export interface RoleTemplateDetail extends RoleTemplateSummary {
   soul: string;
 }
 
-export type LlmServiceType = 'openai-compatible' | 'anthropic' | 'google' | 'deepseek';
+export type LlmServiceType = string;
 
-export interface LlmServiceInfo {
-  name: string;
-  base_url: string;
-  api_key: string;
-  type: LlmServiceType;
-  model: string;
-  enable: boolean;
-  extra_headers: Record<string, string>;
-  provider_params?: Record<string, unknown>;
-  context_window_tokens: number;
-  reserve_output_tokens: number;
-  compact_trigger_ratio: number;
-  compact_summary_max_tokens: number;
-}
 
-export interface LlmServiceListResponse {
-  llm_services: LlmServiceInfo[];
-  default_llm_server: string | null;
-}
 
-export interface LlmServiceTestResult {
-  status: 'ok' | 'error';
-  message: string;
-  detail?: {
-    model?: string;
-    response_text?: string;
-    duration_ms?: number;
-    usage?: Record<string, unknown>;
-    error_type?: string;
-    raw_error?: string;
-  };
-}
 
 export interface SkillInfo {
   name: string;
   description: string;
   is_builtin: boolean;
   files: string[];
+}
+
+export interface LlmContextConfig {
+  compact_trigger_ratio: number;
+  reserve_output_tokens: number;
+  context_window_tokens: number;
+  compact_summary_max_tokens: number;
+}
+
+export interface LlmModelConfig {
+  name: string;
+  protocol: string;
+  context_config: LlmContextConfig | null;
+  extra_headers: Record<string, string> | null;
+  provider_params: Record<string, unknown> | null;
+}
+
+export interface LlmProviderConfig {
+  name: string;
+  enable: boolean;
+  type: LlmServiceType;
+  api_key: string;
+  urls: Record<string, string>;
+  extra_headers: Record<string, string> | null;
+  provider_params: Record<string, unknown> | null;
+  models: LlmModelConfig[];
+}
+
+export interface DefaultModelSlots {
+  primary: string | null;
+  lightweight: string | null;
+  vision: string | null;
+}
+
+export interface LlmConfigPayload {
+  llm_providers: LlmProviderConfig[];
+  default_models: DefaultModelSlots;
+  context_config: LlmContextConfig;
+}
+
+export interface LlmTestResult {
+  status: 'ok' | 'error';
+  message: string;
+  detail?: {
+    duration_ms: number;
+    response_text: string;
+    raw_error: string;
+  };
 }

@@ -52,17 +52,31 @@ export function useSettingsRouting(options: UseSettingsRoutingOptions) {
     const value = Number(raw);
     return Number.isFinite(value) ? value : null;
   });
+  
+  const detailProviderIndex = computed(() => {
+    const raw = options.route.query.detailProviderIndex;
+    if (typeof raw !== 'string') {
+      return null;
+    }
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+  });
+
   const isTeamDetailView = computed(() => currentSectionId.value === 'teams' && detailTeamId.value !== null);
+  const isProviderModelsView = computed(() => currentSectionId.value === 'models' && detailProviderIndex.value !== null);
+  
   const topbarBackLabel = computed(() => (
-    isTeamDetailView.value ? options.t('settings.backToTeams') : options.t('settings.back')
+    isTeamDetailView.value ? options.t('settings.backToTeams') : 
+    (isProviderModelsView.value ? options.t('settings.back') : options.t('settings.back'))
   ));
+  
   const breadcrumbItems = computed<SettingsBreadcrumbItem[]>(() => {
     const items: SettingsBreadcrumbItem[] = [
       { key: 'settings', label: options.t('settings.title'), current: false },
       {
         key: `section-${currentNavItem.value.id}`,
         label: currentNavItem.value.label,
-        current: detailTeamId.value === null,
+        current: detailTeamId.value === null && detailProviderIndex.value === null,
       },
     ];
 
@@ -71,6 +85,13 @@ export function useSettingsRouting(options: UseSettingsRoutingOptions) {
       items.push({
         key: 'team-detail',
         label: options.selectedTeamDetail.value.name,
+        current: true,
+      });
+    } else if (currentSectionId.value === 'models' && detailProviderIndex.value !== null) {
+      items[items.length - 1].current = false;
+      items.push({
+        key: 'provider-models',
+        label: 'Models',
         current: true,
       });
     }
@@ -105,6 +126,21 @@ export function useSettingsRouting(options: UseSettingsRoutingOptions) {
       params: { teamId: options.teamId.value, section: 'teams' },
     }).catch(console.error);
   }
+  
+  function openProviderModels(providerIndex: number): void {
+    options.router.push({
+      name: 'settings',
+      params: { teamId: options.teamId.value, section: 'models' },
+      query: { detailProviderIndex: String(providerIndex) },
+    }).catch(console.error);
+  }
+
+  function clearProviderModels(): void {
+    options.router.push({
+      name: 'settings',
+      params: { teamId: options.teamId.value, section: 'models' },
+    }).catch(console.error);
+  }
 
   function handleBreadcrumbNavigate(key: string): void {
     if (key === 'settings') {
@@ -116,11 +152,20 @@ export function useSettingsRouting(options: UseSettingsRoutingOptions) {
       clearTeamDetail();
       return;
     }
+    
+    if (key === 'provider-models') {
+      clearProviderModels();
+      return;
+    }
 
     if (key.startsWith('section-')) {
       const sectionId = key.slice('section-'.length);
       if (sectionId === 'teams') {
         clearTeamDetail();
+        return;
+      }
+      if (sectionId === 'models') {
+        clearProviderModels();
         return;
       }
       openSection(sectionId);
@@ -130,6 +175,10 @@ export function useSettingsRouting(options: UseSettingsRoutingOptions) {
   function goBack(): void {
     if (isTeamDetailView.value) {
       clearTeamDetail();
+      return;
+    }
+    if (isProviderModelsView.value) {
+      clearProviderModels();
       return;
     }
     options.router.push({ name: 'console', params: { teamId: options.teamId.value } }).catch(console.error);
@@ -152,12 +201,16 @@ export function useSettingsRouting(options: UseSettingsRoutingOptions) {
     breadcrumbItems,
     currentSectionId,
     detailTeamId,
+    detailProviderIndex,
     goBack,
     handleBreadcrumbNavigate,
     isTeamDetailView,
+    isProviderModelsView,
     openSection,
     openTeamDetail,
     clearTeamDetail,
+    openProviderModels,
+    clearProviderModels,
     topbarBackLabel,
   };
 }
