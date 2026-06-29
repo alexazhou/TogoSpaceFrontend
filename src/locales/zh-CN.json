@@ -479,16 +479,8 @@
       "compactTriggerRatioDesc": "上下文使用比例达到此值时触发压缩 (0-1)",
       "compactSummaryMaxTokens": "压缩摘要上限",
       "compactSummaryMaxTokensDesc": "压缩摘要的最大 token 数",
-      "table": {
-        "providerName": "Provider Name",
-        "type": "Type",
-        "modelCount": "Model Count",
-        "status": "Status",
-        "actions": "操作",
-        "modelsBtn": "Models",
-        "emptyProviders": "暂无服务商。"
-      },
       "providersTitle": "LLM 服务商",
+      "providerModelsTitle": "模型列表",
       "addProvider": "新增服务商",
       "newProviderTitle": "新增服务商",
       "addModel": "新增模型",
@@ -530,6 +522,15 @@
       "deleteConfirmMsg": "确认删除服务「{name}」？删除后无法恢复。",
       "deleteConfirmBtn": "删除",
       "table": {
+        "providerName": "服务商名称",
+        "type": "类型",
+        "modelCount": "模型数量",
+        "modelsBtn": "模型",
+        "testBtn": "测试",
+        "editBtn": "编辑",
+        "delBtn": "删除",
+        "emptyProviders": "暂无服务商。",
+        "emptyModels": "该服务商暂未配置模型。",
         "url": "地址",
         "status": "状态",
         "actions": "操作"

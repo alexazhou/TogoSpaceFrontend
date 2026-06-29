@@ -479,16 +479,8 @@
       "compactTriggerRatioDesc": "Ratio of context usage to trigger compaction (0-1)",
       "compactSummaryMaxTokens": "Compact Summary Max Tokens",
       "compactSummaryMaxTokensDesc": "Maximum tokens for compaction summary",
-      "table": {
-        "providerName": "Provider Name",
-        "type": "Type",
-        "modelCount": "Model Count",
-        "status": "Status",
-        "actions": "Actions",
-        "modelsBtn": "Models",
-        "emptyProviders": "No providers configured yet."
-      },
       "providersTitle": "LLM Providers",
+      "providerModelsTitle": "Models",
       "addProvider": "Add Provider",
       "newProviderTitle": "New Provider",
       "addModel": "Add Model",
@@ -530,6 +522,15 @@
       "deleteConfirmMsg": "Confirm deleting service \"{name}\"? This cannot be undone.",
       "deleteConfirmBtn": "Delete",
       "table": {
+        "providerName": "Provider Name",
+        "type": "Type",
+        "modelCount": "Model Count",
+        "modelsBtn": "Models",
+        "testBtn": "Test",
+        "editBtn": "Edit",
+        "delBtn": "Del",
+        "emptyProviders": "No providers configured yet.",
+        "emptyModels": "No models configured for this provider.",
         "url": "URL",
         "status": "Status",
         "actions": "Actions"

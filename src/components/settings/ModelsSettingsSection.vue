@@ -270,8 +270,8 @@ onMounted(() => {
                 <td><span class="models-cell-type">{{ provider.type }}</span></td>
                 <td>{{ provider.models.length }}</td>
                 <td>
-                  <span v-if="provider.enable" class="svc-chip">{{ t('common.enabled', 'Enabled') }}</span>
-                  <span v-else class="svc-chip svc-chip--disabled">{{ t('common.disabled', 'Disabled') }}</span>
+                  <span v-if="provider.enable" class="svc-chip">{{ t('settings.models.enabled', 'Enabled') }}</span>
+                  <span v-else class="svc-chip svc-chip--disabled">{{ t('settings.models.disabled', 'Disabled') }}</span>
                 </td>
                 <td class="models-cell-actions">
                   <button type="button" class="ghost-button" @click="openEditProvider(pIndex)">{{ t('common.edit') }}</button>
@@ -291,8 +291,8 @@ onMounted(() => {
       <section v-else-if="detailProviderIndex != null && config.llm_providers[detailProviderIndex]" class="providers-section">
         <div class="providers-header">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <button type="button" class="ghost-button" @click="emit('clearProviderModels')" style="padding: 4px 8px;">&larr; Back</button>
-            <h4 style="margin: 0;">【{{ config.llm_providers[detailProviderIndex].name }}】 Models</h4>
+            <button type="button" class="ghost-button" @click="emit('clearProviderModels')" style="padding: 4px 8px;">&larr; {{ t('common.back', 'Back') }}</button>
+            <h4 style="margin: 0;">【{{ config.llm_providers[detailProviderIndex].name }}】 {{ t('settings.models.providerModelsTitle', 'Models') }}</h4>
           </div>
           <button type="button" class="secondary-button" @click="openAddModel(detailProviderIndex)">
             {{ t('settings.models.addModel', 'Add Model') }}
@@ -319,14 +319,14 @@ onMounted(() => {
                     :disabled="testingProviderIndex === detailProviderIndex && testingModelIndex === mIndex"
                     @click="testModel(detailProviderIndex, mIndex)"
                   >
-                    Test
+                    {{ t('settings.models.table.testBtn', 'Test') }}
                   </button>
-                  <button type="button" class="ghost-button" @click="openEditModel(detailProviderIndex, mIndex)">Edit</button>
-                  <button type="button" class="ghost-button text-danger" @click="deleteModel(detailProviderIndex, mIndex)">Del</button>
+                  <button type="button" class="ghost-button" @click="openEditModel(detailProviderIndex, mIndex)">{{ t('settings.models.table.editBtn', 'Edit') }}</button>
+                  <button type="button" class="ghost-button text-danger" @click="deleteModel(detailProviderIndex, mIndex)">{{ t('settings.models.table.delBtn', 'Del') }}</button>
                 </td>
               </tr>
               <tr v-if="config.llm_providers[detailProviderIndex].models.length === 0">
-                <td colspan="3" class="models-empty">No models configured for this provider.</td>
+                <td colspan="3" class="models-empty">{{ t('settings.models.table.emptyModels', 'No models configured for this provider.') }}</td>
               </tr>
             </tbody>
           </table>
