@@ -520,6 +520,8 @@
       "createSuccess": "服务已创建",
       "saveSuccess": "服务已保存",
       "saveAllBtn": "保存所有修改",
+      "saveConfirmTitle": "保存配置",
+      "saveConfirmMsg": "确定要保存当前配置吗？这将覆盖已有设置。",
       "resetChanges": "重置修改",
       "testError": "测试请求异常",
       "deleteConfirmTitle": "删除 LLM 服务",

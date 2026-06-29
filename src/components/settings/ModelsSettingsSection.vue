@@ -8,6 +8,7 @@ import ModelEditorDialog from './ModelEditorDialog.vue';
 import ContextConfigSection from './ContextConfigSection.vue';
 import DefaultModelsSection from './DefaultModelsSection.vue';
 import SettingsBreadcrumb from './SettingsBreadcrumb.vue';
+import ConfirmDialog from '../ui/ConfirmDialog.vue';
 import type { SettingsBreadcrumbItem } from './types';
 import { showGlobalSuccessToast } from '../../appUiState';
 
@@ -36,6 +37,7 @@ const statusText = ref('');
 
 const providerDialogRef = ref<InstanceType<typeof ProviderEditorDialog> | null>(null);
 const modelDialogRef = ref<InstanceType<typeof ModelEditorDialog> | null>(null);
+const saveConfirmOpen = ref(false);
 
 // We need to keep track of which provider we are editing models for
 const currentEditingProviderIndex = ref<number | null>(null);
@@ -70,7 +72,16 @@ function resetChanges(): void {
   config.value = JSON.parse(initialConfigSnapshot.value) as LlmConfigPayload;
 }
 
-async function saveAll(): Promise<void> {
+function requestSave(): void {
+  saveConfirmOpen.value = true;
+}
+
+function closeSaveConfirm(): void {
+  saveConfirmOpen.value = false;
+}
+
+async function confirmSave(): Promise<void> {
+  saveConfirmOpen.value = false;
   if (!config.value) return;
   isSaving.value = true;
   statusText.value = '';
@@ -296,10 +307,19 @@ onMounted(() => {
       <button v-if="isDirty" type="button" class="secondary-button" @click="resetChanges">
         {{ t('settings.models.resetChanges', 'Reset Changes') }}
       </button>
-      <button type="button" class="primary-button" :disabled="isSaving || !config || !isDirty" @click="saveAll">
+      <button type="button" class="primary-button" :disabled="isSaving || !config || !isDirty" @click="requestSave">
         {{ isSaving ? t('settings.models.saving', 'Saving...') : t('settings.models.saveAllBtn', 'Save All Changes') }}
       </button>
     </div>
+
+    <ConfirmDialog
+      :open="saveConfirmOpen"
+      :title="t('settings.models.saveConfirmTitle', 'Save Configuration')"
+      :message="t('settings.models.saveConfirmMsg', 'Are you sure you want to save the current configuration? This will overwrite the existing settings.')"
+      :confirm-label="t('common.confirm')"
+      @close="closeSaveConfirm"
+      @confirm="confirmSave"
+    />
 
     <ProviderEditorDialog ref="providerDialogRef" @save="handleProviderSave" />
     <ModelEditorDialog ref="modelDialogRef" @save="handleModelSave" />

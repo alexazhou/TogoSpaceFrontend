@@ -520,6 +520,8 @@
       "createSuccess": "Service created",
       "saveSuccess": "Service saved",
       "saveAllBtn": "Save All Changes",
+      "saveConfirmTitle": "Save Configuration",
+      "saveConfirmMsg": "Are you sure you want to save the current configuration? This will overwrite the existing settings.",
       "resetChanges": "Reset Changes",
       "testError": "Test request error",
       "deleteConfirmTitle": "Delete LLM Service",
