@@ -171,7 +171,7 @@ defineExpose({ openCreate, openEdit });
         <div class="svc-form-grid">
           <label class="svc-field">
             <span>{{ t('settings.models.modelNameLabel', 'Model Name') }}</span>
-            <input v-model="form.name" type="text" class="svc-input" :readonly="!isCreating" :class="{ 'svc-input--readonly': !isCreating }" placeholder="e.g. gpt-4o" />
+            <input v-model="form.name" type="text" class="svc-input" placeholder="e.g. gpt-4o" />
           </label>
 
           <label class="svc-field">

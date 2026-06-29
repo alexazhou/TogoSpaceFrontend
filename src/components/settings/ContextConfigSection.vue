@@ -57,19 +57,19 @@ function formatNumber(n: number): string {
 
     <div class="context-config-tags">
       <span class="context-tag">
-        <span class="context-tag-label">Context Window</span>
+        <span class="context-tag-label">{{ t('settings.models.contextWindowTokens', 'Context Window Tokens') }}</span>
         <span class="context-tag-value">{{ formatNumber(config.context_window_tokens) }}</span>
       </span>
       <span class="context-tag">
-        <span class="context-tag-label">Reserve Output</span>
+        <span class="context-tag-label">{{ t('settings.models.reserveOutputTokens', 'Reserve Output Tokens') }}</span>
         <span class="context-tag-value">{{ formatNumber(config.reserve_output_tokens) }}</span>
       </span>
       <span class="context-tag">
-        <span class="context-tag-label">Compact Trigger</span>
+        <span class="context-tag-label">{{ t('settings.models.compactTriggerRatio', 'Compact Trigger Ratio') }}</span>
         <span class="context-tag-value">{{ (config.compact_trigger_ratio * 100).toFixed(0) }}%</span>
       </span>
       <span class="context-tag">
-        <span class="context-tag-label">Summary Max</span>
+        <span class="context-tag-label">{{ t('settings.models.compactSummaryMaxTokens', 'Compact Summary Max Tokens') }}</span>
         <span class="context-tag-value">{{ formatNumber(config.compact_summary_max_tokens) }}</span>
       </span>
     </div>

@@ -257,11 +257,11 @@ onMounted(() => {
           <table class="settings-table models-table">
             <thead>
               <tr>
-                <th>Provider Name</th>
-                <th>Type</th>
-                <th>Model Count</th>
-                <th>Status</th>
-                <th class="actions-th">{{ t('settings.models.table.actions') }}</th>
+                <th>{{ t('settings.models.table.providerName', 'Provider Name') }}</th>
+                <th>{{ t('settings.models.table.type', 'Type') }}</th>
+                <th>{{ t('settings.models.table.modelCount', 'Model Count') }}</th>
+                <th>{{ t('settings.models.table.status', 'Status') }}</th>
+                <th class="actions-th">{{ t('settings.models.table.actions', 'Actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -270,17 +270,17 @@ onMounted(() => {
                 <td><span class="models-cell-type">{{ provider.type }}</span></td>
                 <td>{{ provider.models.length }}</td>
                 <td>
-                  <span v-if="provider.enable" class="svc-chip">Enabled</span>
-                  <span v-else class="svc-chip svc-chip--disabled">Disabled</span>
+                  <span v-if="provider.enable" class="svc-chip">{{ t('common.enabled', 'Enabled') }}</span>
+                  <span v-else class="svc-chip svc-chip--disabled">{{ t('common.disabled', 'Disabled') }}</span>
                 </td>
                 <td class="models-cell-actions">
                   <button type="button" class="ghost-button" @click="openEditProvider(pIndex)">{{ t('common.edit') }}</button>
-                  <button type="button" class="ghost-button" @click="emit('openProviderModels', pIndex)">Models</button>
+                  <button type="button" class="ghost-button" @click="emit('openProviderModels', pIndex)">{{ t('settings.models.table.modelsBtn', 'Models') }}</button>
                   <button type="button" class="ghost-button text-danger" @click="deleteProvider(pIndex)">{{ t('common.delete') }}</button>
                 </td>
               </tr>
               <tr v-if="config.llm_providers.length === 0">
-                <td colspan="5" class="models-empty">No providers configured yet.</td>
+                <td colspan="5" class="models-empty">{{ t('settings.models.table.emptyProviders', 'No providers configured yet.') }}</td>
               </tr>
             </tbody>
           </table>
