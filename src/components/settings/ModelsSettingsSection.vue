@@ -6,9 +6,9 @@ import type { LlmConfigPayload, LlmProviderConfig, LlmModelConfig } from '../../
 import ProviderEditorDialog from './ProviderEditorDialog.vue';
 import ModelEditorDialog from './ModelEditorDialog.vue';
 import ContextConfigSection from './ContextConfigSection.vue';
+import DefaultModelsSection from './DefaultModelsSection.vue';
 import SettingsBreadcrumb from './SettingsBreadcrumb.vue';
 import type { SettingsBreadcrumbItem } from './types';
-import InfoTooltip from '../ui/InfoTooltip.vue';
 import { showGlobalSuccessToast } from '../../appUiState';
 
 const props = defineProps<{
@@ -171,19 +171,6 @@ async function testModel(providerIndex: number, modelIndex: number) {
   }
 }
 
-const allModelOptions = computed(() => {
-  if (!config.value) return [];
-  const options: string[] = [];
-  config.value.llm_providers.forEach(p => {
-    if (p.enable) {
-      p.models.forEach(m => {
-        options.push(`${m.name}@${p.name}`);
-      });
-    }
-  });
-  return options;
-});
-
 onMounted(() => {
   void loadData();
 });
@@ -202,41 +189,11 @@ onMounted(() => {
     <div v-else-if="config" class="config-content">
       
       <!-- Default Models Settings -->
-      <section class="default-models-section">
-        <h4>{{ t('settings.models.defaultModelsTitle', 'Default Models') }}</h4>
-        <div class="slots-grid">
-          <label class="svc-field">
-            <span>
-              {{ t('settings.models.primaryModel', 'Primary Model') }}
-              <InfoTooltip :text="t('settings.models.primaryModelDesc', 'Default model for general tasks')" />
-            </span>
-            <select v-model="config.default_models.primary" class="svc-input svc-select">
-              <option :value="null">-- Select Model --</option>
-              <option v-for="opt in allModelOptions" :key="opt" :value="opt">{{ opt }}</option>
-            </select>
-          </label>
-          <label class="svc-field">
-            <span>
-              {{ t('settings.models.lightweightModel', 'Lightweight Model') }}
-              <InfoTooltip :text="t('settings.models.lightweightModelDesc', 'Faster model for simple tasks')" />
-            </span>
-            <select v-model="config.default_models.lightweight" class="svc-input svc-select">
-              <option :value="null">-- Select Model --</option>
-              <option v-for="opt in allModelOptions" :key="opt" :value="opt">{{ opt }}</option>
-            </select>
-          </label>
-          <label class="svc-field">
-            <span>
-              {{ t('settings.models.visionModel', 'Vision Model') }}
-              <InfoTooltip :text="t('settings.models.visionModelDesc', 'Model capable of processing images')" />
-            </span>
-            <select v-model="config.default_models.vision" class="svc-input svc-select">
-              <option :value="null">-- Select Model --</option>
-              <option v-for="opt in allModelOptions" :key="opt" :value="opt">{{ opt }}</option>
-            </select>
-          </label>
-        </div>
-      </section>
+      <DefaultModelsSection
+        :default-models="config.default_models"
+        :providers="config.llm_providers"
+        @save="config.default_models = $event"
+      />
 
       <!-- Context Config -->
       <ContextConfigSection
@@ -366,29 +323,6 @@ onMounted(() => {
 
 .config-content { display: grid; gap: 24px; margin-top: 10px; }
 
-.default-models-section h4 { margin: 0 0 12px 0; color: var(--text-strong); font-size: 0.95rem; }
-
-.slots-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-.svc-field { display: grid; gap: 6px; }
-.svc-field > span { color: var(--muted); font-size: 0.76rem; }
-.svc-input, .svc-select {
-  width: 100%; border: 1px solid var(--panel-border); border-radius: 12px;
-  background: var(--panel-bg); color: var(--text-strong); padding: 8px 12px;
-  font: inherit; font-size: 0.88rem; box-sizing: border-box;
-}
-.svc-input[type="number"] {
-  -moz-appearance: textfield;
-}
-.svc-input[type="number"]::-webkit-outer-spin-button,
-.svc-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
 .providers-header {
   display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
 }
@@ -465,7 +399,4 @@ onMounted(() => {
   text-align: center;
 }
 
-@media (max-width: 780px) {
-  .slots-grid { grid-template-columns: 1fr; }
-}
 </style>

@@ -211,15 +211,15 @@ defineExpose({ openCreate, openEdit });
 
         <div class="svc-form-grid">
           <label class="svc-field">
-            <span>{{ t('settings.models.nameLabel') }}</span>
-            <input v-model="form.name" type="text" class="svc-input" :readonly="!isCreating" :class="{ 'svc-input--readonly': !isCreating }" placeholder="e.g. OpenAI" />
-          </label>
-
-          <label class="svc-field">
             <span>{{ t('settings.models.typeLabel') }}</span>
             <select v-model="form.type" class="svc-input svc-select" @change="handleTypeChange">
               <option v-for="st in SERVICE_TYPES" :key="st.value" :value="st.value">{{ st.label }}</option>
             </select>
+          </label>
+
+          <label class="svc-field">
+            <span>{{ t('settings.models.nameLabel') }}</span>
+            <input v-model="form.name" type="text" class="svc-input" :readonly="!isCreating" :class="{ 'svc-input--readonly': !isCreating }" placeholder="e.g. OpenAI" />
           </label>
 
           <div class="svc-field svc-field--wide">
